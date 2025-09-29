@@ -1,0 +1,35 @@
+:root {
+  --title: #fff;
+  --swiper-color: #000;
+  --tab-item-bg: hsla(0, 65%, 15%, 0.059);
+  --main-bg: #f4f4f5;
+  --el-menu-active-color: #202024;
+  --el-menu-active-bg-color: #e4e4e7;
+  --el-menu-bg-color: #fafafa;
+  --chat-item-hover-color: #d9d9df;
+  --menu-foot-border: #e4e4e7;
+  --menu-foot-bg: #f0f0f0;
+  --el-header-bg-color: #fff;
+}
+.dark {
+  --swiper-color: #fff;
+  --tab-item-bg: hsla(0, 0%, 100%, 0.059);
+  --main-bg: transparent;
+  --el-menu-active-color: #fff;
+  --el-menu-active-bg-color: #505154;
+  --el-menu-bg-color: #202024;
+  --chat-item-hover-color: #4c4d4f;
+  --menu-foot-border: #26272b;
+  --menu-foot-bg: #606060;
+  --el-header-bg-color: #202024;
+}
+.el-header {
+  background: var(--el-header-bg-color);
+}
+.el-menu {
+  --el-menu-active-color: var(--el-menu-active-color);
+  .is-active {
+    background-color: var(--el-menu-active-bg-color);
+    border-radius: 10px;
+  }
+}
