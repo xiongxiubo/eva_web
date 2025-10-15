@@ -81,19 +81,7 @@
                 </div>
             </div>
         </div>
-        <el-dropdown>
-            <div class="foot-user">
-                <el-avatar :size="32">{{ email[0] }}</el-avatar>
-                <span>{{ email }}</span>
-            </div>
-            <template #dropdown>
-                <el-dropdown-menu>
-                    <el-dropdown-item @click="logout">
-                        {{ $at('退出登录') }}
-                    </el-dropdown-item>
-                </el-dropdown-menu>
-            </template>
-        </el-dropdown>
+
     </div>
 </template>
 <script setup lang="ts">
@@ -121,19 +109,12 @@ const toggle = (bool: boolean) => {
 
 
 const storage = useUserStore();
-const { email, chatList, isCollapse, token } = storeToRefs(storage);
+const { chatList, isCollapse } = storeToRefs(storage);
 const router = useRouter();
 const isHover = ref(false);
 const hoverId = ref(0);
 
-const logout = async () => {
-    try {
-        token.value = '';
-        router.push('/login');
-    } catch (error) {
-        console.log(error);
-    }
-};
+
 const hoverChat = (id: number) => {
     isHover.value = true;
     hoverId.value = id;
@@ -252,30 +233,7 @@ const deleteChat = async (id: string) => {
         }
     }
 
-    .foot-user {
-        width: 90%;
-        margin: 0 auto;
-        display: flex;
-        align-items: center;
-        padding: 5px;
-        background: var(--menu-foot-bg);
-        border-radius: 8px;
-        box-sizing: border-box;
-        flex-shrink: 0;
-        margin-top: 10px;
-        cursor: pointer;
 
-        span {
-            font-size: 14px;
-            margin-left: 10px;
-        }
-
-        .el-avatar {
-            flex-shrink: 0;
-            border: 1px solid #fff;
-        }
-
-    }
 
     img {
         width: 24px;

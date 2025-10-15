@@ -32,7 +32,6 @@ export function useAudio(avatarref: any) {
     isStreaming: false,
   });
   const loading = ref("0%");
-  const isSpeakEnd = ref(true);
 
   // 音频上下文
   let audioContext: AudioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -46,6 +45,7 @@ export function useAudio(avatarref: any) {
   let bufferQueue: any[] = []; //缓冲队列
   let sendBuffer: ArrayBuffer[] = []; // 发送缓冲区
   let bufferTimer: number | null = null; // 发送定时器
+  let isSpeaker = ref(false); // 说话人是否可以说话
 
   // 播放音乐
   async function playMusic(arrayBuffer: ArrayBuffer | Blob) {
@@ -172,7 +172,7 @@ export function useAudio(avatarref: any) {
           role: "user",
           content: message.text,
         };
-        isSpeakEnd.value = false;
+        // isSpeaker.value = true;
         break;
       case "audio":
         if (message.text !== "end") {
@@ -182,8 +182,6 @@ export function useAudio(avatarref: any) {
             content: message.text,
           };
           handleTextMessage(message);
-        } else {
-          isSpeakEnd.value = true;
         }
         break;
       case "emotion":
@@ -220,6 +218,7 @@ export function useAudio(avatarref: any) {
       audio.wdurations.push(x.end_time - x.start_time);
     });
     bufferQueue.push(audio);
+    isSpeaker.value = true;
     playAudio();
   }
   async function playAudio() {
@@ -232,6 +231,8 @@ export function useAudio(avatarref: any) {
         state.isStreaming = false;
         if (bufferQueue.length > 0) {
           playAudio();
+        } else {
+          isSpeaker.value = false;
         }
       },
     );
@@ -387,7 +388,7 @@ export function useAudio(avatarref: any) {
   return {
     wsMsg,
     loading,
-    isSpeakEnd,
+    isSpeaker,
     sendMessage,
     startRecording,
     stopRecording,

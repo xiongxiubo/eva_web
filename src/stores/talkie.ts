@@ -49,7 +49,7 @@ export const useTalkieStore = defineStore("talkie", () => {
     try {
       const res = await getChatData({
         page_index: page.value,
-        page_count: 20,
+        page_count: 50,
         talkie_id: route.params.id as string,
       });
       if (eq(res.code, 0)) {

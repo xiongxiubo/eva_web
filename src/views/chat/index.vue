@@ -14,7 +14,7 @@
             </el-icon>
         </div>
         <div class="bg" />
-        <Msg v-model:is-show-msg="isShowMsg" v-model:chat-float="chatFloat" />
+        <!-- <Msg v-model:is-show-msg="isShowMsg" v-model:chat-float="chatFloat" /> -->
     </div>
 </template>
 <script setup lang="ts">

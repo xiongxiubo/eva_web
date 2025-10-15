@@ -1,4 +1,5 @@
 import { fileURLToPath, URL } from "node:url";
+import path from "path";
 import AutoImport from "unplugin-auto-import/vite";
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
@@ -11,7 +12,13 @@ import mkcert from "vite-plugin-mkcert";
 export default defineConfig({
   base: "./",
   plugins: [
-    vue(),
+    vue({
+      template: {
+        compilerOptions: {
+          isCustomElement: (tag: any) => ["appkit-button", "appkit-network-button", "appkit-account-button", "appkit-connect-button"].includes(tag),
+        },
+      },
+    }),
     // vueDevTools(),
     // mkcert(),
     AutoImport({
@@ -29,6 +36,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
+      "valtio/react": "valtio/vanilla",
     },
   },
   build: {

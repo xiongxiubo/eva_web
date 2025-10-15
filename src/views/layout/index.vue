@@ -10,18 +10,23 @@
                 <el-header v-show="isMobile">
                     <Header />
                 </el-header>
+                <el-header v-show="!isMobile" style="display: flex; justify-content: flex-end; align-items: center;">
+                    <UserInfo />
+                </el-header>
                 <el-main class="main">
                     <img src="/image/collapse-copy.svg" @click="isCollapse = false" v-if="isCollapse">
                     <router-view :key="$route.fullPath" />
                 </el-main>
             </el-container>
         </el-container>
+        <NoUsername />
     </div>
 </template>
 <script setup lang="ts">
 import Menu from '@/components/menu.vue';
 import Header from './header.vue';
 import { useDark } from '@vueuse/core';
+
 
 const isDark = useDark();
 const route = useRoute();

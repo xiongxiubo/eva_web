@@ -44,9 +44,9 @@
             </el-icon>
             <div v-if="isSpeech" class="mike-box" @mousedown="handleStart" @mouseup="handleStop"
                 @touchstart="handleStart" @touchend="handleStop" @touchcancel="handleStop">
-                <el-button :disabled="!isSpeakEnd">按住说话</el-button>
+                <el-button :disabled="isSpeaker">按住说话</el-button>
             </div>
-            <el-input :disabled="!isSpeakEnd" v-else :placeholder="$at('请输入')" v-model="input" @keydown="handleEnter">
+            <el-input :disabled="isSpeaker" v-else :placeholder="$at('请输入')" v-model="input" @keydown="handleEnter">
                 <template #append>
                     <el-button :icon="Position" type="primary" @click="handleSend" />
                 </template>
@@ -95,13 +95,19 @@ const chatFloat = defineModel("chatFloat", {
     default: () => []
 });
 const avatar: any = inject('avatar');
-const { startRecording, stopRecording, sendMessage, wsMsg, isSpeakEnd } = useAudio(avatar);
+const { startRecording, stopRecording, sendMessage, wsMsg, isSpeaker } = useAudio(avatar);
 const messagesRef = ref<any>(null);
 const input = ref<string>('');
 let loadingHistory = false;
 const isSpeech = ref<boolean>(false);
 const isRecording = ref<boolean>(false);
-const renderList = computed(() => [...chatHistory.value].reverse());
+const renderList = computed(() => [...chatHistory.value].reverse().map(e => {
+    if (e.role !== 'user') return e;
+    let parsedContent = e.content;
+    const parsed = JSON.parse(e.content)
+    parsedContent = parsed.content
+    return { ...e, content: parsedContent }
+}));
 
 watch(() => wsMsg.value, async (newVal) => {
     if (newVal) {
@@ -320,7 +326,6 @@ $msg-w: 40%;
 
         @media (max-width: 768px) {
             padding-bottom: 20px;
-            background: linear-gradient(0deg, rgba(18, 18, 20, .9) -9.48%, rgba(18, 18, 20, .9) 70.08%, rgba(18, 18, 20, 0) 99.2%);
         }
 
         .el-icon {

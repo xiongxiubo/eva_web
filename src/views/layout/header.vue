@@ -4,8 +4,10 @@
             <el-icon :size="24" @click="isCollapse = !isCollapse">
                 <Expand />
             </el-icon>
-            <Logo />
             <div></div>
+            <div>
+                <UserInfo />
+            </div>
         </div>
         <div class="navbar" v-show="isChat">
             <div class="navber_l" @click="handleBack">
@@ -20,16 +22,17 @@
                     <div class="navber_chat_title">
                         {{ chattingAi.name }}
                     </div>
-                    <div class="navber_chat_desc">
+                    <!-- <div class="navber_chat_desc">
                         {{ chattingAi.description }}
-                    </div>
+                    </div> -->
                 </div>
 
             </div>
             <div class="navber_r" @click="drawer = true">
-                <el-icon :size="24" color="#fff">
+                <!-- <el-icon :size="24" color="#fff">
                     <MoreFilled />
-                </el-icon>
+                </el-icon> -->
+                <UserInfo />
             </div>
         </div>
     </div>
@@ -59,10 +62,9 @@
 </template>
 <script setup lang="ts">
 import { UserFilled } from "@element-plus/icons-vue";
-import Logo from "@/components/logo.vue";
 import { DynamicScroller, DynamicScrollerItem } from "vue-virtual-scroller";
 
-const { isCollapse } = storeToRefs(useUserStore());
+const { isCollapse, user, token } = storeToRefs(useUserStore());
 const { chattingAi, chatHistory, page } = storeToRefs(useTalkieStore());
 const route = useRoute();
 const router = useRouter();
@@ -101,6 +103,7 @@ watch(drawer, (newVal) => {
         });
     }
 })
+
 
 </script>
 <style scoped lang="scss">
