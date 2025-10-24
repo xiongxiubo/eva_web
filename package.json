@@ -19,7 +19,9 @@
     "@reown/appkit-adapter-ethers": "^1.7.11",
     "@vueuse/core": "^13.7.0",
     "axios": "^1.11.0",
+    "dayjs": "^1.11.18",
     "element-plus": "^2.10.7",
+    "ethereum-blockies": "^0.1.1",
     "ethers": "^6.15.0",
     "i18n-auto-extractor": "^1.1.5",
     "lodash": "^4.17.21",
@@ -37,6 +39,7 @@
   },
   "devDependencies": {
     "@tsconfig/node22": "^22.0.2",
+    "@types/ethereum-blockies": "^0.1.2",
     "@types/node": "^22.16.5",
     "@types/three": "^0.179.0",
     "@vitejs/plugin-vue": "^6.0.1",

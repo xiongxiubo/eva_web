@@ -41,7 +41,7 @@ export const loginWeb3: (data: web3LoginParams) => Promise<Response> = (data: we
 // 获取用户信息
 export const getUserInfo: () => Promise<Response> = () => request.get("/user/info");
 // 更新用户信息
-export const updateUserInfo: (data: { username: string }) => Promise<Response> = (data: { username: string }) => request.put("/user/username", data);
+export const updateUserInfo: (data: { username?: string; twitter_username?: string }) => Promise<Response> = (data: { username?: string; twitter_username?: string }) => request.put("/user/update/userinfo", data);
 
 // 获取tag列表
 export const getTagList: () => Promise<Response> = () => request.get("/tags/list");
@@ -71,3 +71,6 @@ export const addSpeaker: (data: { speaker: string; audio_data: string }) => Prom
 export const deleteSpeaker: (audio_id: number) => Promise<Response> = (audio_id: number) => request.delete("/speaker/delete", { data: { audio_id } });
 // 修改说话人
 export const updateSpeaker: (data: { audio_id: number; speaker: string }) => Promise<Response> = (data: { audio_id: number; speaker: string }) => request.put("/speaker/update", data);
+
+// 获取记忆列表
+export const getMemoryList: () => Promise<Response> = () => request.get("/memory/list");

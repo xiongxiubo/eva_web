@@ -58,7 +58,47 @@ export async function DownloadPCM(pcmBase64: string) {
   a.click();
   URL.revokeObjectURL(url);
 }
+export function pcmBase64ToAudioUrl(base64: string, sampleRate = 48000, numChannels = 1, bitsPerSample = 16) {
+  // 解码 Base64 → 字节数组
+  const raw = atob(base64);
+  const rawLength = raw.length;
+  const buffer = new ArrayBuffer(44 + rawLength);
+  const view = new DataView(buffer);
 
+  // 写字符串辅助函数
+  function writeString(offset: number, str: string) {
+    for (let i = 0; i < str.length; i++) {
+      view.setUint8(offset + i, str.charCodeAt(i));
+    }
+  }
+
+  const blockAlign = (numChannels * bitsPerSample) / 8;
+  const byteRate = sampleRate * blockAlign;
+
+  // ===== WAV 文件头 =====
+  writeString(0, "RIFF"); // ChunkID
+  view.setUint32(4, 36 + rawLength, true); // ChunkSize
+  writeString(8, "WAVE"); // Format
+  writeString(12, "fmt "); // Subchunk1ID
+  view.setUint32(16, 16, true); // Subchunk1Size
+  view.setUint16(20, 1, true); // AudioFormat = PCM
+  view.setUint16(22, numChannels, true); // NumChannels
+  view.setUint32(24, sampleRate, true); // SampleRate
+  view.setUint32(28, byteRate, true); // ByteRate
+  view.setUint16(32, blockAlign, true); // BlockAlign
+  view.setUint16(34, bitsPerSample, true); // BitsPerSample
+  writeString(36, "data"); // Subchunk2ID
+  view.setUint32(40, rawLength, true); // Subchunk2Size
+
+  // PCM 数据写入
+  for (let i = 0; i < rawLength; i++) {
+    view.setUint8(44 + i, raw.charCodeAt(i));
+  }
+
+  // 创建 Blob 对象
+  const blob = new Blob([view], { type: "audio/wav" });
+  return URL.createObjectURL(blob);
+}
 // 将 Float32 PCM 转成 WAV Buffer
 function encodeWAV(samples: Float32Array, sampleRate: number): ArrayBuffer {
   const buffer = new ArrayBuffer(44 + samples.length * 2);

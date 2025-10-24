@@ -1,12 +1,34 @@
 <template>
-  <RouterView />
+  <ElConfigProvider :locale="locale">
+    <RouterView v-slot="{ Component }">
+      <keep-alive>
+        <component :is="Component" />
+      </keep-alive>
+    </RouterView>
+  </ElConfigProvider>
 </template>
 <script setup lang="ts">
-import { useDark, useToggle } from '@vueuse/core';
 import { createAppKit } from '@reown/appkit/vue'
 import { ethersAdapter, networks, projectId } from '@/config/index'
-const isDark = useDark();
+import { ElConfigProvider } from 'element-plus'
+import zhCn from 'element-plus/es/locale/lang/zh-cn'
+import en from 'element-plus/es/locale/lang/en'
+import ja from 'element-plus/es/locale/lang/ja'
 
+const { currentLang } = storeToRefs(useLangStore());
+
+const locale = computed(() => {
+  switch (currentLang.value) {
+    case 'zh-CN':
+      return zhCn
+    case 'en':
+      return en
+    case 'ja':
+      return ja
+    default:
+      return zhCn
+  }
+})
 createAppKit({
   adapters: [ethersAdapter],
   networks,
@@ -39,13 +61,11 @@ content?.addEventListener('touchstart', (e: any) => {
   startY = e.touches[0].clientY;
 });
 
+// 用法（例如等待 fpClient）
+
 onMounted(() => {
-  console.log(localStorage.getItem('vueuse-color-scheme'));
-  if (localStorage.getItem('vueuse-color-scheme') == 'auto') {
-    isDark.value = true
-    useToggle(isDark);
-  }
-})
+  useLangStore().initLang();
+});
 </script>
 <style scoped>
 /* 禁止文本选择和长按菜单 */

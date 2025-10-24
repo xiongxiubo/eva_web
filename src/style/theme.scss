@@ -9,9 +9,29 @@
   --chat-item-hover-color: #d9d9df;
   --menu-foot-border: #e4e4e7;
   --menu-foot-bg: #f0f0f0;
-  --el-header-bg-color: #fff;
+  --el-header-bg-color: #f4f4f5;
+  --el-header-border-color: rgba(69, 72, 81, 0.1);
+  --sound-wave-border-color: #000;
+  --swiper-header-icon-background: #cacacd;
+  --home-crad-item-background: rgb(228 228 231);
+  --chat-loading-backgroud: radial-gradient(1000px at 50% calc(75px + 50vh), rgb(160 183 199) 0%, rgb(248, 248, 248) 100%);
+  --msg-p-color: #585962;
+  --msg-input-bg-color: #ececee;
+  --msg-input-border-color: #d9d9df;
+  --msg-input-btn-color: #202024;
+  --home-card-item-background: #fff;
+  --speaker-card-item-bg-color: #fff;
 }
 .dark {
+  --speaker-card-item-bg-color: #1d1e1f;
+  --home-card-item-background: #989bab36;
+  --msg-input-btn-color: #131316;
+  --msg-input-bg-color: #202024;
+  --msg-input-border-color: #303136;
+  --msg-p-color: #a2a2ac;
+  --chat-loading-backgroud: radial-gradient(circle at center, rgb(54 97 160), #000);
+  --home-crad-item-background: #50515487;
+  --swiper-header-icon-background: #505154;
   --swiper-color: #fff;
   --tab-item-bg: hsla(0, 0%, 100%, 0.059);
   --main-bg: transparent;
@@ -21,7 +41,9 @@
   --chat-item-hover-color: #4c4d4f;
   --menu-foot-border: #26272b;
   --menu-foot-bg: #606060;
-  --el-header-bg-color: #202024;
+  --el-header-bg-color: transparent;
+  --el-header-border-color: #454851;
+  --sound-wave-border-color: #fff;
 }
 .el-header {
   background: var(--el-header-bg-color);

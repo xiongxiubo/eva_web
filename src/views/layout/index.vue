@@ -7,14 +7,11 @@
                 </el-menu>
             </el-aside>
             <el-container>
-                <el-header v-show="isMobile">
+                <el-header>
                     <Header />
                 </el-header>
-                <el-header v-show="!isMobile" style="display: flex; justify-content: flex-end; align-items: center;">
-                    <UserInfo />
-                </el-header>
                 <el-main class="main">
-                    <img src="/image/collapse-copy.svg" @click="isCollapse = false" v-if="isCollapse">
+                    <img src="/image/collapse-copy.svg" @click="isCollapse = false" v-if="isCollapse && !isMobile">
                     <router-view :key="$route.fullPath" />
                 </el-main>
             </el-container>
@@ -26,7 +23,6 @@
 import Menu from '@/components/menu.vue';
 import Header from './header.vue';
 import { useDark } from '@vueuse/core';
-
 
 const isDark = useDark();
 const route = useRoute();
@@ -52,8 +48,8 @@ onMounted(() => {
         width: 24px;
         height: 24px;
         position: absolute;
-        top: 20px;
-        left: 10px;
+        top: 16px;
+        left: 0px;
         z-index: 1999;
     }
 }

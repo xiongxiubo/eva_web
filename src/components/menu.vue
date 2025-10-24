@@ -2,9 +2,9 @@
     <div class="logo">
         <div class="logo-content" @click="router.push('/')">
             <Logo />
-            <span>Eva</span>
+            <span>Aianace</span>
         </div>
-        <el-icon :size="24" @click="isCollapse = !isCollapse">
+        <el-icon :size="24" v-if="!isMobile" @click="isCollapse = !isCollapse">
             <Fold />
         </el-icon>
     </div>
@@ -14,14 +14,6 @@
         </el-icon>
         <template #title>
             <span>{{ $at('首页') }}</span>
-        </template>
-    </el-menu-item>
-    <el-menu-item index="/search">
-        <el-icon>
-            <Search />
-        </el-icon>
-        <template #title>
-            <span>{{ $at('搜索') }}</span>
         </template>
     </el-menu-item>
     <el-menu-item index="/memory">
@@ -51,74 +43,52 @@
         </div>
     </div>
     <div class="foot">
-        <div class="foot-item">
-            <el-dropdown>
-                <div class="lang">
-                    {{lang.find(item => item.code === langSet.lang)?.name}}
-                </div>
-                <template #dropdown>
-                    <el-dropdown-menu>
-                        <el-dropdown-item v-for="item in lang" :key="item.code"
-                            @click="setCurrentLang(item.code, item.json)">
-                            {{ item.name }}
-                        </el-dropdown-item>
-                    </el-dropdown-menu>
-                </template>
-            </el-dropdown>
-            <div class="darkWrap">
-                <div :class="!isDark ? 'darkBox' : 'darkBoxS'">
-                    <div :class="!isDark ? 'darkItemS' : 'darkItem'" @click="toggle(false)">
-                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                            <path fill-rule="evenodd" clip-rule="evenodd" :d="svgIcon.light" fill="currentColor"></path>
-                        </svg>
-                    </div>
-                    <div :class="isDark ? 'darkItemD' : 'darkItem'" @click="toggle(true)">
-                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"
-                            class="MuiBox-root mui-style-19rsff">
-                            <path fill-rule="evenodd" clip-rule="evenodd" :d="svgIcon.dark" fill="currentColor"></path>
-                        </svg>
-                    </div>
-                </div>
+        <div class="externallinks">
+            <div class="item" v-for="item in link" :key="item.name" @click="openUrl(item.url)">
+                <el-icon>
+                    <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4831">
+                        <path :d="item.icon" p-id="4832" fill="#96979b"></path>
+                    </svg>
+                </el-icon>
+                <span>{{ item.name }}</span>
+                <el-icon>
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path fill-rule="evenodd" clip-rule="evenodd"
+                            d="M5 5V19H19V12H21V19C21 20.1 20.1 21 19 21H5C3.89 21 3 20.1 3 19V5C3 3.9 3.89 3 5 3H12V5H5ZM14 5V3H21V10H19V6.41L9.17 16.24L7.76 14.83L17.59 5H14Z"
+                            fill="currentColor"></path>
+                    </svg>
+                </el-icon>
             </div>
         </div>
-
     </div>
 </template>
 <script setup lang="ts">
 import Logo from '@/components/logo.vue'
-import svgIcon from "@/utils/svg"
 import { $at } from 'i18n-auto-extractor';
 import { CloseBold, } from '@element-plus/icons-vue';
-import { useDark, useToggle } from '@vueuse/core';
-import { useVueAt } from 'i18n-auto-extractor/vue';
-import enJSON from '@/locales/en.json';
-import zhJSON from '@/locales/zh-CN.json';
-import jaJSON from '@/locales/ja.json';
-const { setCurrentLang, langSet } = useVueAt();
-const lang = [
-    { name: '简体中文', code: 'zh-CN', json: zhJSON },
-    { name: 'English', code: 'en', json: enJSON },
-    { name: '日本語', code: 'ja', json: jaJSON }
-];
-
-const isDark = useDark();
-const toggle = (bool: boolean) => {
-    isDark.value = bool;
-    useToggle(bool);
-};
-
-
 const storage = useUserStore();
 const { chatList, isCollapse } = storeToRefs(storage);
 const router = useRouter();
 const isHover = ref(false);
 const hoverId = ref(0);
+const { isMobile } = useDevice()
 
+const link = [
+    { icon: svg.twitter, name: 'Twitter', url: '#' },
+    { icon: svg.github, name: 'GitHub', url: "#" },
+    { icon: svg.telegram, name: 'Telegram', url: "#" },
+    { icon: svg.youtube, name: 'YouTube', url: "#" },
+    { icon: svg.docs, name: 'Docs', url: "#" },
+]
+const openUrl = (url: string) => {
+    window.open(url, '_blank');
+}
 
 const hoverChat = (id: number) => {
     isHover.value = true;
     hoverId.value = id;
 };
+
 const leaveChat = () => {
     isHover.value = false;
     hoverId.value = 0;
@@ -152,7 +122,7 @@ const deleteChat = async (id: string) => {
         }
 
         span {
-            font-size: 20px;
+            font-size: 24px;
             font-weight: bold;
             font-family: 'Courier New', Courier, monospace;
         }
@@ -215,95 +185,39 @@ const deleteChat = async (id: string) => {
     flex-direction: column;
     margin-top: auto;
     box-sizing: border-box;
-    padding: 10px 0;
+    padding: 10px 0 20px 0;
 
-    .foot-item {
+    .externallinks {
         width: 100%;
         display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 5px 10px;
-        box-sizing: border-box;
+        justify-content: center;
+        flex-direction: column;
 
-        .lang {
-            padding: 5px 10px;
-            border: 1px solid #b4aaaa;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-    }
-
-
-
-    img {
-        width: 24px;
-        height: 24px;
-    }
-
-    .darkWrap {
-        display: flex;
-        align-items: center;
-
-        .darkBox {
-            display: flex;
-            align-items: center;
-            width: 64px;
+        .item {
+            width: 100%;
             height: 24px;
-            background: #f0f0f0;
-            border-radius: 8px;
-            padding: 2px;
+            display: flex;
+            align-items: center;
             cursor: pointer;
-        }
-
-        .darkBoxS {
-            display: flex;
-            align-items: center;
-            width: 64px;
-            height: 24px;
-            background: #606060;
             border-radius: 8px;
-            padding: 2px;
-            cursor: pointer;
-        }
+            margin-top: 4px;
+            flex-wrap: nowrap;
+            padding: 0 20px;
+            box-sizing: border-box;
 
-        .darkItem {
-            width: 50%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            border-radius: 8px;
-        }
+            &:hover {
+                color: #fff;
+            }
 
-        .darkItemS {
-            width: 50%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            border-radius: 8px;
-            color: rgb(235, 141, 39);
-            background: #fff;
+            span {
+                font-size: 12px;
+                line-height: 17px;
+                font-weight: 600;
+                font-family: Manrope, Inter, PingFangSC-Regular, "Microsoft YaHei", sans-serif;
+                margin-left: 10px;
+                margin-right: auto;
+            }
         }
-
-        .darkItemD {
-            width: 50%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            border-radius: 8px;
-            color: rgb(235, 141, 39);
-            background: rgb(37, 40, 49);
-            z-index: 5;
-        }
-    }
-
-    .el-switch {
-        --el-switch-on-color: var(--el-switch-off-color);
     }
 }
 </style>

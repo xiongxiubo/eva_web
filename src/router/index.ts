@@ -24,14 +24,9 @@ const router = createRouter({
           component: () => import("@/views/chat/index.vue"),
         },
         {
-          path: "/search",
-          name: "search",
-          component: () => import("@/views/search/index.vue"),
-        },
-        {
-          path: "/test",
-          name: "test",
-          component: () => import("@/views/test/index.vue"),
+          path: "/chathistory/:id",
+          name: "chathistory",
+          component: () => import("@/views/chathistory/index.vue"),
         },
         {
           path: "/memory",

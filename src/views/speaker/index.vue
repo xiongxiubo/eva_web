@@ -1,81 +1,81 @@
 <template>
   <MainPage>
     <div class="speaker">
-      <Card_pagination :page="page_index" :size="page_size" :total="total">
-        <template #header>
-          <div class="card-header">
-            <span>{{ $at('说话人') }}</span>
-            <el-button :icon="Plus" type="primary" size="small" @click="dialogVisible = true">{{ $at('添加说话人')
-            }}</el-button>
+      <div class="header">
+        <div class="title">{{ $at('说话人') }} </div>
+        <el-button :icon="Plus" @click="dialogVisible = true">
+          {{ $at('添加说话人') }}
+        </el-button>
+      </div>
+
+      <div class="cards">
+        <div class="item" v-for="item in SpeakerList" :key="item.id">
+          <div class="name" v-if="isHover !== item.ID">
+            {{ item.speaker }}
+            <el-icon @click="isHover = item.ID">
+              <Edit />
+            </el-icon>
           </div>
-        </template>
-        <el-table :data="SpeakerList" style="width: 100%">
-          <el-table-column prop="speaker" :label="$at('说话人')" width="200px">
-            <template #default="scope">
-              <el-input v-model="scope.row.speaker" @blur="putSpeaker(scope.row)" />
-            </template>
-          </el-table-column>
-          <el-table-column prop="created_at" :label="$at('创建时间')" />
-          <el-table-column prop="audio_data" :label="$at('试听')">
-            <template #default="scope">
-              <el-button :icon="Service" @click="playPCM(scope.row.audio_data)" />
-            </template>
-          </el-table-column>
-          <el-table-column prop="active" :label="$at('操作')" width="200px" align="center">
-            <template #default="scope">
-              <el-button type="danger" size="small" @click="delSpeaker(scope.row)">{{ $at('删除') }}</el-button>
-            </template>
-          </el-table-column>
-        </el-table>
-      </Card_pagination>
-      <el-dialog v-model="dialogVisible" :title="$at('添加说话人')" width="800">
-        <el-form :model="speaker" :rules="rules" ref="speakerForm" label-width="80px">
+          <div class="name" v-else>
+            <el-input v-model="item.speaker" @blur="isHover = 0" @keyup.enter="putSpeaker(item)" />
+          </div>
+          <div class="audio">
+            <audio class="no-volume" controls controlslist="nodownload noplaybackrate nofullscreen"
+              :src="pcmBase64ToAudioUrl(item.audio_data)"></audio>
+          </div>
+          <div class="footer">
+            <div class="time">{{ formatTime(item.created_at) }}</div>
+            <el-button :icon="Delete" type="danger" @click="delSpeaker(item)" circle />
+          </div>
+        </div>
+      </div>
+
+      <Pagination v-model:page="page_index" v-model:size="page_size" v-model:total="total" />
+
+      <el-dialog v-model="dialogVisible" :title="$at('添加说话人')" :width="300" align-center destroy-on-close>
+        <el-form :model="speaker" label-position="top" :rules="rules" ref="speakerForm" label-width="80px">
           <el-form-item :label="$at('说话人')" prop="speaker">
             <el-input v-model="speaker.speaker" :placeholder="$at('请输入说话人')" />
           </el-form-item>
-          <el-form-item :label="$at('录制音频')" prop="audio_data">
-            <el-button :icon="Microphone" @click="startRecording()" :loading="isRecording">
-              {{ isRecording ? $at('录制中...') : $at('点击录制') }}
-            </el-button>
-            <el-tooltip class="item" content="播放录音" placement="top">
-              <el-button v-if="pcm_data !== ''" :icon="Headset" @click="playPcm" />
-            </el-tooltip>
+          <el-form-item :label="$at('音频')" prop="audio_data">
+            <AudioRecorder @recorded="handleRecorded" />
           </el-form-item>
-          <el-form-item>
-            <Button :type="'primary'" @submit="submitForm">{{ $at('提交') }}</Button>
-          </el-form-item>
+          <el-button class="submit" @click="submitForm">{{ $at('提交') }}</el-button>
         </el-form>
       </el-dialog>
-
     </div>
   </MainPage>
 
 </template>
 <script setup lang="ts">
-import { Service, Headset, Plus, Microphone, MessageBox } from "@element-plus/icons-vue"
-import { playPCM } from '@/utils/baseToaudio';
+import AudioRecorder from './AudioRecorder.vue'
+import { Delete, Plus } from "@element-plus/icons-vue"
+import { pcmBase64ToAudioUrl } from '@/utils/baseToaudio';
+import { formatTime } from '@/utils/time';
 import { $at } from 'i18n-auto-extractor';
 import { eq, get } from 'lodash';
 import { ElMessageBox } from "element-plus";
 const SpeakerList = ref<any[]>([])
 const dialogVisible = ref<boolean>(false)
-const { startRecording, isRecording, pcm_data, playPcm } = useRecording();
 const speakerForm = ref<any>()
 const speaker = reactive({
   speaker: "",
-  audio_data: computed(() => pcm_data.value)
+  audio_data: ""
 });
+const isHover = ref<number>(0)
 const page_index = ref<number>(1)
 const page_size = ref<number>(10)
 const total = ref<number>(0)
 const rules = reactive({
   speaker: [
-    { required: true, message: $at('请选择说话人'), trigger: 'blur' }
+    { required: true, message: $at('请输入说话人'), trigger: 'blur' }
   ],
   audio_data: [
     { required: true, message: $at('请录制音频'), trigger: 'blur' }
   ]
 });
+
+const handleRecorded = (pcm_data: string) => speaker.audio_data = pcm_data;
 
 const getSpeaker = async () => {
   try {
@@ -106,6 +106,7 @@ const submitForm = async () => {
     console.log(error);
   };
 };
+
 const delSpeaker = async (row: any) => {
   ElMessageBox.confirm($at('确定删除说话人吗？'), $at('提示'), {
     confirmButtonText: $at('确定'),
@@ -125,6 +126,7 @@ const delSpeaker = async (row: any) => {
     };
   });
 };
+
 const putSpeaker = async (row: any) => {
   ElMessageBox.confirm($at(`确定将说话人修改成 `) + row.speaker + $at(' 吗？'), $at('提示'), {
     confirmButtonText: $at('确定'),
@@ -138,6 +140,7 @@ const putSpeaker = async (row: any) => {
       });
       if (eq(res.code, 0)) {
         ElMessage.success($at('修改成功'));
+        isHover.value = 0;
       } else {
         ElMessage.error($at('修改失败'));
       }
@@ -153,21 +156,101 @@ onMounted(() => {
 </script>
 <style scoped lang="scss">
 .speaker {
-  width: 80%;
+  width: 100%;
   height: 100%;
   padding: 20px 0;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
 
-  .card-header {
+  .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 20px;
+    padding: 0 20px;
+
+    .title {
+      font-size: 24px;
+      font-weight: bold;
+    }
   }
 
-  .el-form {
-    border-radius: 8px;
-    padding: 20px;
-    margin-top: 20px;
+
+
+  .cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    padding: 0 10px;
+    margin-bottom: 20px;
+
+    @media (max-width: 768px) {
+      display: grid;
+      justify-items: center;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+
+    .item {
+      width: 13rem;
+      background: var(--home-crad-item-background);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1.25rem;
+      border-radius: 8px;
+      border: 1px solid var(--el-border-color);
+      box-sizing: border-box;
+
+      @media (max-width: 768px) {
+        width: 10rem;
+      }
+
+      .name {
+        width: 100%;
+        font-size: 16px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+        .el-icon {
+          cursor: pointer;
+        }
+      }
+
+      .audio {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+
+
+        .no-volume {
+          width: 100%;
+          height: 40px;
+        }
+      }
+
+      .footer {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .time {
+          font-size: 0.8rem;
+        }
+      }
+    }
+  }
+
+  .submit {
+    width: 100%;
   }
 }
 </style>

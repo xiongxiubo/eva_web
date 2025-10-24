@@ -1,5 +1,5 @@
 // @ts-ignore 忽略找不到模块声明文件的错误
-import { TalkingHead } from "./talkinghead_copy.mjs";
+import { TalkingHead } from "./talkinghead.mjs";
 import { ElMessage, ElMessageBox } from "element-plus";
 
 const SAMPLE_RATE = 16000;
@@ -31,7 +31,7 @@ export function useAudio(avatarref: any) {
     isConnected: false,
     isStreaming: false,
   });
-  const loading = ref("0%");
+  const loading = ref(true);
 
   // 音频上下文
   let audioContext: AudioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -78,20 +78,7 @@ export function useAudio(avatarref: any) {
   // 初始化head实例
   async function initHead() {
     if (!avatarref.value) return;
-    const el = document.createElement("div");
-    el.style.position = "absolute";
-    el.style.top = "0";
-    el.style.left = "0";
-    el.style.width = "100%";
-    el.style.height = "100%";
-    el.style.zIndex = "999";
-    el.style.backgroundColor = "rgba(0,0,0,0.5)";
-    el.style.color = "white";
-    el.style.fontSize = "20px";
-    el.style.textAlign = "center";
-    el.style.lineHeight = "100px";
-    avatarref.value.appendChild(el);
-    await head.value.showAvatar(
+    await head.value?.showAvatar(
       {
         url: chattingAi.value?.model_3d,
         body: chattingAi.value?.gender,
@@ -99,11 +86,14 @@ export function useAudio(avatarref: any) {
         lipsyncLang: "en",
       },
       (e: any) => {
-        el.innerText = "模型已加载" + ((e.loaded / e.total) * 100).toFixed(2) + "%";
-        if (e.loaded === e.total) avatarref.value.removeChild(el);
+        if (e.loaded === e.total) {
+          setTimeout(() => {
+            loading.value = false;
+          }, 2000);
+        }
       },
     );
-    // head.value.playAnimation("/CanCan.fbx");
+    // head.value.playAnimation("/121560902_p.fbx");
   }
   // 连接websocket
   function connectWebSocket() {
@@ -188,17 +178,17 @@ export function useAudio(avatarref: any) {
         if (message.data.length > 1) {
           const arr = Array.from(message.text);
           arr.forEach((item: any) => {
-            head.value.speakEmoji(item);
+            head.value?.speakEmoji(item);
           });
         } else {
-          head.value.speakEmoji(message.text);
+          head.value?.speakEmoji(message.text);
         }
         break;
       case "closeMusic":
         pauseMusic();
         break;
       case "modelAction":
-        head.value.playAnimation(message.text);
+        head.value?.playAnimation(message.text);
         break;
     }
   }
@@ -212,9 +202,10 @@ export function useAudio(avatarref: any) {
       wtimes: [] as number[],
       wdurations: [] as number[],
     };
+    console.log(words);
     words.forEach((x: any) => {
       audio.words.push(x.word);
-      audio.wtimes.push(x.start_time - 150);
+      audio.wtimes.push(x.start_time);
       audio.wdurations.push(x.end_time - x.start_time);
     });
     bufferQueue.push(audio);
@@ -224,8 +215,8 @@ export function useAudio(avatarref: any) {
   async function playAudio() {
     if (bufferQueue.length === 0 || state.isStreaming) return;
     let audio = bufferQueue.shift();
-    await head.value.streamStart(
-      { sampleRate: 24000, lipsyncType: "words", gain: 3, lipsyncLang: "en" },
+    await head.value?.streamStart(
+      { sampleRate: 16000, lipsyncType: "words", gain: 3, lipsyncLang: "en" },
       () => (state.isStreaming = true),
       () => {
         state.isStreaming = false;
@@ -236,7 +227,7 @@ export function useAudio(avatarref: any) {
         }
       },
     );
-    head.value.streamAudio(audio);
+    head.value?.streamAudio(audio);
     // head.value.streamNotifyEnd();
   }
 
@@ -364,6 +355,26 @@ export function useAudio(avatarref: any) {
       connectWebSocket();
     },
   );
+  // 关闭
+  const close = () => {
+    try {
+      ws.value?.close();
+      audioContextMusic?.close();
+      sourceNode?.disconnect();
+      audioContext?.close();
+      mediaStream?.getTracks().forEach((track: any) => track.stop());
+      mediaStream = null;
+      audioProcessor?.disconnect();
+      mediaSource?.disconnect();
+      audioProcessor = null;
+      mediaSource = null;
+      bufferTimer = null;
+      sendBuffer = [];
+      stopHeartbeat();
+    } catch (error) {
+      console.error("关闭连接失败:", error);
+    }
+  };
   onMounted(async () => {
     await NewHead();
     await useTalkieStore().getChatting(route.params.id as string);
@@ -371,19 +382,7 @@ export function useAudio(avatarref: any) {
     connectWebSocket();
   });
   onUnmounted(() => {
-    ws.value?.close();
-    audioContextMusic.close();
-    sourceNode?.disconnect();
-    audioContext.close();
-    mediaStream?.getTracks().forEach((track: any) => track.stop());
-    mediaStream = null;
-    audioProcessor?.disconnect();
-    mediaSource?.disconnect();
-    audioProcessor = null;
-    mediaSource = null;
-    bufferTimer = null;
-    sendBuffer = [];
-    stopHeartbeat();
+    close();
   });
   return {
     wsMsg,
@@ -392,6 +391,7 @@ export function useAudio(avatarref: any) {
     sendMessage,
     startRecording,
     stopRecording,
+    close,
   };
 }
 /** Float32 → Int16 PCM */

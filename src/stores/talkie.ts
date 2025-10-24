@@ -35,9 +35,10 @@ export const useTalkieStore = defineStore("talkie", () => {
     }
   }
   // 获取正在聊的ai
-  async function getChatting(talkie_id: string) {
+  async function getChatting() {
     try {
-      const res = await getChattingAi(talkie_id);
+      const res = await getChattingAi(route.params.id as string);
+      console.log(res);
       if (eq(res.code, 0)) {
         chattingAi.value = get(res, "data", {});
       }

@@ -1,17 +1,26 @@
 <template>
     <div class="header">
-        <div class="nav" v-show="!isChat">
+        <div v-if="!isMobile" v-show="!isChat" class="header_content">
+            <Search />
+            <div style="display: flex; align-items: center;">
+                <Theme />
+                <Lang />
+                <UserInfo />
+            </div>
+        </div>
+        <div class="nav" v-show="!isChat" v-if="isMobile">
             <el-icon :size="24" @click="isCollapse = !isCollapse">
                 <Expand />
             </el-icon>
-            <div></div>
-            <div>
+            <div style="display: flex; align-items: center;">
+                <Theme />
+                <Lang />
                 <UserInfo />
             </div>
         </div>
         <div class="navbar" v-show="isChat">
-            <div class="navber_l" @click="handleBack">
-                <el-icon :size="24" color="#fff">
+            <div class="navber_l" @click="handleBack" style="cursor: pointer;">
+                <el-icon :size="24">
                     <ArrowLeft />
                 </el-icon>
 
@@ -28,7 +37,7 @@
                 </div>
 
             </div>
-            <div class="navber_r" @click="drawer = true">
+            <div class="navber_r">
                 <!-- <el-icon :size="24" color="#fff">
                     <MoreFilled />
                 </el-icon> -->
@@ -64,14 +73,20 @@
 import { UserFilled } from "@element-plus/icons-vue";
 import { DynamicScroller, DynamicScrollerItem } from "vue-virtual-scroller";
 
-const { isCollapse, user, token } = storeToRefs(useUserStore());
+const { isCollapse, } = storeToRefs(useUserStore());
 const { chattingAi, chatHistory, page } = storeToRefs(useTalkieStore());
 const route = useRoute();
 const router = useRouter();
+const { isMobile } = useDevice();
 
 const drawer = ref<boolean>(false);
 const renderList = computed(() => [...chatHistory.value].reverse());
-const isChat = computed(() => route.path.includes("/chat"));
+const isChat = computed(() => {
+    if (route.path === "/chat") {
+        return true;
+    }
+    return false;
+});
 const messagesRef = ref<any>(null);
 let loadingHistory = false;
 
@@ -94,7 +109,7 @@ async function loadHistory() {
     loadingHistory = false;
 };
 const handleBack = () => {
-    router.back();
+    router.replace({ path: "/" });
 };
 watch(drawer, (newVal) => {
     if (newVal) {
@@ -110,6 +125,13 @@ watch(drawer, (newVal) => {
 .header {
     width: 100%;
     height: 60px;
+    background-color: var(--el-header-bg-color);
+
+    .header_content {
+        display: flex;
+        justify-content: space-between;
+        padding-top: 10px;
+    }
 
     .nav {
         display: flex;
@@ -117,6 +139,7 @@ watch(drawer, (newVal) => {
         justify-content: space-between;
         width: 100%;
         height: 100%;
+
     }
 
     .navbar {
