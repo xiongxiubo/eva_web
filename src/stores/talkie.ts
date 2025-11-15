@@ -38,7 +38,6 @@ export const useTalkieStore = defineStore("talkie", () => {
   async function getChatting() {
     try {
       const res = await getChattingAi(route.params.id as string);
-      console.log(res);
       if (eq(res.code, 0)) {
         chattingAi.value = get(res, "data", {});
       }

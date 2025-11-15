@@ -8,11 +8,13 @@ export {}
 declare global {
   const $at: typeof import('i18n-auto-extractor')['$at']
   const DownloadPCM: typeof import('../utils/baseToaudio')['DownloadPCM']
-  const DynamicBones: typeof import('../hooks/head/dynamicbones.mjs')['DynamicBones']
+  const DynamicBones: typeof import('../hooks/newHead/dynamicbones')['DynamicBones']
   const EffectScope: typeof import('vue')['EffectScope']
   const ElMessage: typeof import('element-plus/es')['ElMessage']
   const ElMessageBox: typeof import('element-plus/es')['ElMessageBox']
+  const Lipsync: typeof import('../hooks/newHead/lipsync')['Lipsync']
   const LipsyncEn: typeof import('../hooks/head/lipsync-en.mjs')['LipsyncEn']
+  const Render: typeof import('../hooks/newHead/render')['Render']
   const TalkingHead: typeof import('../hooks/head/talkinghead.mjs')['TalkingHead']
   const acceptHMRUpdate: typeof import('pinia')['acceptHMRUpdate']
   const addSpeaker: typeof import('../api/index')['addSpeaker']
@@ -100,7 +102,7 @@ declare global {
   const updateSpeaker: typeof import('../api/index')['updateSpeaker']
   const updateUserInfo: typeof import('../api/index')['updateUserInfo']
   const useAttrs: typeof import('vue')['useAttrs']
-  const useAudio: typeof import('../hooks/head/useAudio')['useAudio']
+  const useAudio: typeof import('../hooks/newHead/useAudio')['useAudio']
   const useCssModule: typeof import('vue')['useCssModule']
   const useCssVars: typeof import('vue')['useCssVars']
   const useDevice: typeof import('../hooks/useDevice')['useDevice']
@@ -127,4 +129,13 @@ declare global {
   // @ts-ignore
   export type { Component, Slot, Slots, ComponentPublicInstance, ComputedRef, DirectiveBinding, ExtractDefaultPropTypes, ExtractPropTypes, ExtractPublicPropTypes, InjectionKey, PropType, Ref, ShallowRef, MaybeRef, MaybeRefOrGetter, VNode, WritableComputedRef } from 'vue'
   import('vue')
+  // @ts-ignore
+  export type { DynamicBones } from '../hooks/newHead/dynamicbones'
+  import('../hooks/newHead/dynamicbones')
+  // @ts-ignore
+  export type { Lipsync } from '../hooks/newHead/lipsync'
+  import('../hooks/newHead/lipsync')
+  // @ts-ignore
+  export type { Render } from '../hooks/newHead/render'
+  import('../hooks/newHead/render')
 }

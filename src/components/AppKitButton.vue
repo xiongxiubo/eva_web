@@ -52,7 +52,6 @@ const web3login = async () => {
     if (!Account.value.isConnected) return;
     if (!signature.value || !msg.value || !Account.value.address) return;
     const res = await loginWeb3({ signature: signature.value, msg: msg.value, address: Account.value.address });
-    console.log(res);
     if (eq(res?.code, 0)) {
         ElMessage.success('Login success');
         token.value = res.data;

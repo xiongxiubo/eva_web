@@ -64,7 +64,6 @@ const swiperRef = ref<any>(null);
 const isMuted = ref(true);
 
 const onSwiper = (swiper: any) => {
-    // console.log(swiper);
     currentIndex.value = swiper.realIndex;
     swiperRef.value = swiper;
 };

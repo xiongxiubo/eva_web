@@ -24,8 +24,6 @@ const { lang, setLang } = (useLangStore());
 </script>
 <style scoped lang="scss">
 .langBox {
-    display: flex;
-    align-items: center;
     background: rgb(255, 255, 255);
     border-radius: 8px;
     padding: 2px;

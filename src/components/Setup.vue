@@ -71,7 +71,6 @@ import { useUserStore } from "@/stores/user";
 import { eq } from 'lodash';
 
 const { user } = storeToRefs(useUserStore());
-console.log(user.value);
 
 const defaultValue = defineModel({ default: false })
 const label = computed(() => {
@@ -91,7 +90,7 @@ const handleClose = () => {
 
 // 菜单选择事件处理
 const handleMenuSelect = (key: string) => {
-    console.log('选择了菜单:', key);
+    // console.log('选择了菜单:', key);
     // 这里可以添加菜单切换逻辑
 };
 

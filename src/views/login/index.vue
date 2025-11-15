@@ -37,7 +37,6 @@
                         <el-button color="#2D68FF" @click="handleRegisterSubmit">Register</el-button>
                     </el-form-item>
                 </el-form>
-                <el-divider>Or</el-divider>
                 <p>Already have an account? <el-link type="primary" @click="showRegister = false">Log in</el-link></p>
             </div>
         </div>
@@ -191,6 +190,7 @@ const handleRegisterSubmit = async () => {
                 align-items: center;
                 justify-content: center;
                 margin-top: 30px;
+                color: #fff;
             }
 
         }

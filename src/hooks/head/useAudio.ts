@@ -47,6 +47,10 @@ export function useAudio(avatarref: any) {
   let bufferTimer: number | null = null; // 发送定时器
   let isSpeaker = ref(false); // 说话人是否可以说话
 
+  const start_time = ref(0);
+  const timer = ref(0);
+  const timerInterval = ref<any>(null);
+
   // 播放音乐
   async function playMusic(arrayBuffer: ArrayBuffer | Blob) {
     if (arrayBuffer instanceof Blob) {
@@ -93,7 +97,6 @@ export function useAudio(avatarref: any) {
         }
       },
     );
-    // head.value.playAnimation("/121560902_p.fbx");
   }
   // 连接websocket
   function connectWebSocket() {
@@ -195,14 +198,12 @@ export function useAudio(avatarref: any) {
   //处理消息
   async function handleTextMessage(message: any) {
     let words = message.words || [];
-    // console.log(words);
     let audio = {
       audio: base64ToArrayBuffer(message.data),
       words: [] as string[],
       wtimes: [] as number[],
       wdurations: [] as number[],
     };
-    console.log(words);
     words.forEach((x: any) => {
       audio.words.push(x.word);
       audio.wtimes.push(x.start_time);
@@ -290,6 +291,9 @@ export function useAudio(avatarref: any) {
         };
         // 启动录音
         workletNode.port.postMessage({ command: "start" });
+        start_time.value = Date.now();
+        timer.value = 0;
+        timerInterval.value = window.setInterval(updateTimer, 500);
         // 保存停止函数
         (workletNode as any).stopRecording = () => {
           workletNode.port.postMessage({ command: "stop" });
@@ -345,12 +349,29 @@ export function useAudio(avatarref: any) {
     if (state.isConnected) sendMessage({ type: "end" });
     state.isRecording = false;
     await audioContextMusic.resume();
+    if (timerInterval.value) {
+      clearInterval(timerInterval.value);
+      timerInterval.value = null;
+      timer.value = 0;
+    }
   }
+  // 格式化录音时间
+  const formattedTime = computed(() => {
+    const total = Math.floor(timer.value);
+    const m = String(Math.floor(total / 60)).padStart(2, "0");
+    const s = String(total % 60).padStart(2, "0");
+    return `${m}:${s}`;
+  });
+  const updateTimer = () => {
+    if (start_time.value) {
+      timer.value = (Date.now() - start_time.value) / 1000;
+    }
+  };
   watch(
     () => route.params.id,
-    async id => {
+    async () => {
       ws.value?.close();
-      await useTalkieStore().getChatting(id as string);
+      await useTalkieStore().getChatting();
       if (avatarref?.value) initHead();
       connectWebSocket();
     },
@@ -377,7 +398,7 @@ export function useAudio(avatarref: any) {
   };
   onMounted(async () => {
     await NewHead();
-    await useTalkieStore().getChatting(route.params.id as string);
+    await useTalkieStore().getChatting();
     if (avatarref?.value) initHead();
     connectWebSocket();
   });
@@ -388,6 +409,7 @@ export function useAudio(avatarref: any) {
     wsMsg,
     loading,
     isSpeaker,
+    formattedTime,
     sendMessage,
     startRecording,
     stopRecording,

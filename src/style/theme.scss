@@ -14,7 +14,7 @@
   --sound-wave-border-color: #000;
   --swiper-header-icon-background: #cacacd;
   --home-crad-item-background: rgb(228 228 231);
-  --chat-loading-backgroud: radial-gradient(1000px at 50% calc(75px + 50vh), rgb(160 183 199) 0%, rgb(248, 248, 248) 100%);
+  --chat-loading-backgroud: radial-gradient(circle at center, rgb(160 183 199) 0%, #f4f4f5 50%, #f4f4f5 100%);
   --msg-p-color: #585962;
   --msg-input-bg-color: #ececee;
   --msg-input-border-color: #d9d9df;
@@ -29,7 +29,7 @@
   --msg-input-bg-color: #202024;
   --msg-input-border-color: #303136;
   --msg-p-color: #a2a2ac;
-  --chat-loading-backgroud: radial-gradient(circle at center, rgb(54 97 160), #000);
+  --chat-loading-backgroud: radial-gradient(circle at center, rgb(54 97 160) 0%, #121212 50%, #121212 100%);
   --home-crad-item-background: #50515487;
   --swiper-header-icon-background: #505154;
   --swiper-color: #fff;

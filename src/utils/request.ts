@@ -24,7 +24,6 @@ request.interceptors.request.use(
 request.interceptors.response.use(
   response => {
     if (eq(response.data.code, 401) && !isShowingLoginAlert) {
-      console.log("登录过期，请重新登录");
       isShowingLoginAlert = true;
       ElMessageBox.alert("登录过期，请重新登录", "提示", {
         confirmButtonText: "确定",

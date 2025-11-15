@@ -1,7 +1,6 @@
 <template>
     <div class="chat">
         <div class="avatar" ref="avatar" v-clean-canvas />
-        <div class="bg" />
         <Msg />
     </div>
 </template>

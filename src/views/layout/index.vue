@@ -11,7 +11,6 @@
                     <Header />
                 </el-header>
                 <el-main class="main">
-                    <img src="/image/collapse-copy.svg" @click="isCollapse = false" v-if="isCollapse && !isMobile">
                     <router-view :key="$route.fullPath" />
                 </el-main>
             </el-container>

@@ -1,8 +1,6 @@
 <template>
     <div class="home">
         <MainPage>
-
-            <Swiper />
             <h2>{{ $at('为你推荐') }}
                 <img
                     src="https://cdn.talkie-ai.com/public-cdn-s3-us-west-2/talkie-op-img/image/1660802544_1722257297570_recommend-star.svg">
@@ -127,6 +125,7 @@ onMounted(async () => {
             background: var(--tab-item-bg);
             margin-right: 10px;
             border-radius: 8px;
+            font-weight: bolder;
             cursor: pointer;
 
             @media (max-width: 768px) {

@@ -1,8 +1,12 @@
 <template>
     <div class="header">
         <div v-if="!isMobile" v-show="!isChat" class="header_content">
+            <el-icon :size="24" v-if="!isMobile" @click="isCollapse = !isCollapse">
+                <Fold v-if="!isCollapse" />
+                <Expand v-else />
+            </el-icon>
             <Search />
-            <div style="display: flex; align-items: center;">
+            <div class="r">
                 <Theme />
                 <Lang />
                 <UserInfo />
@@ -12,7 +16,7 @@
             <el-icon :size="24" @click="isCollapse = !isCollapse">
                 <Expand />
             </el-icon>
-            <div style="display: flex; align-items: center;">
+            <div class="r">
                 <Theme />
                 <Lang />
                 <UserInfo />
@@ -82,7 +86,7 @@ const { isMobile } = useDevice();
 const drawer = ref<boolean>(false);
 const renderList = computed(() => [...chatHistory.value].reverse());
 const isChat = computed(() => {
-    if (route.path === "/chat") {
+    if (route.name === "chat") {
         return true;
     }
     return false;
@@ -129,8 +133,21 @@ watch(drawer, (newVal) => {
 
     .header_content {
         display: flex;
-        justify-content: space-between;
+        align-items: center;
         padding-top: 10px;
+
+
+    }
+
+    .r {
+        display: flex;
+        align-items: center;
+        margin-left: auto;
+
+        @media (max-width: 768px) {
+            margin-left: 0;
+            flex-wrap: nowrap;
+        }
     }
 
     .nav {

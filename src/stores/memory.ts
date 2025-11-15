@@ -5,7 +5,6 @@ export const useMemoryStore = defineStore("memory", () => {
 
   async function GetMemory() {
     const res = await getMemoryList();
-    console.log(res);
     if (eq(res.code, 0)) {
       MemoryList.value = res.data;
     }

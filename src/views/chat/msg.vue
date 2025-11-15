@@ -8,7 +8,14 @@
         <div class="tail">
             <div v-if="isSpeech" class="msg-input" @mousedown="handleStart" @mouseup="handleStop"
                 @touchstart="handleStart" @touchend="handleStop" @touchcancel="handleStop">
-                <el-button class="msg-input-btn" :disabled="isSpeaker">{{ $at('按住说话') }}</el-button>
+                <el-button v-show="!isRecording" class="msg-input-btn" :disabled="isSpeaker">{{
+                    $at('按住说话') }}</el-button>
+                <div v-show="isRecording" class="recording">
+                    <el-button class="msg-input-btn" :disabled="isSpeaker">
+                        {{ formattedTime }}
+                    </el-button>
+                    <div v-for="n in 3" :key="n" class="wave" :style="{ animationDelay: `${n * 0.6}s` }"></div>
+                </div>
             </div>
             <div class="msg-input" v-else>
                 <input type="text" v-model="input" :placeholder="`${$at('向')}${chattingAi.name} ${$at('发送消息')} `"
@@ -29,35 +36,22 @@
             </el-icon>
         </div>
         <p @click="isSpan = !isSpan">这是人工智能聊天机器人，不是真人。请将其所说的一切视为虚构。<span v-show="isSpan">其所说内容不应被视为事实或建议。</span> </p>
-        <div class="mask" @mouseup="handleStop">
-            <div class="mike">
-                <div class="sound">
-                    <img src="/image/sound.gif">
-                </div>
-                <span>{{ $at('松开发送') }}</span>
-                <div class="mike-content">
-                    <el-icon style="cursor: pointer;" :size="32" color="#fff">
-                        <Microphone />
-                    </el-icon>
-                </div>
-            </div>
-        </div>
     </div>
     <Loading v-if="loading" @close="closeLoading" />
 </template>
 <script setup lang="ts">
-import Loading from './loading.vue';
+import Loading from './loading.vue'
 import { $at } from 'i18n-auto-extractor';
 import { Position } from "@element-plus/icons-vue";
 import { eq } from 'lodash';
 import router from '@/router';
+import { useAudio } from '@/hooks/newHead/useAudio';
 const route = useRoute();
 const { chattingAi } = storeToRefs(useTalkieStore());
-
 const isSpan = ref<boolean>(false);
 const chatFloat = ref<any[]>([]);
 const avatar: any = inject('avatar');
-const { startRecording, stopRecording, sendMessage, close, wsMsg, isSpeaker, loading } = useAudio(avatar);
+const { startRecording, stopRecording, sendMessage, close, formattedTime, wsMsg, isSpeaker, loading } = useAudio(avatar);
 const input = ref<string>('');
 const isSpeech = ref<boolean>(false);
 const isRecording = ref<boolean>(false);
@@ -68,7 +62,6 @@ const closeLoading = () => {
 }
 watch(() => wsMsg.value, async (newVal) => {
     if (newVal) {
-        console.log(newVal);
         if (newVal.role === 'user') {
             try {
                 newVal.content = JSON.parse(newVal.content).content;
@@ -96,12 +89,13 @@ const handleSend = () => {
 }
 const handleStart = () => {
     isRecording.value = true;
-    // startRecording();
+    startRecording();
+
 };
 const handleStop = () => {
     setTimeout(() => {
         isRecording.value = false;
-        // stopRecording();
+        stopRecording();
     }, 200);
 };
 </script>
@@ -186,6 +180,8 @@ const handleStop = () => {
             border: 1px solid #d9d9df;
         }
 
+
+
         .msg-input {
             width: 80%;
             display: flex;
@@ -196,6 +192,42 @@ const handleStop = () => {
             padding: 4px;
             border-radius: calc(4rem - 4px);
             display: flex;
+
+            &:active {
+                background: #5b82e0;
+            }
+
+            .recording {
+                position: relative;
+                width: 100%;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+
+                /* 波纹圈 */
+                .wave {
+                    position: absolute;
+                    width: 40px;
+                    height: 40px;
+                    border: 3px solid #60a5fa;
+                    border-radius: 50%;
+                    opacity: 0;
+                    animation: waveExpand 1.8s ease-out infinite;
+                }
+
+                @keyframes waveExpand {
+                    0% {
+                        transform: scale(1);
+                        opacity: 0.8;
+                    }
+
+                    100% {
+                        transform: scale(2);
+                        opacity: 0;
+                    }
+                }
+            }
 
             input {
                 width: 100%;

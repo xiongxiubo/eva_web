@@ -23,21 +23,6 @@ const router = createRouter({
           name: "chat",
           component: () => import("@/views/chat/index.vue"),
         },
-        {
-          path: "/chathistory/:id",
-          name: "chathistory",
-          component: () => import("@/views/chathistory/index.vue"),
-        },
-        {
-          path: "/memory",
-          name: "memory",
-          component: () => import("@/views/memory/index.vue"),
-        },
-        {
-          path: "/speaker",
-          name: "speaker",
-          component: () => import("@/views/speaker/index.vue"),
-        },
       ],
     },
   ],

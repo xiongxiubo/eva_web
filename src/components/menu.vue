@@ -4,9 +4,7 @@
             <Logo />
             <span>Aianace</span>
         </div>
-        <el-icon :size="24" v-if="!isMobile" @click="isCollapse = !isCollapse">
-            <Fold />
-        </el-icon>
+
     </div>
     <el-menu-item index="/">
         <el-icon>
