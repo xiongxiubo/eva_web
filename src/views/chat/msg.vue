@@ -44,9 +44,9 @@ import Loading from './loading.vue'
 import { $at } from 'i18n-auto-extractor';
 import { Position } from "@element-plus/icons-vue";
 import { eq } from 'lodash';
-import router from '@/router';
 import { useAudio } from '@/hooks/newHead/useAudio';
 const route = useRoute();
+const router = useRouter();
 const { chattingAi } = storeToRefs(useTalkieStore());
 const isSpan = ref<boolean>(false);
 const chatFloat = ref<any[]>([]);
@@ -55,7 +55,6 @@ const { startRecording, stopRecording, sendMessage, close, formattedTime, wsMsg,
 const input = ref<string>('');
 const isSpeech = ref<boolean>(false);
 const isRecording = ref<boolean>(false);
-
 const closeLoading = () => {
     close();
     router.back();

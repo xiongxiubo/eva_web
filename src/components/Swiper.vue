@@ -9,8 +9,8 @@
             </h1>
             <div class="swiper-header-icon" @click="isMuted = !isMuted">
                 <el-icon>
-                    <img src="/image/audio-unmuted.svg" alt="" v-if="isMuted">
-                    <img src="/image/audio-mute.svg" alt="" v-else>
+                    <img src="@/assets/audio-unmuted.svg" alt="" v-if="isMuted">
+                    <img src="@/assets/audio-mute.svg" alt="" v-else>
                 </el-icon>
             </div>
         </div>

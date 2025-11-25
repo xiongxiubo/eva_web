@@ -23,7 +23,8 @@ export function useAudio(avatarRef: any) {
   const head = shallowRef<Render | null>(null);
   const ws = ref<WebSocket | null>(null);
   const wsMsg = ref<any>();
-
+  const worker = new Worker(new URL("@/worker/encode/worker.js", import.meta.url));
+  const modelUrl = ref<string>("");
   const state = reactive({
     isRecording: false,
     isConnected: false,
@@ -47,15 +48,31 @@ export function useAudio(avatarRef: any) {
   const start_time = ref(0);
   const timer = ref(0);
   const timerInterval = ref<any>(null);
+  const initWorker = () => {
+    worker.onmessage = e => {
+      const { type, success, result, error } = e.data;
+      if (type === "init") {
+        success ? console.log("WASM init success") : console.log("WASM init error", error);
+        return;
+      }
+      if (type === "decrypt") {
+        if (error) {
+          console.error("解密失败:", error);
+        } else {
+          const blob = new Blob([result], { type: "model/gltf-binary" });
+          modelUrl.value = URL.createObjectURL(blob);
+        }
+      }
+    };
+    worker.postMessage({ type: "init" });
+  };
   // 播放音乐
   async function playMusic(arrayBuffer: ArrayBuffer | Blob) {
     if (arrayBuffer instanceof Blob) {
       arrayBuffer = await arrayBuffer.arrayBuffer();
     }
-
     const audioBuffer = await audioContextMusic.decodeAudioData(arrayBuffer);
     pauseMusic();
-
     sourceNode = audioContextMusic.createBufferSource();
     sourceNode.buffer = audioBuffer;
     sourceNode.connect(audioContextMusic.destination);
@@ -71,7 +88,7 @@ export function useAudio(avatarRef: any) {
   async function NewHead() {
     if (!avatarRef.value) return;
     const render = new Render(avatarRef.value);
-    await render.showModel({ url: chattingAi.value?.model_3d }, (e: any) => {
+    await render.showModel({ url: modelUrl.value }, (e: any) => {
       if (e.loaded === e.total) {
         setTimeout(() => {
           loading.value = false;
@@ -92,7 +109,6 @@ export function useAudio(avatarRef: any) {
       startHeartbeat();
     };
     ws.value.onclose = () => {
-      // ElMessage.error("WebSocket连接关闭");
       state.isConnected = false;
       stopHeartbeat();
     };
@@ -336,15 +352,7 @@ export function useAudio(avatarRef: any) {
       timer.value = (Date.now() - start_time.value) / 1000;
     }
   };
-  watch(
-    () => route.params.id,
-    async () => {
-      ws.value?.close();
-      await useTalkieStore().getChatting();
-      if (avatarRef?.value) NewHead();
-      connectWebSocket();
-    },
-  );
+
   // 关闭
   const close = () => {
     try {
@@ -365,9 +373,25 @@ export function useAudio(avatarRef: any) {
       console.error("关闭连接失败:", error);
     }
   };
+  const getDecode = async (url: string) => {
+    const resp = await fetch(url);
+    const arrayBuffer = await resp.arrayBuffer();
+    const encrypted = uint8ToBase64(new Uint8Array(arrayBuffer));
+    worker?.postMessage({ type: "decrypt", data: encrypted });
+  };
+
+  watch([() => route.params.id, () => chattingAi.value?.model_3d, modelUrl], async ([id, model_3d, url], [oldId, oldModel_3d, oldUrl]) => {
+    if (id !== oldId) {
+      ws.value?.close();
+      await useTalkieStore().getChatting();
+      connectWebSocket();
+    }
+    if (model_3d !== oldModel_3d) await getDecode(model_3d);
+    if (url !== oldUrl) await NewHead();
+  });
   onMounted(async () => {
+    initWorker();
     await useTalkieStore().getChatting();
-    await NewHead();
     connectWebSocket();
   });
   onUnmounted(() => {
@@ -429,4 +453,12 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
     binary += String.fromCharCode(bytes[i]);
   }
   return btoa(binary); // 转 base64
+}
+function uint8ToBase64(bytes: Uint8Array | any) {
+  let binary = "";
+  const chunk = 0x8000; // 32KB
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+  }
+  return btoa(binary);
 }

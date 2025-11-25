@@ -1864,12 +1864,6 @@ class TalkingHead {
           noseSneerRight: [0.4],
         },
       },
-      // "😝": { dt: [300, 100, 1500, 500, 500], rescale: [0, 0, 1, 0, 0], vs: { browInnerUp: [0.8], eyesClosed: [1], jawOpen: [0.7], mouthFunnel: [0.5], mouthSmile: [1], tongueOut: [0, 1, 1, 0] } },
-      // "😋": { link: "😝" },
-      // "😛": { link: "😝" },
-      // "😛": { link: "😝" },
-      // "😜": { link: "😝" },
-      // "🤪": { link: "😝" },
       "😂": {
         dt: [300, 2000],
         rescale: [0, 1],
@@ -3614,7 +3608,6 @@ class TalkingHead {
     const tasks = [];
     for (i = 0, l = this.animQueue.length; i < l; i++) {
       const x = this.animQueue[i];
-      console.log(x);
       if (this.animClock < x.ts[0]) continue;
 
       for (j = x.ndx || 0, k = x.ts.length; j < k; j++) {
@@ -3690,7 +3683,6 @@ class TalkingHead {
     // Tasks
     for (let i = 0, l = tasks.length; i < l; i++) {
       j = tasks[i].val;
-      console.log(tasks[i]);
 
       switch (tasks[i].mt) {
         case "speak":
@@ -4351,7 +4343,6 @@ class TalkingHead {
       if (line.emoji) {
         // Look at the camera
         this.lookAtCamera(500);
-
         // Only emoji
         let duration = line.emoji.dt.reduce((a, b) => a + b, 0);
         this.animQueue.push(this.animFactory(line.emoji));
@@ -4696,6 +4687,7 @@ class TalkingHead {
             const lipsyncLang = this.streamLipsyncLang || this.avatar.lipsyncLang || this.opt.lipsyncLang;
             const wrd = this.lipsyncPreProcessText(word, lipsyncLang);
             const val = this.lipsyncWordsToVisemes(wrd, lipsyncLang);
+            console.log(val);
             if (val && val.visemes && val.visemes.length) {
               const dTotal = val.times[val.visemes.length - 1] + val.durations[val.visemes.length - 1];
               const overdrive = Math.min(duration, Math.max(0, duration - val.visemes.length * 150));
@@ -4798,13 +4790,17 @@ class TalkingHead {
   lookAtCamera(t) {
     if (this.avatar.hasOwnProperty("avatarIgnoreCamera")) {
       if (this.avatar.avatarIgnoreCamera) {
+        console.log(1);
         this.lookAhead(t);
       } else {
+        console.log(2);
         this.lookAt(null, null, t);
       }
     } else if (this.opt.avatarIgnoreCamera) {
+      console.log(3);
       this.lookAhead(t);
     } else {
+      console.log(4);
       this.lookAt(null, null, t);
     }
   }

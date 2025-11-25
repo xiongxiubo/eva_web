@@ -97,6 +97,10 @@ export function useAudio(avatarref: any) {
         }
       },
     );
+    head.value?.playAnimation("/model/standby.fbx");
+    setTimeout(() => {
+      head.value?.speakEmoji("😀");
+    }, 2000);
   }
   // 连接websocket
   function connectWebSocket() {

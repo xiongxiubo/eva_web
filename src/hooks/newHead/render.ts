@@ -1,10 +1,12 @@
-import { WebGLRenderer, PerspectiveCamera, Scene, AmbientLight, Color, DirectionalLight, Vector3, Euler, Spherical, type Object3DEventMap, Group } from "three";
+import { AnimationMixer, SRGBColorSpace, WebGLRenderer, PerspectiveCamera, Scene, AmbientLight, Color, DirectionalLight, Vector3, Euler, Spherical, type Object3DEventMap, Group, Quaternion } from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { FBXLoader } from "three/addons/loaders/FBXLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { DynamicBones } from "./dynamicbones";
 import { Lipsync } from "./lipsync";
 const workletUrl = new URL("./playback-worklet.js", import.meta.url);
+import { mapping } from "./mapping";
 interface Model {
   url: string;
 }
@@ -73,6 +75,9 @@ export class Render {
   easing = this.sigmoidFactory(5);
   mtAvatar: any = {};
   blinkMorphs: any[] = [];
+  mixer: AnimationMixer | null = null;
+  animEmojis: any = {};
+  morphdict: any = {};
   constructor(node: HTMLElement) {
     this.nodeAvatar = node;
     this.lipsync = { en: new Lipsync() };
@@ -93,7 +98,7 @@ export class Render {
     this.resizeobserver = new ResizeObserver(this.onResize.bind(this));
     this.resizeobserver.observe(this.nodeAvatar);
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    this.controls.enableZoom = false;
+    this.controls.enableZoom = true;
     this.controls.enableRotate = true;
     this.controls.enablePan = false;
     this.controls.minDistance = 2;
@@ -104,6 +109,240 @@ export class Render {
     this.controls.maxPolarAngle = Math.PI / 2; // 90 度
     this.controls.update();
     this.dynamicbones = new DynamicBones();
+    this.animEmojis = {
+      "🙂": { dt: [300, 2000], rescale: [0, 1], vs: { mouthSmile: [0.5] } },
+      "😊": { dt: [300, 2000], rescale: [0, 1], vs: { browInnerUp: [0.6], eyeSquintLeft: [1], eyeSquintRight: [1], mouthSmile: [0.7], noseSneerLeft: [0.7], noseSneerRight: [0.7] } },
+      "😀": {
+        dt: [300, 2000],
+        rescale: [0, 1],
+        vs: {
+          browInnerUp: [0.6],
+          jawOpen: [0.1],
+          mouthDimpleLeft: [0.2],
+          mouthDimpleRight: [0.2],
+          mouthOpen: [0.3],
+          mouthPressLeft: [0.3],
+          mouthPressRight: [0.3],
+          mouthRollLower: [0.4],
+          mouthShrugUpper: [0.4],
+          mouthSmile: [0.7],
+          mouthUpperUpLeft: [0.3],
+          mouthUpperUpRight: [0.3],
+          noseSneerLeft: [0.4],
+          noseSneerRight: [0.4],
+        },
+      },
+      "😃": {
+        dt: [300, 2000],
+        rescale: [0, 1],
+        vs: {
+          browInnerUp: [0.6],
+          eyeWideLeft: [0.7],
+          eyeWideRight: [0.7],
+          jawOpen: [0.1],
+          mouthDimpleLeft: [0.2],
+          mouthDimpleRight: [0.2],
+          mouthOpen: [0.3],
+          mouthPressLeft: [0.3],
+          mouthPressRight: [0.3],
+          mouthRollLower: [0.4],
+          mouthShrugUpper: [0.4],
+          mouthSmile: [0.7],
+          mouthUpperUpLeft: [0.3],
+          mouthUpperUpRight: [0.3],
+          noseSneerLeft: [0.4],
+          noseSneerRight: [0.4],
+        },
+      },
+      "😄": {
+        dt: [300, 2000],
+        rescale: [0, 1],
+        vs: {
+          browInnerUp: [0.3],
+          eyeSquintLeft: [1],
+          eyeSquintRight: [1],
+          jawOpen: [0.2],
+          mouthDimpleLeft: [0.2],
+          mouthDimpleRight: [0.2],
+          mouthOpen: [0.3],
+          mouthPressLeft: [0.3],
+          mouthPressRight: [0.3],
+          mouthRollLower: [0.4],
+          mouthShrugUpper: [0.4],
+          mouthSmile: [0.7],
+          mouthUpperUpLeft: [0.3],
+          mouthUpperUpRight: [0.3],
+          noseSneerLeft: [0.4],
+          noseSneerRight: [0.4],
+        },
+      },
+      "😁": {
+        dt: [300, 2000],
+        rescale: [0, 1],
+        vs: {
+          browInnerUp: [0.3],
+          eyeSquintLeft: [1],
+          eyeSquintRight: [1],
+          jawOpen: [0.3],
+          mouthDimpleLeft: [0.2],
+          mouthDimpleRight: [0.2],
+          mouthPressLeft: [0.5],
+          mouthPressRight: [0.5],
+          mouthShrugUpper: [0.4],
+          mouthSmile: [0.7],
+          mouthUpperUpLeft: [0.3],
+          mouthUpperUpRight: [0.3],
+          noseSneerLeft: [0.4],
+          noseSneerRight: [0.4],
+        },
+      },
+      "😆": {
+        dt: [300, 2000],
+        rescale: [0, 1],
+        vs: {
+          browInnerUp: [0.3],
+          eyeSquintLeft: [1],
+          eyeSquintRight: [1],
+          eyesClosed: [0.6],
+          jawOpen: [0.3],
+          mouthDimpleLeft: [0.2],
+          mouthDimpleRight: [0.2],
+          mouthPressLeft: [0.5],
+          mouthPressRight: [0.5],
+          mouthShrugUpper: [0.4],
+          mouthSmile: [0.7],
+          mouthUpperUpLeft: [0.3],
+          mouthUpperUpRight: [0.3],
+          noseSneerLeft: [0.4],
+          noseSneerRight: [0.4],
+        },
+      },
+      "😂": {
+        dt: [300, 2000],
+        rescale: [0, 1],
+        vs: {
+          browInnerUp: [0.3],
+          eyeSquintLeft: [1],
+          eyeSquintRight: [1],
+          eyesClosed: [0.6],
+          jawOpen: [0.3],
+          mouthDimpleLeft: [0.2],
+          mouthDimpleRight: [0.2],
+          mouthPressLeft: [0.5],
+          mouthPressRight: [0.5],
+          mouthShrugUpper: [0.4],
+          mouthSmile: [0.7],
+          mouthUpperUpLeft: [0.3],
+          mouthUpperUpRight: [0.3],
+          noseSneerLeft: [0.4],
+          noseSneerRight: [0.4],
+        },
+      },
+      "🤣": { link: "😂" },
+      "😅": { link: "😂" },
+      "😭": {
+        dt: [1000, 1000],
+        rescale: [0, 1],
+        vs: {
+          browInnerUp: [1],
+          eyeSquintLeft: [1],
+          eyeSquintRight: [1],
+          eyesClosed: [0.1],
+          jawOpen: [0],
+          mouthFrownLeft: [1],
+          mouthFrownRight: [1],
+          mouthOpen: [0.5],
+          mouthPucker: [0.5],
+          mouthUpperUpLeft: [0.6],
+          mouthUpperUpRight: [0.6],
+        },
+      },
+      "🥺": {
+        dt: [1000, 1000],
+        rescale: [0, 1],
+        vs: {
+          browDownLeft: [0.2],
+          browDownRight: [0.2],
+          browInnerUp: [1],
+          eyeWideLeft: [0.9],
+          eyeWideRight: [0.9],
+          eyesClosed: [0.1],
+          mouthClose: [0.2],
+          mouthFrownLeft: [1],
+          mouthFrownRight: [1],
+          mouthPressLeft: [0.4],
+          mouthPressRight: [0.4],
+          mouthPucker: [1],
+          mouthRollLower: [0.6],
+          mouthRollUpper: [0.2],
+          mouthUpperUpLeft: [0.8],
+          mouthUpperUpRight: [0.8],
+        },
+      },
+
+      "☹️": { dt: [500, 1500], rescale: [0, 1], vs: { mouthFrownLeft: [1], mouthFrownRight: [1], mouthPucker: [0.1], mouthRollLower: [0.8] } },
+      "😚": {
+        dt: [500, 1000, 1000],
+        rescale: [0, 1, 0],
+        vs: {
+          browInnerUp: [0.6],
+          eyeBlinkLeft: [1],
+          eyeBlinkRight: [1],
+          eyeSquintLeft: [1],
+          eyeSquintRight: [1],
+          mouthPucker: [0, 0.5],
+          noseSneerLeft: [0, 0.7],
+          noseSneerRight: [0, 0.7],
+          viseme_U: [0, 1],
+        },
+      },
+      "🥰": { dt: [1000, 1000], rescale: [0, 1], vs: { browInnerUp: [0.6], eyeSquintLeft: [1], eyeSquintRight: [1], mouthSmile: [0.7], noseSneerLeft: [0.7], noseSneerRight: [0.7] } },
+      "😍": {
+        dt: [1000, 1000],
+        rescale: [0, 1],
+        vs: {
+          browInnerUp: [0.6],
+          jawOpen: [0.1],
+          mouthDimpleLeft: [0.2],
+          mouthDimpleRight: [0.2],
+          mouthOpen: [0.3],
+          mouthPressLeft: [0.3],
+          mouthPressRight: [0.3],
+          mouthRollLower: [0.4],
+          mouthShrugUpper: [0.4],
+          mouthSmile: [0.7],
+          mouthUpperUpLeft: [0.3],
+          mouthUpperUpRight: [0.3],
+          noseSneerLeft: [0.4],
+          noseSneerRight: [0.4],
+        },
+      },
+      "🤩": { link: "😍" },
+      "😱": { dt: [500, 1500], rescale: [0, 1], vs: { browInnerUp: [0.8], eyeWideLeft: [0.5], eyeWideRight: [0.5], jawOpen: [0.7], mouthFunnel: [0.5] } },
+      "😬": {
+        dt: [500, 1500],
+        rescale: [0, 1],
+        vs: {
+          browDownLeft: [1],
+          browDownRight: [1],
+          browInnerUp: [1],
+          mouthDimpleLeft: [0.5],
+          mouthDimpleRight: [0.5],
+          mouthLowerDownLeft: [1],
+          mouthLowerDownRight: [1],
+          mouthPressLeft: [0.4],
+          mouthPressRight: [0.4],
+          mouthPucker: [0.5],
+          mouthSmile: [0.1],
+          mouthSmileLeft: [0.2],
+          mouthSmileRight: [0.2],
+          mouthStretchLeft: [1],
+          mouthStretchRight: [1],
+          mouthUpperUpLeft: [1],
+          mouthUpperUpRight: [1],
+        },
+      },
+    };
   }
   initAudioGraph(sampleRate?: number) {
     if (this.audioCtx && this.audioCtx.state !== "closed") this.audioCtx.close();
@@ -175,6 +414,16 @@ export class Render {
     loader.setDRACOLoader(dracoLoader);
     const gltf = await loader.loadAsync(model.url, onProgress);
     const modelScene = gltf.scene;
+    modelScene.traverse((obj: any) => {
+      if (obj.isMesh && obj.material) {
+        const mat = obj.material;
+        if (mat.map) mat.map.colorSpace = SRGBColorSpace;
+        mat.color.multiplyScalar(1);
+        mat.metalness = 0.1;
+        mat.envMapIntensity = 1.0;
+        mat.needsUpdate = true;
+      }
+    });
     this.scene.add(modelScene);
     this.model = modelScene;
     this.stop();
@@ -183,15 +432,16 @@ export class Render {
     this.armature = modelScene.getObjectByName("Armature");
     this.armature.scale.setScalar(1);
     this.armature.traverse((x: any) => {
-      if (x.morphTargetInfluences && x.morphTargetInfluences.length && x.morphTargetDictionary) this.morphs.push(x);
+      if (x.morphTargetInfluences && x.morphTargetInfluences.length && x.morphTargetDictionary) {
+        this.morphs.push(x);
+        this.morphdict = x.morphTargetDictionary;
+      }
       x.frustumCulled = false;
     });
-    if (this.morphs.length === 0) throw new Error("Blend shapes not found");
+    // if (this.morphs.length === 0) throw new Error("Blend shapes not found");
     const keys = new Set();
     this.morphs.forEach(x => {
-      Object.keys(x.morphTargetDictionary).forEach(y => {
-        if (y.includes("viseme")) keys.add(y);
-      });
+      Object.keys(x.morphTargetDictionary).forEach(y => keys.add(y));
     });
     const mtTemp: any = {};
     keys.forEach((x: any) => {
@@ -238,6 +488,9 @@ export class Render {
     this.setView();
     this.start();
     this.initBlink();
+    // await this.setGLBAction("/model/Dining.glb");
+    this.setAction("/model/standby.fbx");
+    // this.setRigAction("/model/Running.fbx");
   }
   initBlink() {
     this.blinkMorphs = [];
@@ -380,15 +633,16 @@ export class Render {
       }
       this.controls.update();
     }
+    if (this.mixer) this.mixer.update((dt / 1000) * this.mixer.timeScale);
     this.render();
   }
   setView() {
     const fov = this.camera.fov * (Math.PI / 180);
-    let x = -0 * Math.tan(fov / 2);
-    let y = (1 - 0) * Math.tan(fov / 2);
+    let x = 0 * Math.tan(fov / 2);
+    let y = Math.tan(fov / 2);
     let z = 0;
-    z += 12;
-    y = y * z;
+    z += 11;
+    y = y * z + 0.05;
     x = x * z;
     this.controlsEnd = new Vector3(x, y, 0);
     this.cameraEnd = new Vector3(x, y, z).applyEuler(new Euler(0, 0, 0));
@@ -517,28 +771,26 @@ export class Render {
       const word = r.words[i];
       const time = r.wtimes[i];
       let duration = r.wdurations[i];
-      if (word.length === 0) return;
-      if (this.streamLipsyncType == "words") {
-        const lipsyncLang = this.streamLipsyncLang;
-        const wrd = this.lipsyncPreProcessText(word, lipsyncLang);
-        const val = this.lipsyncWordsToVisemes(wrd, lipsyncLang);
-        if (val && val.visemes && val.visemes.length) {
-          const dTotal = val.times[val.visemes.length - 1] + val.durations[val.visemes.length - 1];
-          const overdrive = Math.min(duration, Math.max(0, duration - val.visemes.length * 150));
-          let level = 0.6 + this.convertRange(overdrive, [0, duration], [0, 0.4]);
-          duration = Math.min(duration, val.visemes.length * 200);
-          if (dTotal > 0) {
-            for (let j = 0; j < val.visemes.length; j++) {
-              const t = audioStart + time + (val.times[j] / dTotal) * duration;
-              const d = (val.durations[j] / dTotal) * duration;
-              this.animQueue.push({
-                template: { name: "viseme" },
-                ts: [t - Math.min(60, (2 * d) / 3), t + Math.min(25, d / 2), t + d + Math.min(60, d / 2)],
-                vs: {
-                  ["viseme_" + val.visemes[j]]: [null, val.visemes[j] === "PP" || val.visemes[j] === "FF" ? 0.9 : level, 0],
-                },
-              });
-            }
+      if (word.length === 0) continue;
+      const lipsyncLang = this.streamLipsyncLang;
+      const wrd = this.lipsyncPreProcessText(word, lipsyncLang);
+      const val = this.lipsyncWordsToVisemes(wrd, lipsyncLang);
+      if (val && val.visemes && val.visemes.length) {
+        const dTotal = val.times[val.visemes.length - 1] + val.durations[val.visemes.length - 1];
+        const overdrive = Math.min(duration, Math.max(0, duration - val.visemes.length * 150));
+        let level = 0.6 + this.convertRange(overdrive, [0, duration], [0, 0.4]);
+        duration = Math.min(duration, val.visemes.length * 200);
+        if (dTotal > 0) {
+          for (let j = 0; j < val.visemes.length; j++) {
+            const t = audioStart + time + (val.times[j] / dTotal) * duration;
+            const d = (val.durations[j] / dTotal) * duration;
+            this.animQueue.push({
+              template: { name: "viseme" },
+              ts: [t - Math.min(60, (2 * d) / 3), t + Math.min(25, d / 2), t + d + Math.min(60, d / 2)],
+              vs: {
+                ["viseme_" + val.visemes[j]]: [null, val.visemes[j] === "PP" || val.visemes[j] === "FF" ? 0.9 : level, 0],
+              },
+            });
           }
         }
       }
@@ -669,5 +921,137 @@ export class Render {
         o.ms[i][o.is[i]] = o.applied;
       }
     }
+  }
+  async setAction(url: string) {
+    if (!this.mixer) this.mixer = new AnimationMixer(this.model!);
+    const loader = new FBXLoader();
+    const fbx = await loader.loadAsync(url);
+    let anim = fbx.animations[0];
+    const props: any = {};
+    anim.tracks.forEach(t => {
+      t.name = t.name.replaceAll("mixamorig", "");
+      const ids = t.name.split(".");
+      if (ids[1] === "position") {
+        for (let i = 0; i < t.values.length; i++) {
+          t.values[i] = t.values[i] * 0.01;
+        }
+        props[t.name] = new Vector3(t.values[0], t.values[1], t.values[2]);
+      } else if (ids[1] === "quaternion") {
+        props[t.name] = new Quaternion(t.values[0], t.values[1], t.values[2], t.values[3]);
+      } else if (ids[1] === "rotation") {
+        props[ids[0] + ".quaternion"] = new Quaternion().setFromEuler(new Euler(t.values[0], t.values[1], t.values[2], "XYZ")).normalize();
+      }
+    });
+    this.mixer.clipAction(anim).fadeIn(0.5).play();
+  }
+  playEmoji(emoji: string) {
+    const animemoji = this.animEmojis[emoji];
+    if (!animemoji) return;
+    this.applyEmoji(animemoji);
+  }
+  applyEmoji(animemoji: any) {
+    const { dt, rescale, vs } = animemoji;
+    const [startDelay, endDelay] = dt;
+    const [minVal, maxVal] = rescale;
+    const duration = endDelay - startDelay;
+    const animationStartTime = performance.now() + startDelay;
+    const animationEndTime = performance.now() + endDelay;
+    let recoverStart = 0;
+    // === 第一阶段：立即应用数值（无渐变）===
+    const applyInstant = () => {
+      this.armature.traverse((obj: any) => {
+        if (!obj.morphTargetDictionary || !obj.morphTargetInfluences) return;
+        const dict = obj.morphTargetDictionary;
+        for (const morphName in vs) {
+          const index = dict[morphName];
+          if (index === undefined) continue;
+          const targetVal = vs[morphName];
+          const val = minVal + (maxVal - minVal) * targetVal; // 直接达到预设值
+          obj.morphTargetInfluences[index] = val;
+        }
+      });
+    };
+    // === 第二阶段：恢复动画（渐变回 0）===
+    const animateOut = (now: number) => {
+      if (!recoverStart) recoverStart = now;
+      const elapsed = now - recoverStart;
+      const t = Math.min(elapsed / duration, 1); // 0 → 1
+      this.armature.traverse((obj: any) => {
+        if (!obj.morphTargetDictionary || !obj.morphTargetInfluences) return;
+        const dict = obj.morphTargetDictionary;
+        for (const morphName in vs) {
+          const index = dict[morphName];
+          if (index === undefined) continue;
+          const targetVal = vs[morphName];
+          const maxValNow = minVal + (maxVal - minVal) * targetVal;
+          obj.morphTargetInfluences[index] = maxValNow * (1 - t); // 预设值 → 0
+        }
+      });
+      if (t < 1) requestAnimationFrame(animateOut);
+    };
+    const waitAndStart = (now: number) => {
+      if (now < animationStartTime) {
+        requestAnimationFrame(waitAndStart);
+        return;
+      }
+      // 立即应用目标
+      applyInstant();
+      // 等待到结束点，再开始恢复
+      const waitEnd = (now2: number) => {
+        if (now2 < animationEndTime) {
+          requestAnimationFrame(waitEnd);
+        } else {
+          requestAnimationFrame(animateOut);
+        }
+      };
+      requestAnimationFrame(waitEnd);
+    };
+    requestAnimationFrame(waitAndStart);
+  }
+  async setRigAction(url: string) {
+    if (!this.mixer) this.mixer = new AnimationMixer(this.model!);
+    const loader = new FBXLoader();
+    const fbx = await loader.loadAsync(url);
+    let anim = fbx.animations[0];
+    const props: any = {};
+    anim.tracks.forEach(t => {
+      const ids = t.name.split(".");
+      if (mapping[ids[0]]) {
+        t.name = mapping[ids[0]] + "." + ids[1];
+      }
+      if (ids[1] === "position") {
+        for (let i = 0; i < t.values.length; i++) {
+          t.values[i] = t.values[i] * 0.01;
+        }
+        props[t.name] = new Vector3(t.values[0], t.values[1], t.values[2]);
+      } else if (ids[1] === "quaternion") {
+        props[t.name] = new Quaternion(t.values[0], t.values[1], t.values[2], t.values[3]);
+      } else if (ids[1] === "rotation") {
+        props[ids[0] + ".quaternion"] = new Quaternion().setFromEuler(new Euler(t.values[0], t.values[1], t.values[2], "XYZ")).normalize();
+      }
+    });
+    this.mixer.clipAction(anim).fadeIn(0.5).play();
+  }
+  async setGLBAction(url: string) {
+    if (!this.mixer) this.mixer = new AnimationMixer(this.model!);
+    const loader = new GLTFLoader();
+    const gltf = await loader.loadAsync(url);
+    let anim = gltf.animations[0];
+    const props: any = {};
+    anim.tracks.forEach(t => {
+      t.name = t.name.replaceAll("mixamorig", "");
+      const ids = t.name.split(".");
+      if (ids[1] === "position") {
+        for (let i = 0; i < t.values.length; i++) {
+          t.values[i] = t.values[i] * 0.01;
+        }
+        props[t.name] = new Vector3(t.values[0], t.values[1], t.values[2]);
+      } else if (ids[1] === "quaternion") {
+        props[t.name] = new Quaternion(t.values[0], t.values[1], t.values[2], t.values[3]);
+      } else if (ids[1] === "rotation") {
+        props[ids[0] + ".quaternion"] = new Quaternion().setFromEuler(new Euler(t.values[0], t.values[1], t.values[2], "XYZ")).normalize();
+      }
+    });
+    this.mixer.clipAction(anim).fadeIn(0.5).play();
   }
 }

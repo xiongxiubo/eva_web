@@ -25,19 +25,14 @@ provide('avatar', avatar);
     .avatar {
         width: 100%;
         height: calc(100% - 100px);
-        // background: url("/image/purple-bg.avif") top / cover no-repeat;
         position: relative;
         background-position: 80%;
         z-index: 10;
 
         @media (max-width: 768px) {
-            width: 100%;
-            height: 100%;
             position: absolute;
             left: 0;
             top: 0;
-            z-index: 1;
-
         }
     }
 }
