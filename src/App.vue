@@ -14,7 +14,8 @@ import { ElConfigProvider } from 'element-plus'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import en from 'element-plus/es/locale/lang/en'
 import ja from 'element-plus/es/locale/lang/ja'
-
+import { useDark } from '@vueuse/core';
+useDark();
 const { currentLang } = storeToRefs(useLangStore());
 
 const locale = computed(() => {

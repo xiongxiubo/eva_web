@@ -6,8 +6,8 @@
             </div>
             <div class="list">
                 <div class="item" v-for="(item, index) in MemoryList" :key="index"
-                    :style="{ backgroundImage: `url(${item.talkie.avatar})` }"
                     @click="router.push(`/chathistory/${item.talkie.id}`)">
+                    <img :src="item.talkie.avatar" class="avatar">
                     <div class="header">
                         <div class="ainame">{{ item.talkie.name }}</div>
                         <div class="time">{{ $at('最后通话') }}：{{ timeFromNow(item.last_call_time, currentLang) }}</div>
@@ -90,18 +90,37 @@ onMounted(() => {
             flex-direction: column;
             gap: 20px;
             background: hsla(0, 0%, 100%, .102);
-            background-image: linear-gradient(to right, rgba(0, 0, 0) 0%, rgba(0, 0, 0, 0) 100%);
+            // background-image: linear-gradient(to right, rgba(0, 0, 0) 0%, rgba(0, 0, 0, 0) 100%);
             background-repeat: no-repeat;
             background-position: 100% 0;
             background-size: cover;
             color: #fff;
             font-size: 16px;
             font-weight: bold;
+            position: relative;
+            overflow: hidden;
+
+            .avatar {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                filter: blur(50px);
+                position: absolute;
+                left: 0;
+                top: 0;
+                z-index: 1;
+
+            }
 
             .header {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
+                z-index: 2;
+            }
+
+            .content {
+                z-index: 2;
             }
 
             .footer {
@@ -111,6 +130,8 @@ onMounted(() => {
                 padding: 10px 0;
                 border-top: 1px solid var(--el-border-color);
                 margin-top: auto;
+                z-index: 2;
+
 
                 .ainame {
                     display: flex;

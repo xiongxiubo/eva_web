@@ -32,6 +32,16 @@ type web3LoginParams = {
   address: string;
 };
 
+export interface VoiceParams extends Params {
+  gender?: string;
+  is_public?: boolean;
+}
+
+export interface previewVoiceParams {
+  platform: string;
+  voice_type: string;
+}
+
 //登录
 export const login: (data: LoginParams) => Promise<Response> = (data: LoginParams) => request.post("/user/login", data);
 // 注册
@@ -74,3 +84,9 @@ export const updateSpeaker: (data: { audio_id: number; speaker: string }) => Pro
 
 // 获取记忆列表
 export const getMemoryList: () => Promise<Response> = () => request.get("/memory/list");
+
+// 获取音色列表
+export const getVoiceList: (params: VoiceParams) => Promise<Response> = (params: VoiceParams) => request.get("/voice/list", { params });
+
+// 试听音色
+export const previewVoice: (data: previewVoiceParams) => Promise<Response> = (data: previewVoiceParams) => request.post("/voice/preview", data);

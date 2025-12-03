@@ -25,7 +25,7 @@ self.onmessage = async e => {
       return;
     }
     try {
-      const ret = self.decryptWithPublicKey(data); // 传字符串
+      const ret = self.decryptWithPublicKey(data);
       self.postMessage({ type: "decrypt", result: ret });
     } catch (err) {
       console.log(err);

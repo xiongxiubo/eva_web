@@ -6,6 +6,13 @@
         </div>
 
     </div>
+    <div class="create">
+        <button class="btn" @click="router.push('/create')">
+            <el-icon>
+                <Plus />
+            </el-icon>{{ $at('创建人物') }}
+        </button>
+    </div>
     <el-menu-item index="/">
         <el-icon>
             <House />
@@ -65,11 +72,10 @@ import Logo from '@/components/logo.vue'
 import { $at } from 'i18n-auto-extractor';
 import { CloseBold, } from '@element-plus/icons-vue';
 const storage = useUserStore();
-const { chatList, isCollapse } = storeToRefs(storage);
+const { chatList } = storeToRefs(storage);
 const router = useRouter();
 const isHover = ref(false);
 const hoverId = ref(0);
-const { isMobile } = useDevice()
 
 const link = [
     { icon: svg.twitter, name: 'Twitter', url: '#' },
@@ -81,12 +87,10 @@ const link = [
 const openUrl = (url: string) => {
     window.open(url, '_blank');
 }
-
 const hoverChat = (id: number) => {
     isHover.value = true;
     hoverId.value = id;
 };
-
 const leaveChat = () => {
     isHover.value = false;
     hoverId.value = 0;
@@ -132,6 +136,35 @@ const deleteChat = async (id: string) => {
         cursor: pointer;
     }
 
+}
+
+.create {
+    width: 100%;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 0 20px;
+    box-sizing: border-box;
+    border-bottom: 1px solid var(--el-border-color);
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+
+    .btn {
+        width: 100%;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 20px;
+        box-sizing: border-box;
+        border-radius: 8px;
+        cursor: pointer;
+        border: 0;
+        gap: 8px;
+
+    }
 }
 
 .chat-title {

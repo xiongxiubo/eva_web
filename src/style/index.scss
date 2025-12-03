@@ -1,6 +1,7 @@
 * {
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
   &::-webkit-scrollbar {
     display: none;
   }
@@ -15,4 +16,7 @@ body,
 .el-menu-item {
   --el-menu-item-height: 44px;
   width: calc(100% - 20px);
+}
+.el-dialog__header {
+  padding-bottom: 0 !important;
 }

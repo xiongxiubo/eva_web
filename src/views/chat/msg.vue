@@ -7,7 +7,7 @@
         </div>
         <div class="tail">
             <div v-if="isSpeech" class="msg-input" @mousedown="handleStart" @mouseup="handleStop"
-                @touchstart="handleStart" @touchend="handleStop" @touchcancel="handleStop">
+                @mouseleave="handleStop" @touchstart="handleStart" @touchend="handleStop" @touchcancel="handleStop">
                 <el-button v-show="!isRecording" class="msg-input-btn" :disabled="isSpeaker">{{
                     $at('按住说话') }}</el-button>
                 <div v-show="isRecording" class="recording">
@@ -44,7 +44,6 @@ import Loading from './loading.vue'
 import { $at } from 'i18n-auto-extractor';
 import { Position } from "@element-plus/icons-vue";
 import { eq } from 'lodash';
-import { useAudio } from '@/hooks/newHead/useAudio';
 const route = useRoute();
 const router = useRouter();
 const { chattingAi } = storeToRefs(useTalkieStore());

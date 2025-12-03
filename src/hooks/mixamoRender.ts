@@ -3,10 +3,10 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { FBXLoader } from "three/addons/loaders/FBXLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
-import { DynamicBones } from "./dynamicbones";
-import { Lipsync } from "./lipsync";
-const workletUrl = new URL("./playback-worklet.js", import.meta.url);
-import { mapping } from "./mapping";
+import { KTX2Loader } from "three/examples/jsm/loaders/KTX2Loader.js";
+import { DynamicBones } from "./renderUtils/dynamicbones";
+import { Lipsync } from "./renderUtils/lipsync";
+const workletUrl = new URL("./renderUtils/playback-worklet.js", import.meta.url);
 interface Model {
   url: string;
 }
@@ -16,7 +16,7 @@ interface streamOptions {
   gain: number;
   lipsyncLang: string;
 }
-export class Render {
+export class MixamoRender {
   nodeAvatar: HTMLElement;
   lipsync: any;
   audioCtx: AudioContext | null = null;
@@ -37,7 +37,6 @@ export class Render {
   volumeHeadVelocity = 0.15;
   volumeHeadEasing = this.sigmoidFactory(3);
   dracoDecoderPath = "https://www.gstatic.com/draco/v1/decoders/";
-  b64Lookup: Uint8Array | number[] = [];
   stateName = "idle";
   speechQueue: any[] = [];
   isSpeaking = false;
@@ -64,7 +63,7 @@ export class Render {
   animFrameDur = 1000 / 30;
   animSlowdownRate = 1;
   animClock = 0;
-  visemeNames: string[];
+  visemeNames: typeof visemeNames = visemeNames;
   isAudioPlaying = false;
   animQueue: any[] = [];
   cameraView: string = "full";
@@ -81,11 +80,7 @@ export class Render {
   constructor(node: HTMLElement) {
     this.nodeAvatar = node;
     this.lipsync = { en: new Lipsync() };
-    this.visemeNames = ["aa", "E", "I", "O", "U", "PP", "SS", "TH", "DD", "FF", "kk", "nn", "RR", "CH", "sil"];
     this.initAudioGraph();
-    const b64Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    this.b64Lookup = typeof Uint8Array === "undefined" ? [] : new Uint8Array(256);
-    for (let i = 0; i < b64Chars.length; i++) this.b64Lookup[b64Chars.charCodeAt(i)] = i;
     this.renderer = new WebGLRenderer({ antialias: true, alpha: true });
     this.renderer.setPixelRatio(1 * window.devicePixelRatio);
     this.renderer.setSize(this.nodeAvatar.clientWidth, this.nodeAvatar.clientHeight);
@@ -412,6 +407,10 @@ export class Render {
     const dracoLoader = new DRACOLoader();
     dracoLoader.setDecoderPath(this.dracoDecoderPath);
     loader.setDRACOLoader(dracoLoader);
+    const ktx2Loader = new KTX2Loader();
+    ktx2Loader.setTranscoderPath("/basis/");
+    ktx2Loader.detectSupport(this.renderer);
+    loader.setKTX2Loader(ktx2Loader);
     const gltf = await loader.loadAsync(model.url, onProgress);
     const modelScene = gltf.scene;
     modelScene.traverse((obj: any) => {
@@ -641,8 +640,8 @@ export class Render {
     let x = 0 * Math.tan(fov / 2);
     let y = Math.tan(fov / 2);
     let z = 0;
-    z += 11;
-    y = y * z + 0.05;
+    z += 4.5;
+    y = y * z + 3.4 / 3;
     x = x * z;
     this.controlsEnd = new Vector3(x, y, 0);
     this.cameraEnd = new Vector3(x, y, z).applyEuler(new Euler(0, 0, 0));

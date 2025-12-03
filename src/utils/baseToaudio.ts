@@ -1,4 +1,3 @@
-const sampleRate = 48000;
 export async function playPCM(pcmBase64: string) {
   // 1. Base64 解码
   const binary = atob(pcmBase64);
@@ -18,8 +17,8 @@ export async function playPCM(pcmBase64: string) {
   }
 
   // 3. 用 Web Audio 播放
-  const audioCtx = new AudioContext({ sampleRate: 48000 });
-  const buffer = audioCtx.createBuffer(1, samples.length, 48000);
+  const audioCtx = new AudioContext({ sampleRate: 16000 });
+  const buffer = audioCtx.createBuffer(1, samples.length, 16000);
   buffer.copyToChannel(samples, 0);
 
   const source = audioCtx.createBufferSource();

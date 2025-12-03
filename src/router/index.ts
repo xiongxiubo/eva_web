@@ -23,6 +23,12 @@ const router = createRouter({
           name: "chat",
           component: () => import("@/views/chat/index.vue"),
         },
+
+        {
+          path: "/chathistory/:id",
+          name: "chathistory",
+          component: () => import("@/views/chathistory/index.vue"),
+        },
         {
           path: "/memory",
           name: "memory",
@@ -34,6 +40,18 @@ const router = createRouter({
           component: () => import("@/views/speaker/index.vue"),
         },
       ],
+    },
+    // 创作中心
+    {
+      path: "/create",
+      name: "create",
+      component: () => import("@/views/create/index.vue"),
+    },
+    // 创作中心-编辑
+    {
+      path: "/create/edit",
+      name: "create-edit",
+      component: () => import("@/views/create/edit/index.vue"),
     },
   ],
 });

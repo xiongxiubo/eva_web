@@ -21,9 +21,7 @@
 <script setup lang="ts">
 import Menu from '@/components/menu.vue';
 import Header from './header.vue';
-import { useDark } from '@vueuse/core';
 
-const isDark = useDark();
 const route = useRoute();
 const { isMobile } = useDevice();
 const storage = useUserStore();
