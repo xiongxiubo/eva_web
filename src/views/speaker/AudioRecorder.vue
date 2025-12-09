@@ -60,7 +60,7 @@ const toggleRecording = async () => {
             SampleRate.value = audioContext.value.sampleRate;
             mediaStream.value = await navigator.mediaDevices.getUserMedia({ audio: true });
             const sourceNode = audioContext.value.createMediaStreamSource(mediaStream.value);
-            await audioContext.value.audioWorklet.addModule("/script/recording.js");
+            await audioContext.value.audioWorklet.addModule("/script/recorder-processor.js");
             workletNode.value = new AudioWorkletNode(audioContext.value, "recorder-processor");
             workletNode.value.port.onmessage = event => {
                 audioBufferData.value.push(new Float32Array(event.data));

@@ -23,24 +23,6 @@
                         <input id="name" type="text" :placeholder="$at('请输入姓名')" v-model="config.name" maxlength="30" />
                         <span class="char-count">{{ config.name.length }}/30</span>
                     </div>
-
-                    <div class="input-group">
-                        <label for="gender">{{ $at('性别') }}</label>
-                        <div class="radio-group">
-                            <label class="radio-item">
-                                <input type="radio" value="Male" v-model="config.gender" />
-                                {{ $at('男') }}
-                            </label>
-                            <label class="radio-item">
-                                <input type="radio" value="Female" v-model="config.gender" />
-                                {{ $at('女') }}
-                            </label>
-                            <label class="radio-item">
-                                <input type="radio" value="Non-Binary" v-model="config.gender" />
-                                {{ $at('第三性别') }}
-                            </label>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="config-panel__section">
@@ -147,10 +129,6 @@ const voiceVisible = ref(false);
 </script>
 
 <style lang="scss" scoped>
-$mid-bg: #2a2a2a;
-$light-border: #383838;
-$text-color: #d1d1d1;
-$placeholder-color: #777;
 $primary-color: #4b89ff;
 $publish-color: #a04bff;
 
@@ -422,7 +400,6 @@ textarea {
     justify-content: center;
     align-items: center;
     cursor: pointer;
-    color: $placeholder-color;
     transition: border-color 0.2s;
 }
 

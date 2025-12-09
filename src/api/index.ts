@@ -90,3 +90,8 @@ export const getVoiceList: (params: VoiceParams) => Promise<Response> = (params:
 
 // 试听音色
 export const previewVoice: (data: previewVoiceParams) => Promise<Response> = (data: previewVoiceParams) => request.post("/voice/preview", data);
+
+// 克隆音色
+export const cloneVoice: (data: FormData) => Promise<Response> = (data: FormData) => request.post("/voice/clone", data);
+// 查看用户音色列表
+export const getUserVoiceList: (params: Params) => Promise<Response> = (params: Params) => request.get("/voice/user/list", { params });

@@ -66,38 +66,23 @@
             <div class="modal-content">
                 <div class="voice-name-input">
                     <label for="voice-name">{{ $at('说出你的声音') }}</label>
-                    <div class="input-container">
-                        <input id="voice-name" type="text" v-model="voiceName" placeholder="Clone_20251202_01"
-                            maxlength="20" />
-                        <button class="clear-button" @click="voiceName = ''">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
-                                <path fill="currentColor"
-                                    d="m12 10.586l4.95-4.95l1.414 1.414l-4.95 4.95l4.95 4.95l-1.414 1.414l-4.95-4.95l-4.95 4.95l-1.414-1.414l4.95-4.95l-4.95-4.95l1.414-1.414z" />
-                            </svg>
-                        </button>
-                        <span class="char-count">{{ voiceName.length }}/20</span>
-                    </div>
+                    <el-input v-model="voiceName" maxlength="20" :placeholder="$at('请输入20个字符以内')" show-word-limit
+                        type="text" />
                 </div>
-
                 <h3 class="section-title">{{ $at('上传样本') }}</h3>
-
                 <div class="upload-options">
-                    <div class="option-card upload-card">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24">
-                            <path fill="currentColor" d="M19 9h-4V3H9v6H5l7 7zM7 19h10v-2H7z" />
-                        </svg>
-                        <h4 class="upload-title-text">{{ $at('拖放文件或浏览') }}</h4>
-                        <p>{{ $at('最大文件大小: 200 MB, 持续时间: 10-60 秒.') }}</p>
-                    </div>
+                    <DragUpload class="option-card" @change="handleFileChange" />
 
-                    <div class="option-card record-card">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24">
-                            <path fill="currentColor"
-                                d="M12 14c2.21 0 4-1.79 4-4V5c0-2.21-1.79-4-4-4S8 2.79 8 5v5c0 2.21 1.79 4 4 4m-2 0v1.5c0 2.34 1.76 4.29 4 4.48V21h-4v-2H9v2h6v-2.02c2.24-.19 4-2.14 4-4.48V14h-2V5c0-1.1-.9-2-2-2s-2 .9-2 2v5c0 1.1.9 2 2 2s2-.9 2-2V5" />
-                        </svg>
-                        <h4 class="record-title-text">{{ $at('开始记录') }}</h4>
+                    <div class="option-card record-card" @click="isRecording ? stopRecord() : startRecord()">
+                        <el-icon :size="24">
+                            <Mic />
+                        </el-icon>
+                        <h4 class="record-title-text">{{ isRecording ? $at('停止记录') : $at('开始记录') }}</h4>
                         <p>{{ $at('点击录音并讲话 10-60 秒.') }}</p>
                     </div>
+                </div>
+                <div v-if="file" class="file-info">
+                    <span class="file-name">{{ file.name }}</span>
                 </div>
 
                 <div class="info-section">
@@ -125,8 +110,9 @@
 
             <footer class="modal-footer">
                 <button class="btn btn-back" @click="isCreate = false">{{ $at('后退') }}</button>
-                <button class="btn btn-clone" :disabled="!isConfirmed || voiceName.length === 0">{{ $at('克隆语音')
-                    }}</button>
+                <button class="btn btn-clone" :disabled="!isConfirmed || voiceName.length === 0" @click="clonevoice">
+                    {{ $at('克隆语音') }}
+                </button>
             </footer>
         </div>
 
@@ -135,21 +121,13 @@
 
 <script setup lang="ts">
 import { $at } from 'i18n-auto-extractor';
-// Define the structure for a voice tag
-interface VoiceTag {
-    label: string;
-    class: string; // Used for potential specific styling (e.g., 'gender', 'age', 'attribute', 'accent')
-}
+import { useRecordAudio } from '@/views/create/edit/recording'
 
-// Define the structure for a voice item
-interface VoiceItem {
-    name: string;
-    gender: string;
-    tags: VoiceTag[];
-}
 const store = useVoiceStore();
 const { voiceList } = storeToRefs(store)
-const voiceName = ref('Clone_20251202_01');
+const { startRecord, stopRecord, isRecording, blob } = useRecordAudio()
+
+const voiceName = ref('');
 const isConfirmed = ref(false); // State for the legal confirmation checkbox
 
 const clonedVoice = computed(() => activeTab.value === 'mine' && isCreate.value)
@@ -167,7 +145,31 @@ const Gender = [
     { name: $at('男性'), value: 'M' },
     { name: $at('女性'), value: 'F' },
 ]
+const file = ref<File>()
+// 处理文件上传
+const handleFileChange = (e: File) => {
+    file.value = e
+};
 
+const clonevoice = async () => {
+    const formData = new FormData();
+    if (!file.value && !blob.value) {
+        ElMessage.error("请上传或记录样本");
+        return;
+    }
+    if (blob.value) {
+        formData.append('file', blob.value);
+    } else {
+        formData.append('file', file.value!);
+    }
+    formData.append('name', voiceName.value);
+    try {
+        const res = await store.clone(formData);
+        console.log(res)
+    } catch (error) {
+        console.error("克隆音色失败:", error);
+    }
+}
 // 试听音色
 const previewVoice = (item: any) => {
     store.preview({
@@ -182,7 +184,8 @@ watch(selectedGender, (newGender) => {
         gender: newGender,
         is_public: true,
     });
-})
+});
+
 onMounted(() => {
     store.getVoice({
         page_index: 1,
@@ -190,6 +193,7 @@ onMounted(() => {
         gender: 'ALL',
         is_public: true,
     });
+    store.getUserVoice();
 })
 </script>
 
@@ -446,37 +450,7 @@ $info-yellow: #f8c940;
         margin-bottom: 8px;
     }
 
-    .input-container {
-        display: flex;
-        align-items: center;
-        border: 1px solid var(--el-border-color);
-        border-radius: 6px;
-        padding: 0 10px;
 
-        input {
-            flex-grow: 1;
-            border: none;
-            background: none;
-            padding: 10px 0;
-            font-size: 14px;
-
-            &:focus {
-                outline: none;
-            }
-        }
-
-        .clear-button {
-            background: none;
-            border: none;
-            cursor: pointer;
-            margin-right: 5px;
-        }
-
-        .char-count {
-            font-size: 13px;
-            flex-shrink: 0;
-        }
-    }
 }
 
 // --- Upload/Record Cards ---
@@ -484,6 +458,20 @@ $info-yellow: #f8c940;
     display: flex;
     gap: 20px;
     margin-bottom: 30px;
+}
+
+:deep(.el-upload) {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    padding-bottom: 14px;
+
+    .el-upload-dragger {
+        width: 100%;
+        height: 100%;
+        border: 0;
+    }
 }
 
 .option-card {
@@ -496,13 +484,8 @@ $info-yellow: #f8c940;
     justify-content: center;
     align-items: center;
     text-align: center;
-    padding: 20px;
     cursor: pointer;
     transition: border-color 0.2s, background-color 0.2s;
-
-    svg {
-        margin-bottom: 10px;
-    }
 
     h4 {
         font-size: 16px;
@@ -646,6 +629,12 @@ $info-yellow: #f8c940;
             }
         }
     }
+}
+
+.file-info {
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 20px;
 }
 
 // ===================================
