@@ -34,7 +34,7 @@ type web3LoginParams = {
 
 export interface VoiceParams extends Params {
   gender?: string;
-  is_public?: boolean;
+  is_public?: number;
 }
 
 export interface previewVoiceParams {

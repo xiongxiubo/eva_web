@@ -62,73 +62,13 @@
                 </button>
             </div>
         </div>
-        <div v-if="clonedVoice">
-            <div class="modal-content">
-                <div class="voice-name-input">
-                    <label for="voice-name">{{ $at('说出你的声音') }}</label>
-                    <el-input v-model="voiceName" maxlength="20" :placeholder="$at('请输入20个字符以内')" show-word-limit
-                        type="text" />
-                </div>
-                <h3 class="section-title">{{ $at('上传样本') }}</h3>
-                <div class="upload-options">
-                    <DragUpload class="option-card" @change="handleFileChange" />
-
-                    <div class="option-card record-card" @click="isRecording ? stopRecord() : startRecord()">
-                        <el-icon :size="24">
-                            <Mic />
-                        </el-icon>
-                        <h4 class="record-title-text">{{ isRecording ? $at('停止记录') : $at('开始记录') }}</h4>
-                        <p>{{ $at('点击录音并讲话 10-60 秒.') }}</p>
-                    </div>
-                </div>
-                <div v-if="file" class="file-info">
-                    <span class="file-name">{{ file.name }}</span>
-                </div>
-
-                <div class="info-section">
-                    <div class="info-box">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
-                            <path fill="currentColor"
-                                d="M11 15h2v2h-2zm0-8h2v6h-2zm.99-5C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2M12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8s8 3.58 8 8s-3.58 8-8 8" />
-                        </svg>
-                        <p>
-                            {{ $at('尚未上传任何内容。请上传您想克隆的声音的音频样本。') }}
-                            <br />
-                            **{{ $at('样本质量比数量更重要。') }}** {{ $at('噪声较大的样本可能会导致糟糕的结果。提供超过10秒的音频对提升效果帮助不大。') }}
-                        </p>
-                    </div>
-
-                    <label class="confirmation-checkbox">
-                        <input type="checkbox" v-model="isConfirmed" />
-                        <span class="checkmark"></span>
-                        <span class="confirmation-text">
-                            {{ $at('我在此确认，我拥有上传和克隆这些语音样本的所有必要权利和许可，并且我不会将平台生成的内容用于任何非法、欺诈或有害的目的。') }}
-                        </span>
-                    </label>
-                </div>
-            </div>
-
-            <footer class="modal-footer">
-                <button class="btn btn-back" @click="isCreate = false">{{ $at('后退') }}</button>
-                <button class="btn btn-clone" :disabled="!isConfirmed || voiceName.length === 0" @click="clonevoice">
-                    {{ $at('克隆语音') }}
-                </button>
-            </footer>
-        </div>
-
     </el-dialog>
 </template>
 
 <script setup lang="ts">
 import { $at } from 'i18n-auto-extractor';
-import { useRecordAudio } from '@/views/create/edit/recording'
-
 const store = useVoiceStore();
 const { voiceList } = storeToRefs(store)
-const { startRecord, stopRecord, isRecording, blob } = useRecordAudio()
-
-const voiceName = ref('');
-const isConfirmed = ref(false); // State for the legal confirmation checkbox
 
 const clonedVoice = computed(() => activeTab.value === 'mine' && isCreate.value)
 const { isMobile } = useDevice()
@@ -145,31 +85,7 @@ const Gender = [
     { name: $at('男性'), value: 'M' },
     { name: $at('女性'), value: 'F' },
 ]
-const file = ref<File>()
-// 处理文件上传
-const handleFileChange = (e: File) => {
-    file.value = e
-};
 
-const clonevoice = async () => {
-    const formData = new FormData();
-    if (!file.value && !blob.value) {
-        ElMessage.error("请上传或记录样本");
-        return;
-    }
-    if (blob.value) {
-        formData.append('file', blob.value);
-    } else {
-        formData.append('file', file.value!);
-    }
-    formData.append('name', voiceName.value);
-    try {
-        const res = await store.clone(formData);
-        console.log(res)
-    } catch (error) {
-        console.error("克隆音色失败:", error);
-    }
-}
 // 试听音色
 const previewVoice = (item: any) => {
     store.preview({
@@ -182,7 +98,7 @@ watch(selectedGender, (newGender) => {
         page_index: 1,
         page_count: 50,
         gender: newGender,
-        is_public: true,
+        is_public: 1,
     });
 });
 
@@ -191,18 +107,13 @@ onMounted(() => {
         page_index: 1,
         page_count: 50,
         gender: 'ALL',
-        is_public: true,
+        is_public: 1,
     });
     store.getUserVoice();
 })
 </script>
 
 <style lang="scss" scoped>
-@use "sass:color";
-$primary-color: #4b89ff;
-$error-red: #ff4b4b;
-$info-yellow: #f8c940;
-
 @mixin dark-scrollbars {
     &::-webkit-scrollbar {
         width: 6px;
@@ -222,7 +133,6 @@ $info-yellow: #f8c940;
     }
 }
 
-// --- Header ---
 .modal-header {
     display: flex;
     justify-content: space-between;
@@ -242,7 +152,6 @@ $info-yellow: #f8c940;
     }
 }
 
-// --- Tabs ---
 .tabs-container {
     display: flex;
     gap: 20px;
@@ -268,7 +177,6 @@ $info-yellow: #f8c940;
     }
 }
 
-// --- Content and Filters ---
 .content-area {
     flex-grow: 1;
     display: flex;
@@ -315,7 +223,6 @@ $info-yellow: #f8c940;
     }
 }
 
-// --- Voice List ---
 .voice-list {
     list-style: none;
     padding: 0;
@@ -425,218 +332,6 @@ $info-yellow: #f8c940;
     }
 }
 
-// --- Content Area ---
-.modal-content {
-    padding: 20px;
-    flex-grow: 1;
-    overflow-y: auto; // Allow content to scroll
-}
-
-.section-title {
-    font-size: 16px;
-    font-weight: 600;
-    margin-top: 20px;
-    margin-bottom: 15px;
-}
-
-// --- Voice Name Input ---
-.voice-name-input {
-    margin-bottom: 25px;
-
-    label {
-        display: block;
-        font-size: 15px;
-        font-weight: 600;
-        margin-bottom: 8px;
-    }
-
-
-}
-
-// --- Upload/Record Cards ---
-.upload-options {
-    display: flex;
-    gap: 20px;
-    margin-bottom: 30px;
-}
-
-:deep(.el-upload) {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: 100%;
-    padding-bottom: 14px;
-
-    .el-upload-dragger {
-        width: 100%;
-        height: 100%;
-        border: 0;
-    }
-}
-
-.option-card {
-    flex: 1;
-    min-height: 150px;
-    border-radius: 8px;
-    border: 2px dashed var(--el-border-color);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    cursor: pointer;
-    transition: border-color 0.2s, background-color 0.2s;
-
-    h4 {
-        font-size: 16px;
-        margin: 0 0 5px 0;
-    }
-
-    p {
-        font-size: 12px;
-        line-height: 1.4;
-    }
-
-    &:hover {
-        background-color: rgba($color: transparent, $alpha: .1);
-    }
-}
-
-.record-card {
-    // Styling for the "Start Recording" card
-    border-color: $error-red;
-
-    svg {
-        color: $error-red;
-    }
-
-    .record-title-text {
-        color: $error-red;
-    }
-
-    &:hover {
-        border-color: rgba($color: $error-red, $alpha: 1.0);
-        background-color: rgba($error-red, 0.1);
-    }
-}
-
-// --- Info Section ---
-.info-section {
-    margin-bottom: 20px;
-}
-
-.info-box {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    background-color: rgba($info-yellow, 0.1);
-    border: 1px solid $info-yellow;
-    padding: 15px;
-    border-radius: 6px;
-    font-size: 14px;
-    margin-bottom: 20px;
-
-    svg {
-        color: $info-yellow;
-        flex-shrink: 0;
-        margin-top: 2px;
-    }
-
-    p strong {
-        font-weight: 700;
-        color: white;
-    }
-}
-
-// --- Custom Checkbox ---
-.confirmation-checkbox {
-    display: flex;
-    align-items: flex-start;
-    cursor: pointer;
-    user-select: none;
-    font-size: 13px;
-    line-height: 1.5;
-
-    input[type='checkbox'] {
-        display: none;
-    }
-
-    .checkmark {
-        display: inline-block;
-        width: 18px;
-        height: 18px;
-        border: 2px solid var(--el-border-color);
-        border-radius: 4px;
-        margin-right: 10px;
-        flex-shrink: 0;
-        position: relative;
-        transition: background-color 0.2s, border-color 0.2s;
-    }
-
-    input[type='checkbox']:checked+.checkmark {
-        background-color: $primary-color;
-        border-color: $primary-color;
-
-        &::after {
-            content: '';
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%) rotate(45deg);
-            width: 5px;
-            height: 10px;
-            border: solid white;
-            border-width: 0 2px 2px 0;
-        }
-    }
-}
-
-// --- Footer Buttons ---
-.modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    padding: 15px 20px;
-    border-top: 1px solid var(--el-border-color);
-    gap: 15px;
-
-    .btn {
-        padding: 10px 20px;
-        border-radius: 6px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: opacity 0.2s, background-color 0.2s;
-
-        &-back {
-            border: none;
-
-            &:hover {
-                background-color: rgba($color: transparent, $alpha: .1);
-            }
-        }
-
-        &-clone {
-            background-color: $primary-color;
-            color: white;
-            border: none;
-
-            &:hover:not(:disabled) {
-                background-color: color.scale($primary-color, $lightness: -10%);
-            }
-
-            &:disabled {
-                opacity: 0.5;
-                cursor: not-allowed;
-            }
-        }
-    }
-}
-
-.file-info {
-    font-size: 14px;
-    line-height: 1.5;
-    margin-bottom: 20px;
-}
-
 // ===================================
 // --- Mobile/Tablet Responsiveness ---
 // ===================================
@@ -663,7 +358,6 @@ $info-yellow: #f8c940;
         }
     }
 
-    // Voice List Items Adaptation
     .voice-item {
         padding: 12px 15px; // Reduced vertical padding
     }
@@ -688,40 +382,6 @@ $info-yellow: #f8c940;
     .modal-header,
     .modal-footer {
         padding: 12px 15px; // Reduced padding
-    }
-
-    .modal-content {
-        padding: 15px; // Reduced padding
-    }
-
-    // Upload/Record Cards Adaptation
-    .upload-options {
-        flex-direction: column; // Stack cards vertically
-        gap: 15px;
-    }
-
-    .option-card {
-        min-height: 100px; // Smaller minimum height
-    }
-
-    // Info Section and Checkbox Adaptation
-    .info-box {
-        font-size: 13px; // Smaller text
-    }
-
-    .confirmation-checkbox {
-        .confirmation-text {
-            font-size: 12px; // Smaller text
-        }
-    }
-
-    // Footer Button Adaptation
-    .modal-footer {
-        justify-content: space-between; // Space between buttons
-
-        .btn {
-            flex: 1; // Make buttons equal width
-        }
     }
 }
 </style>

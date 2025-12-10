@@ -51,6 +51,8 @@ export const useVoiceStore = defineStore("voice", () => {
       if (eq(res.code, 0)) {
         ElMessage.success("克隆成功");
         getUserVoice();
+      } else {
+        ElMessage.error("克隆失败");
       }
     } catch (error) {
       console.log(error);

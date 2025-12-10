@@ -45,7 +45,19 @@ const router = createRouter({
     {
       path: "/create",
       name: "create",
-      component: () => import("@/views/create/index.vue"),
+      component: () => import("@/views/create/layout.vue"),
+      children: [
+        {
+          path: "/create",
+          name: "create-index",
+          component: () => import("@/views/create/index.vue"),
+        },
+        {
+          path: "/create/voice",
+          name: "create-voice",
+          component: () => import("@/views/create/voice/index.vue"),
+        },
+      ],
     },
     // 创作中心-编辑
     {
