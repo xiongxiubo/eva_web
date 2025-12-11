@@ -8,58 +8,58 @@
             <span class="btn-text-mobile">{{ $at('创建') }}</span>
         </button>
     </div>
-
+    <el-empty v-if="characterList.length === 0" description="还没有人物，快去创建一个吧" />
     <div class="content-grid">
-        <div v-for="card in cards" :key="card.id" class="card">
-            <div class="card-image">
-                <div class="placeholder-pattern">
-                    <span class="talkie-watermark">talkie</span>
-                </div>
-            </div>
+        <div v-for="card in characterList" :key="card.id" class="card"
+            @click="detailDialogVisible = true; currentCard = card">
+            <img lazy :src="card.avatar_url" class="card-image" alt="">
             <div class="card-body">
                 <div class="card-header">
-                    <h3 class="card-title">{{ card.title }}</h3>
+                    <h3 class="card-title">{{ card.name }}</h3>
                 </div>
                 <p class="card-desc">{{ card.description }}</p>
                 <div class="card-footer">
-                    {{ card.lastEdited }}
+                    {{ formatTime(card.created_at) }}
                 </div>
             </div>
         </div>
     </div>
+    <!-- 详情对话框 -->
+    <el-dialog v-model="detailDialogVisible" :center="true" :width="width">
+        <el-descriptions :title="$at('模型详情')" border direction="vertical" :column="4">
+            <el-descriptions-item :width="140" :rowspan="2" :label="$at('图片')" align="center">
+                <el-image lazy style="width: 100px; height: 100px" :src="currentCard.avatar_url"
+                    :preview-src-list="[currentCard.avatar_url]" preview-teleported fit="contain" />
+            </el-descriptions-item>
+            <el-descriptions-item :label="$at('模型名称')" :min-width="200">{{ currentCard.name }}</el-descriptions-item>
+            <el-descriptions-item :label="$at('性别')">{{ currentCard.gender === 'M' ? '男' : '女' }}</el-descriptions-item>
+            <el-descriptions-item :label="$at('语言')">{{ currentCard.language }}</el-descriptions-item>
+            <el-descriptions-item :label="$at('语音信息')"> 语音名称：{{ currentCard.voice_name }} </el-descriptions-item>
+            <el-descriptions-item :label="$at('是否推荐')">{{ currentCard.is_recommended ? '是' :
+                '否' }}</el-descriptions-item>
+            <el-descriptions-item :label="$at('是否公开')">{{ currentCard.is_public ? '是' : '否' }}</el-descriptions-item>
+            <el-descriptions-item :label="$at('创建时间')">{{ formatTime(currentCard.created_at) }}</el-descriptions-item>
+            <el-descriptions-item :label="$at('欢迎语')">{{ currentCard.welcome_text }}</el-descriptions-item>
+            <el-descriptions-item :label="$at('模型路径')" :span="2">{{ currentCard.model_url }}</el-descriptions-item>
+            <el-descriptions-item :label="$at('描述')" :span="4">{{ currentCard.description }}</el-descriptions-item>
+            <el-descriptions-item :label="$at('提示词')" :span="4">{{ currentCard.prompt }}</el-descriptions-item>
+        </el-descriptions>
+    </el-dialog>
 </template>
 <script setup lang="ts">
 import { $at } from 'i18n-auto-extractor';
-// --- 类型定义 ---
-interface CardItem {
-    id: number;
-    title: string;
-    description: string;
-    status: 'Draft' | 'Under Review' | 'Public';
-    lastEdited: string;
-    isSample: boolean;
-}
+import { formatTime } from '@/utils/time';
+const auditStore = useAuditStore();
+const { characterList } = storeToRefs(auditStore);
+const { isMobile } = useDevice();
+const width = computed(() => isMobile.value ? '100%' : '800px');
 const router = useRouter();
+const detailDialogVisible = ref(false);
+const currentCard = ref<any>({});
 
-const cards = ref<CardItem[]>([
-    {
-        id: 1,
-        title: 'Homework ...',
-        description: "Just like the name says, feed me your homework by typing/picture I'll give t...",
-        status: 'Draft',
-        lastEdited: 'Edited 12-02 10:17',
-        isSample: true,
-    },
-    {
-        id: 2,
-        title: 'Mobile Test',
-        description: "This is a card to test the responsive grid layout on mobile screens.",
-        status: 'Draft',
-        lastEdited: 'Edited 12-03 09:00',
-        isSample: false,
-    }
-]);
-
+onMounted(() => {
+    auditStore.GetCharacterList();
+});
 
 </script>
 <style lang="scss" scoped>
@@ -101,6 +101,7 @@ const cards = ref<CardItem[]>([
     border-radius: 12px;
     overflow: hidden;
     border: 1px solid var(--el-border-color);
+    cursor: pointer;
 
     .card-image {
         width: 100%;
@@ -110,14 +111,7 @@ const cards = ref<CardItem[]>([
         justify-content: center;
         align-items: center;
         border-bottom: 1px solid var(--el-border-color);
-
-        .placeholder-pattern {
-            color: #333;
-            font-size: 32px;
-            font-weight: 900;
-            letter-spacing: -1px;
-            opacity: 0.5;
-        }
+        object-fit: contain;
     }
 
     .card-body {

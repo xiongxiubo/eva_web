@@ -10,11 +10,7 @@
             <ul class="voice-list">
                 <li v-for="voice in userVoiceList" :key="voice.id" class="voice-item">
                     <div class="voice-info">
-                        <button class="play-button">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
-                                <path fill="currentColor" d="M8 5.14v13.72L19 12z" />
-                            </svg>
-                        </button>
+                        <Audio :src="voice.voice_url" />
                         <div class="voice-details">
                             <div class="voice-name">{{ voice.name }}</div>
                             <div class="voice-tags">
@@ -23,8 +19,8 @@
                             </div>
                         </div>
                     </div>
-
-                    <button class="use-button" @click="">{{ $at('使用') }}</button>
+                    <!-- 状态 -->
+                    <component :is="getStatusTag(voice.status)" />
                 </li>
             </ul>
         </el-card>
@@ -86,6 +82,7 @@
 <script setup lang="ts">
 import { $at } from 'i18n-auto-extractor';
 import { useRecordAudio } from '@/views/create/voice/recording';
+import Audio from '@/views/create/voice/Audio.vue';
 const { startRecord, stopRecord, isRecording, blob } = useRecordAudio();
 const store = useVoiceStore();
 const { userVoiceList } = storeToRefs(store);
@@ -99,22 +96,29 @@ const width = computed(() => isMobile.value ? '100%' : '50%');
 // 处理文件上传
 const handleFileChange = (e: File) => file.value = e;
 const clonevoice = async () => {
+    if (!file.value && !blob.value) return ElMessage.error("请上传或记录样本");
     const formData = new FormData();
-    if (!file.value && !blob.value) {
-        ElMessage.error("请上传或记录样本");
-        return;
-    };
-    if (blob.value) {
-        formData.append('file', blob.value);
-    } else {
-        formData.append('file', file.value!);
-    };
+    formData.append('file', blob.value ?? file.value!);
     formData.append('name', voiceName.value);
     try {
         await clone(formData);
     } catch (error) {
         console.error("克隆音色失败:", error);
     };
+};
+const getStatusTag = (status: string) => {
+    const map: Record<string, { type: 'warning' | 'danger' | 'success'; label: string }> = {
+        pending: { type: 'warning', label: '待审核' },
+        rejected: { type: 'danger', label: '审核拒绝' },
+        active: { type: 'success', label: '审核通过' },
+    };
+    const item = map[status];
+    if (!item) return status;
+    return h(
+        ElTag,
+        { type: item.type },
+        () => item.label
+    );
 };
 onMounted(() => {
     getUserVoice();

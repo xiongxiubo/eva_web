@@ -46,21 +46,42 @@
                         </div>
                     </div>
 
-                    <button class="use-button" @click="">{{ $at('使用') }}</button>
+                    <button class="use-button" @click="selectVoice(voice)">{{ $at('使用') }}</button>
                 </li>
             </ul>
         </div>
         <div class="content-area" v-if="activeTab === 'mine' && !clonedVoice">
-            <div class="empty">
+            <div class="empty" v-if="userVoiceList.length === 0">
                 <h3 class="title">{{ $at('开始克隆你的声音') }}</h3>
                 <div class="sub-title">{{ $at('看来你还没有创作过任何内容！你可以使用我们的语音创作功能来创作，然后添加以供使用。') }}</div>
-                <button class="create-button" @click="isCreate = true">
+                <button class="create-button" @click="$router.push('/create/voice')">
                     <el-icon>
                         <Headset />
                     </el-icon>
                     {{ $at('克隆新的声音') }}
                 </button>
             </div>
+            <ul class="voice-list" v-else>
+                <li v-for="voice in userVoiceList" :key="voice.id" class="voice-item">
+                    <div class="voice-info">
+                        <button class="play-button" @click="previewVoice(voice)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                                <path fill="currentColor" d="M8 5.14v13.72L19 12z" />
+                            </svg>
+                        </button>
+
+                        <div class="voice-details">
+                            <div class="voice-name">{{ voice.name }}</div>
+                            <div class="voice-tags">
+                                <span class="tag gender">{{ voice.gender === 'M' ? '男性' : '女性' }}</span>
+                                <span class="tag accent">{{ voice.language }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="use-button" @click="selectVoice(voice)">{{ $at('使用') }}</button>
+                </li>
+            </ul>
         </div>
     </el-dialog>
 </template>
@@ -68,16 +89,13 @@
 <script setup lang="ts">
 import { $at } from 'i18n-auto-extractor';
 const store = useVoiceStore();
-const { voiceList } = storeToRefs(store)
-
+const { voiceList, userVoiceList } = storeToRefs(store)
 const clonedVoice = computed(() => activeTab.value === 'mine' && isCreate.value)
 const { isMobile } = useDevice()
 const width = computed(() => isMobile.value ? '100%' : '50%')
-const dialogVisible = defineModel<boolean>({
-    default: true,
-});
+const dialogVisible = defineModel<boolean>({ default: true });
+const emits = defineEmits(['select'])
 const isCreate = ref(false);
-// Component State
 const activeTab = ref<'library' | 'mine'>('library');
 const selectedGender = ref<string>('ALL');
 const Gender = [
@@ -101,6 +119,10 @@ watch(selectedGender, (newGender) => {
         is_public: 1,
     });
 });
+const selectVoice = (item: any) => {
+    emits('select', item);
+    dialogVisible.value = false;
+};
 
 onMounted(() => {
     store.getVoice({
@@ -114,6 +136,8 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
+$primary-color: #4b89ff;
+
 @mixin dark-scrollbars {
     &::-webkit-scrollbar {
         width: 6px;

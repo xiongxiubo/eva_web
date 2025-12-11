@@ -34,18 +34,22 @@ import Header from './header.vue'
 import { Avatar, CircleCloseFilled, Mic, Stamp } from '@element-plus/icons-vue';
 import { $at } from 'i18n-auto-extractor';
 const router = useRouter();
+const route = useRoute();
 // --- 状态管理 ---
 const isMobileMenuOpen = ref(false); // 控制手机端菜单开关
-const activeIndex = ref(0);
+
+const activeIndex = computed(() => {
+    const activePath = route.path;
+    return menuItems.findIndex(item => item.path === activePath);
+});
 const menuItems = [
     { name: $at('我的人物'), icon: Avatar, path: '/create' },
     { name: $at('我的音色'), icon: Mic, path: '/create/voice' },
-    { name: $at('审核中'), icon: Stamp, path: '/create/review' },
-    { name: $at('审核失败'), icon: CircleCloseFilled, path: '/create/fail' },
+    { name: $at('审核中'), icon: Stamp, path: '/create/audit' },
+    { name: $at('审核失败'), icon: CircleCloseFilled, path: '/create/audit/rejected' },
 ];
 // --- 方法 ---
 const setActiveItem = (index: number) => {
-    activeIndex.value = index;
     router.push(menuItems[index].path);
 };
 const closeMobileMenu = () => {

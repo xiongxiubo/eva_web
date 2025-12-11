@@ -7,7 +7,6 @@ export const useVoiceStore = defineStore("voice", () => {
   async function getVoice(params: VoiceParams) {
     try {
       const res = await getVoiceList(params);
-      console.log(res);
       if (eq(res.code, 0)) {
         voiceList.value = get(res, "data.list", []);
       }
@@ -19,7 +18,6 @@ export const useVoiceStore = defineStore("voice", () => {
   async function preview(data: previewVoiceParams) {
     try {
       const res = await previewVoice(data);
-      console.log(res);
       if (eq(res.code, 0)) {
         const audio = get(res, "data.audio", "");
         playPCM(audio);
@@ -35,7 +33,6 @@ export const useVoiceStore = defineStore("voice", () => {
         page_index: 1,
         page_count: 50,
       });
-      console.log(res);
       if (eq(res.code, 0)) {
         userVoiceList.value = get(res, "data.list", []);
       }
@@ -47,7 +44,6 @@ export const useVoiceStore = defineStore("voice", () => {
   async function clone(data: FormData) {
     try {
       const res = await cloneVoice(data);
-      console.log(res);
       if (eq(res.code, 0)) {
         ElMessage.success("克隆成功");
         getUserVoice();

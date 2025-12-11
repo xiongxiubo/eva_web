@@ -12,6 +12,7 @@ declare global {
   const EffectScope: typeof import('vue')['EffectScope']
   const ElMessage: typeof import('element-plus/es')['ElMessage']
   const ElMessageBox: typeof import('element-plus/es')['ElMessageBox']
+  const ElTag: typeof import('element-plus/es')['ElTag']
   const Lipsync: typeof import('../hooks/renderUtils/lipsync')['Lipsync']
   const LipsyncEn: typeof import("../hooks/head/lipsync-en.mjs")["LipsyncEn"]
   const MixamoRender: typeof import('../hooks/mixamoRender')['MixamoRender']
@@ -25,6 +26,7 @@ declare global {
   const cloneVoice: typeof import('../api/index')['cloneVoice']
   const computed: typeof import('vue')['computed']
   const createApp: typeof import('vue')['createApp']
+  const createAuditModel: typeof import('../api/index')['createAuditModel']
   const createPinia: typeof import('pinia')['createPinia']
   const customRef: typeof import('vue')['customRef']
   const defineAsyncComponent: typeof import('vue')['defineAsyncComponent']
@@ -38,6 +40,8 @@ declare global {
   const formatTime: typeof import('../utils/time')['formatTime']
   const generateAvatar: typeof import('../utils/utils')['generateAvatar']
   const getActivePinia: typeof import('pinia')['getActivePinia']
+  const getAuditModelList: typeof import('../api/index')['getAuditModelList']
+  const getCharacterList: typeof import('../api/index')['getCharacterList']
   const getChatData: typeof import('../api/index')['getChatData']
   const getChattingAi: typeof import('../api/index')['getChattingAi']
   const getCurrentInstance: typeof import('vue')['getCurrentInstance']
@@ -115,6 +119,7 @@ declare global {
   const updateUserInfo: typeof import('../api/index')['updateUserInfo']
   const useAttrs: typeof import('vue')['useAttrs']
   const useAudio: typeof import('../hooks/useAudio')['useAudio']
+  const useAuditStore: typeof import('../stores/audit')['useAuditStore']
   const useCssModule: typeof import('vue')['useCssModule']
   const useCssVars: typeof import('vue')['useCssVars']
   const useDevice: typeof import('../hooks/useDevice')['useDevice']
@@ -160,6 +165,6 @@ declare global {
   export type { RigRender } from '../hooks/rigRender'
   import('../hooks/rigRender')
   // @ts-ignore
-  export type { VoiceParams, previewVoiceParams } from '../api/index'
+  export type { VoiceParams, previewVoiceParams, CreateAudit } from '../api/index'
   import('../api/index')
 }

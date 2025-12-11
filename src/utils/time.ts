@@ -6,7 +6,7 @@ import "dayjs/locale/ja";
 
 dayjs.extend(relativeTime);
 export function formatTime(time: string) {
-  return dayjs(time).format("YYYY-MM-DD HH:mm:ss");
+  return dayjs.unix(Number(time)).format("YYYY-MM-DD HH:mm:ss");
 }
 
 export function timeFromNow(time: string, locale: string = "zh-cn") {

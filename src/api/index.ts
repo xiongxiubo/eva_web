@@ -1,5 +1,4 @@
 import request from "@/utils/request";
-
 type LoginParams = {
   email: string;
   password: string;
@@ -41,7 +40,17 @@ export interface previewVoiceParams {
   platform: string;
   voice_type: string;
 }
-
+export interface CreateAudit {
+  name: string;
+  description: string;
+  prompt: string;
+  welcome_text: string;
+  images: Blob;
+  voice_id: string;
+}
+interface auditParams extends Params {
+  status: string;
+}
 //登录
 export const login: (data: LoginParams) => Promise<Response> = (data: LoginParams) => request.post("/user/login", data);
 // 注册
@@ -52,46 +61,41 @@ export const loginWeb3: (data: web3LoginParams) => Promise<Response> = (data: we
 export const getUserInfo: () => Promise<Response> = () => request.get("/user/info");
 // 更新用户信息
 export const updateUserInfo: (data: { username?: string; twitter_username?: string }) => Promise<Response> = (data: { username?: string; twitter_username?: string }) => request.put("/user/update/userinfo", data);
-
 // 获取tag列表
 export const getTagList: () => Promise<Response> = () => request.get("/tags/list");
 // 获取ai角色列表
 export const getRoleList: (params: AiParams) => Promise<Response> = (params: AiParams) => request.get("/ai/list", { params });
 // 获取正在聊的ai
 export const getChattingAi: (talkie_id: string) => Promise<Response> = (talkie_id: string) => request.get("/ai/current", { params: { talkie_id } });
-
 // 获取用户聊过的ai
 export const getUserChat: () => Promise<Response> = () => request.get("/chat/records");
 // 删除用户聊过的ai
 export const deleteUserChat: (talkie_id: string) => Promise<Response> = (talkie_id: string) => request.delete("/chat/records", { data: { talkie_id } });
-
 // 获取聊天记录等数据
 export const getChatData: (params: ChatDataParams) => Promise<Response> = (params: ChatDataParams) => request.get("/chat/talkie", { params });
-
 // 热门ai
 export const getHotAi: () => Promise<Response> = () => request.get("/ai/hot");
-
 // 说话人列表
 export const getSpeakerList: (params: Params) => Promise<Response> = (params: Params) => request.get("/speaker/list", { params });
-
 // 添加说话人
 export const addSpeaker: (data: { speaker: string; audio_data: string }) => Promise<Response> = (data: { speaker: string; audio_data: string }) => request.post("/speaker/add", data);
-
 // 删除说话人
 export const deleteSpeaker: (audio_id: number) => Promise<Response> = (audio_id: number) => request.delete("/speaker/delete", { data: { audio_id } });
 // 修改说话人
 export const updateSpeaker: (data: { audio_id: number; speaker: string }) => Promise<Response> = (data: { audio_id: number; speaker: string }) => request.put("/speaker/update", data);
-
 // 获取记忆列表
 export const getMemoryList: () => Promise<Response> = () => request.get("/memory/list");
-
 // 获取音色列表
 export const getVoiceList: (params: VoiceParams) => Promise<Response> = (params: VoiceParams) => request.get("/voice/list", { params });
-
 // 试听音色
 export const previewVoice: (data: previewVoiceParams) => Promise<Response> = (data: previewVoiceParams) => request.post("/voice/preview", data);
-
 // 克隆音色
 export const cloneVoice: (data: FormData) => Promise<Response> = (data: FormData) => request.post("/voice/clone", data);
 // 查看用户音色列表
 export const getUserVoiceList: (params: Params) => Promise<Response> = (params: Params) => request.get("/voice/user/list", { params });
+// 创建审核模型
+export const createAuditModel: (data: FormData) => Promise<Response> = (data: FormData) => request.post("/audit/create", data);
+// 获取审核模型列表
+export const getAuditModelList: (params: auditParams) => Promise<Response> = (params: auditParams) => request.get("/audit/list", { params });
+// 获取人物列表
+export const getCharacterList: (params: Params) => Promise<Response> = (params: Params) => request.get("/character/list", { params });

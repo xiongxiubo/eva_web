@@ -8,80 +8,55 @@
                 <span class="draft-text">{{ $at('返回') }}</span>
             </div>
             <div class="header-right">
-                <button class="btn btn-save">{{ $at('保存') }}</button>
-                <button class="btn btn-publish">{{ $at('发布') }}</button>
+                <button class="btn btn-publish" @click="submit" v-loading="loading">{{ $at('提交审核') }}</button>
             </div>
         </header>
-
         <div class="talkie-creator__main-content">
             <section class="config-panel">
                 <div class="config-panel__section">
                     <h2 class="section-title">{{ $at('创建你的人物') }}</h2>
-
                     <div class="input-group">
                         <label for="name">{{ $at('姓名') }}</label>
                         <input id="name" type="text" :placeholder="$at('请输入姓名')" v-model="config.name" maxlength="30" />
                         <span class="char-count">{{ config.name.length }}/30</span>
                     </div>
                 </div>
-
                 <div class="config-panel__section">
-                    <h2 class="section-title">{{ $at('设置（影响角色的回复）') }}</h2>
-                    <p class="section-description update-info">
-                        **{{ $at('更新提示') }}:** {{ $at('不能被用户看到，仅影响对话效果') }}
-                    </p>
-                    <p class="section-description">
-                        {{ $at('角色的设置，包括所有背景信息、特征、角色与用户之间的关系等') }}
-                    </p>
-                    <textarea v-model="config.settings" rows="5"></textarea>
-                    <div class="mention-tags">
-                        <span class="char-count">{{ config.settings.length }}/4000</span>
-                    </div>
+                    <h2 class="section-title">{{ $at('提示词（影响角色的回复）') }}</h2>
+                    <p class="section-description update-info"> **{{ $at('更新提示') }}:** {{ $at('不能被用户看到，仅影响对话效果') }} </p>
+                    <p class="section-description">{{ $at('角色的提示词，包括所有背景信息、特征、角色与用户之间的关系等') }}</p>
+                    <textarea v-model="config.prompt" rows="5"></textarea>
+                    <div class="mention-tags"><span class="char-count">{{ config.prompt.length }}/4000</span></div>
                 </div>
-
                 <div class="config-panel__section">
                     <h2 class="section-title">{{ $at('介绍（不影响角色的回复）') }}</h2>
-                    <p class="section-description update-info">
-                        **{{ $at('更新提示') }}:** {{ $at('角色的介绍不会影响对话效果') }}
-                    </p>
-                    <p class="section-description">
-                        {{ $at('角色的介绍，用于展示角色的背景、特征、关系等') }}
-                    </p>
-                    <textarea v-model="config.intro" :placeholder="$at('输入角色的介绍')" rows="4"></textarea>
-                    <span class="char-count">{{ config.intro.length }}/500</span>
+                    <p class="section-description update-info"> **{{ $at('更新提示') }}:** {{ $at('角色的介绍不会影响对话效果') }}</p>
+                    <p class="section-description">{{ $at('角色的介绍，用于展示角色的背景、特征、关系等') }}</p>
+                    <textarea v-model="config.description" :placeholder="$at('输入角色的介绍')" rows="4"></textarea>
+                    <span class="char-count">{{ config.description.length }}/500</span>
                 </div>
-
                 <div class="config-panel__section">
                     <h2 class="section-title">{{ $at('开场白（不影响角色的回复）') }}</h2>
-                    <p class="section-description">
-                        {{ $at('开场白，用于开始对话并设置对话基调') }}
-                    </p>
-                    <textarea v-model="config.opening" :placeholder="$at('输入开场白')" rows="4"></textarea>
-                    <span class="char-count">{{ config.opening.length }}/500</span>
+                    <p class="section-description">{{ $at('开场白，用于开始对话并设置对话基调') }}</p>
+                    <textarea v-model="config.welcome_text" :placeholder="$at('输入开场白')" rows="4"></textarea>
+                    <span class="char-count">{{ config.welcome_text.length }}/500</span>
                 </div>
             </section>
-
             <section class="media-and-preview-panel">
-
                 <div class="media-config">
                     <div class="header">
-                        <div class="title-with-icon">
-                            <el-icon>
+                        <div class="title-with-icon"><el-icon>
                                 <PictureFilled />
-                            </el-icon>
-                            {{ $at('图片') }}
-                        </div>
+                            </el-icon>{{ $at('图片') }}</div>
                     </div>
-                    <p class="description">
-                        {{ $at('添加图片，便于创建3D模型') }}
-                    </p>
-                    <div class="placeholder-box">
+                    <p class="description"> {{ $at('添加图片，便于创建3D模型') }}</p>
+                    <el-upload class="avatar-uploader" action="#" list-type="picture-card" :auto-upload="false"
+                        accept="image/*" :limit="1" @change="handleAvatarChange">
                         <el-icon>
                             <Plus />
                         </el-icon>
-                    </div>
+                    </el-upload>
                 </div>
-
                 <div class="media-config">
                     <div class="header">
                         <div class="title-with-icon">
@@ -91,41 +66,80 @@
                             {{ $at('语音') }}
                         </div>
                     </div>
-                    <p class="description">
-                        {{ $at('选择人物的语音') }}
-                    </p>
-                    <div class="placeholder-box" @click="voiceVisible = true">
+                    <p class="description">{{ $at('选择人物的语音') }}</p>
+                    <div class="placeholder-box" @click="voiceVisible = true" v-if="!voice.id">
                         <el-icon>
                             <Plus />
                         </el-icon>
                     </div>
+                    <div class="voice-item" v-else>
+                        <p class="voice-name">{{ voice.name }}</p>
+                        <span class="tag accent">{{ voice.language }}</span>
+                    </div>
                 </div>
             </section>
         </div>
-        <Voice v-model="voiceVisible" />
+        <Voice v-model="voiceVisible" @select="selectVoice" />
     </div>
 </template>
 
 <script setup lang="ts">
 import Voice from './voice.vue';
 import { $at } from 'i18n-auto-extractor';
-// Talkie Configuration State
-interface TalkieConfig {
-    name: string;
-    gender: 'Male' | 'Female' | 'Non-Binary' | '';
-    settings: string;
-    intro: string;
-    opening: string;
-}
+import { type UploadFile } from 'element-plus';
+const loading = ref(false);
 const router = useRouter();
-const config = reactive<TalkieConfig>({
+const voice = ref<any>({});
+const config = reactive<CreateAudit>({
     name: '',
-    gender: '',
-    settings: '',
-    intro: '',
-    opening: '',
+    description: '',
+    prompt: '',
+    welcome_text: '',
+    images: new Blob(),
+    voice_id: '',
 });
 const voiceVisible = ref(false);
+const handleAvatarChange = (file: UploadFile) => {
+    config.images = file.raw!;
+};
+const selectVoice = (item: any) => {
+    config.voice_id = item.id;
+    voice.value = item;
+};
+const submit = async () => {
+    const formData = new FormData();
+    formData.append('name', config.name);
+    formData.append('description', config.description);
+    formData.append('prompt', config.prompt);
+    formData.append('welcome_text', config.welcome_text);
+    formData.append('images', config.images);
+    formData.append('voice_id', config.voice_id);
+    loading.value = true;
+    try {
+        const res = await createAuditModel(formData);
+        if (res.code === 0) {
+            ElMessage.success($at('提交成功'));
+            router.replace("/create");
+        } else {
+            ElMessage.error(res.msg || $at('提交失败'));
+        }
+    } catch (error) {
+        ElMessage.error($at('提交失败'));
+    } finally {
+        loading.value = false;
+    }
+};
+onUnmounted(() => {
+    // 将config重置为初始值
+    Object.assign(config, {
+        name: '',
+        description: '',
+        prompt: '',
+        welcome_text: '',
+        images: new Blob(),
+        voice_id: '',
+    });
+})
 </script>
 
 <style lang="scss" scoped>
@@ -402,6 +416,39 @@ textarea {
     cursor: pointer;
     transition: border-color 0.2s;
 }
+
+.voice-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    transition: background-color 0.2s;
+    background-color: var(--el-menu-bg-color);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    border: 1px solid var(--el-border-color);
+
+    .voice-name {
+        font-size: 15px;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+
+    .tag {
+        font-size: 11px;
+        padding: 3px 8px;
+        border-radius: 12px;
+        background-color: #383838;
+        white-space: nowrap;
+        font-weight: 600;
+
+        &.accent {
+            background-color: #1a3a3a;
+            color: #46b8b8;
+        }
+    }
+}
+
 
 @media (max-width: 900px) {
     .talkie-creator__main-content {
