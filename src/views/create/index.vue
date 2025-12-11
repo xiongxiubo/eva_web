@@ -10,8 +10,7 @@
     </div>
     <el-empty v-if="characterList.length === 0" description="还没有人物，快去创建一个吧" />
     <div class="content-grid">
-        <div v-for="card in characterList" :key="card.id" class="card"
-            @click="detailDialogVisible = true; currentCard = card">
+        <div v-for="card in characterList" :key="card.id" class="card" @click="showDetailDialog(card)">
             <img lazy :src="card.avatar_url" class="card-image" alt="">
             <div class="card-body">
                 <div class="card-header">
@@ -31,19 +30,43 @@
                 <el-image lazy style="width: 100px; height: 100px" :src="currentCard.avatar_url"
                     :preview-src-list="[currentCard.avatar_url]" preview-teleported fit="contain" />
             </el-descriptions-item>
-            <el-descriptions-item :label="$at('模型名称')" :min-width="200">{{ currentCard.name }}</el-descriptions-item>
-            <el-descriptions-item :label="$at('性别')">{{ currentCard.gender === 'M' ? '男' : '女' }}</el-descriptions-item>
-            <el-descriptions-item :label="$at('语言')">{{ currentCard.language }}</el-descriptions-item>
+            <el-descriptions-item :label="$at('模型名称')" :min-width="200">
+                <el-input v-model="edit.name" />
+            </el-descriptions-item>
+            <el-descriptions-item :label="$at('性别')">
+                <el-select v-model="edit.gender" placeholder="请选择性别">
+                    <el-option label="男" value="M" />
+                    <el-option label="女" value="F" />
+                </el-select>
+            </el-descriptions-item>
+            <el-descriptions-item :label="$at('语言')">
+                <el-select v-model="edit.language" placeholder="请选择语言">
+                    <el-option label="中文" value="zh" />
+                    <el-option label="英文" value="en" />
+                </el-select>
+            </el-descriptions-item>
             <el-descriptions-item :label="$at('语音信息')"> 语音名称：{{ currentCard.voice_name }} </el-descriptions-item>
-            <el-descriptions-item :label="$at('是否推荐')">{{ currentCard.is_recommended ? '是' :
-                '否' }}</el-descriptions-item>
-            <el-descriptions-item :label="$at('是否公开')">{{ currentCard.is_public ? '是' : '否' }}</el-descriptions-item>
+            <el-descriptions-item :label="$at('年龄')">
+                <el-input v-model="edit.age" type="number" />
+            </el-descriptions-item>
+            <el-descriptions-item :label="$at('是否公开')">
+                <el-switch v-model="edit.is_public" :active-value="1" :inactive-value="0" />
+            </el-descriptions-item>
             <el-descriptions-item :label="$at('创建时间')">{{ formatTime(currentCard.created_at) }}</el-descriptions-item>
-            <el-descriptions-item :label="$at('欢迎语')">{{ currentCard.welcome_text }}</el-descriptions-item>
+            <el-descriptions-item :label="$at('欢迎语')">
+                <el-input v-model="edit.welcome_text" />
+            </el-descriptions-item>
             <el-descriptions-item :label="$at('模型路径')" :span="2">{{ currentCard.model_url }}</el-descriptions-item>
-            <el-descriptions-item :label="$at('描述')" :span="4">{{ currentCard.description }}</el-descriptions-item>
-            <el-descriptions-item :label="$at('提示词')" :span="4">{{ currentCard.prompt }}</el-descriptions-item>
+            <el-descriptions-item :label="$at('描述')" :span="4">
+                <el-input v-model="edit.description" type="textarea" :rows="4" />
+            </el-descriptions-item>
+            <el-descriptions-item :label="$at('提示词')" :span="4">
+                <el-input v-model="edit.prompt" type="textarea" :rows="4" />
+            </el-descriptions-item>
         </el-descriptions>
+        <template #footer>
+            <el-button type="primary" @click="handleSave">{{ $at('保存') }}</el-button>
+        </template>
     </el-dialog>
 </template>
 <script setup lang="ts">
@@ -56,7 +79,51 @@ const width = computed(() => isMobile.value ? '100%' : '800px');
 const router = useRouter();
 const detailDialogVisible = ref(false);
 const currentCard = ref<any>({});
+const saveLoading = ref(false);
+const edit = reactive<EditCharacter>({
+    id: 0,
+    name: "",
+    gender: "",
+    language: "",
+    age: 0,
+    is_public: false,
+    welcome_text: "",
+    description: "",
+    prompt: "",
+})
 
+const showDetailDialog = (card: any) => {
+    currentCard.value = { ...card };
+    edit.id = card.id;
+    edit.name = card.name;
+    edit.gender = card.gender;
+    edit.language = card.language;
+    edit.age = card.age;
+    edit.is_public = card.is_public;
+    edit.welcome_text = card.welcome_text;
+    edit.description = card.description;
+    edit.prompt = card.prompt;
+    detailDialogVisible.value = true;
+}
+
+const handleSave = async () => {
+    saveLoading.value = true;
+    try {
+        const res = await updateCharacterInfo({
+            ...edit,
+            age: Number(edit.age),
+        });
+        if (res.code != 0) return ElMessage.error(res.msg);
+        ElMessage.success('修改成功');
+    } catch (error) {
+        ElMessage.error('修改失败');
+    } finally {
+        detailDialogVisible.value = false;
+        saveLoading.value = false;
+        auditStore.GetCharacterList();
+    }
+
+}
 onMounted(() => {
     auditStore.GetCharacterList();
 });

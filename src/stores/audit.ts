@@ -3,6 +3,7 @@ import { eq, get } from "lodash";
 export const useAuditStore = defineStore("audit", () => {
   const auditList = ref<any[]>([]);
   const audittotal = ref(0);
+  const auditDetail = ref<any>({});
   const characterList = ref<any[]>([]);
   const charactertotal = ref(0);
   const page_index = ref(1);
@@ -37,12 +38,26 @@ export const useAuditStore = defineStore("audit", () => {
       console.log(error);
     }
   }
+  // 获取审核详情
+  async function GetAuditDetail(id: number) {
+    try {
+      const res = await getAuditDetail(id);
+      console.log(res);
+      if (eq(res.code, 0)) {
+        auditDetail.value = get(res, "data", {});
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
   return {
     auditList,
     audittotal,
+    auditDetail,
     characterList,
     charactertotal,
     GetAuditList,
+    GetAuditDetail,
     GetCharacterList,
   };
 });

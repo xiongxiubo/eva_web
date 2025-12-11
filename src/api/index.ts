@@ -45,11 +45,24 @@ export interface CreateAudit {
   description: string;
   prompt: string;
   welcome_text: string;
-  images: Blob;
+  file: Blob | null;
+  images: string;
   voice_id: string;
 }
 interface auditParams extends Params {
   status: string;
+}
+
+export interface EditCharacter {
+  id: number;
+  name: string;
+  gender: string;
+  age: number;
+  language: string;
+  is_public: boolean;
+  welcome_text: string;
+  description: string;
+  prompt: string;
 }
 //登录
 export const login: (data: LoginParams) => Promise<Response> = (data: LoginParams) => request.post("/user/login", data);
@@ -99,3 +112,9 @@ export const createAuditModel: (data: FormData) => Promise<Response> = (data: Fo
 export const getAuditModelList: (params: auditParams) => Promise<Response> = (params: auditParams) => request.get("/audit/list", { params });
 // 获取人物列表
 export const getCharacterList: (params: Params) => Promise<Response> = (params: Params) => request.get("/character/list", { params });
+// 获取审核详情
+export const getAuditDetail: (id: number) => Promise<Response> = (id: number) => request.get(`/audit/detail`, { params: { id } });
+// 更改审核信息
+export const updateAuditInfo: (data: FormData) => Promise<Response> = (data: FormData) => request.put(`/audit/edit`, data);
+// 修改人物信息
+export const updateCharacterInfo: (data: EditCharacter) => Promise<Response> = (data: EditCharacter) => request.put(`/character/edit`, data);

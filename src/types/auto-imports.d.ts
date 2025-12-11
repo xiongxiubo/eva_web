@@ -40,6 +40,7 @@ declare global {
   const formatTime: typeof import('../utils/time')['formatTime']
   const generateAvatar: typeof import('../utils/utils')['generateAvatar']
   const getActivePinia: typeof import('pinia')['getActivePinia']
+  const getAuditDetail: typeof import('../api/index')['getAuditDetail']
   const getAuditModelList: typeof import('../api/index')['getAuditModelList']
   const getCharacterList: typeof import('../api/index')['getCharacterList']
   const getChatData: typeof import('../api/index')['getChatData']
@@ -49,6 +50,7 @@ declare global {
   const getCurrentWatcher: typeof import('vue')['getCurrentWatcher']
   const getHotAi: typeof import('../api/index')['getHotAi']
   const getMemoryList: typeof import('../api/index')['getMemoryList']
+  const getModelDetail: typeof import('../api/index')['getModelDetail']
   const getRoleList: typeof import('../api/index')['getRoleList']
   const getSpeakerList: typeof import('../api/index')['getSpeakerList']
   const getTagList: typeof import('../api/index')['getTagList']
@@ -115,6 +117,8 @@ declare global {
   const triggerRef: typeof import('vue')['triggerRef']
   const uint8ToBase64: typeof import('../utils/convert')['uint8ToBase64']
   const unref: typeof import('vue')['unref']
+  const updateAuditInfo: typeof import('../api/index')['updateAuditInfo']
+  const updateCharacterInfo: typeof import('../api/index')['updateCharacterInfo']
   const updateSpeaker: typeof import('../api/index')['updateSpeaker']
   const updateUserInfo: typeof import('../api/index')['updateUserInfo']
   const useAttrs: typeof import('vue')['useAttrs']
@@ -165,6 +169,6 @@ declare global {
   export type { RigRender } from '../hooks/rigRender'
   import('../hooks/rigRender')
   // @ts-ignore
-  export type { VoiceParams, previewVoiceParams, CreateAudit } from '../api/index'
+  export type { VoiceParams, previewVoiceParams, CreateAudit, EditCharacter } from '../api/index'
   import('../api/index')
 }

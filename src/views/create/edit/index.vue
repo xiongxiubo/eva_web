@@ -1,7 +1,7 @@
 <template>
     <div class="talkie-creator">
         <header class="talkie-creator__header">
-            <div class="header-left" @click="router.push('/create')">
+            <div class="header-left" @click="router.back()">
                 <el-icon>
                     <ArrowLeft />
                 </el-icon>
@@ -50,12 +50,17 @@
                             </el-icon>{{ $at('图片') }}</div>
                     </div>
                     <p class="description"> {{ $at('添加图片，便于创建3D模型') }}</p>
-                    <el-upload class="avatar-uploader" action="#" list-type="picture-card" :auto-upload="false"
-                        accept="image/*" :limit="1" @change="handleAvatarChange">
-                        <el-icon>
-                            <Plus />
-                        </el-icon>
-                    </el-upload>
+                    <div class="upload-box">
+                        <el-image :src="config.images" fit="cover" class="avatar"
+                            v-if="!config.file && config.images" />
+                        <el-upload class="avatar-uploader" action="#" list-type="picture-card" :auto-upload="false"
+                            accept="image/*" :limit="1" @change="handleAvatarChange">
+                            <el-icon>
+                                <Plus />
+                            </el-icon>
+                        </el-upload>
+                    </div>
+
                 </div>
                 <div class="media-config">
                     <div class="header">
@@ -87,20 +92,24 @@
 import Voice from './voice.vue';
 import { $at } from 'i18n-auto-extractor';
 import { type UploadFile } from 'element-plus';
+const { GetAuditDetail } = useAuditStore();
+const { auditDetail } = storeToRefs(useAuditStore());
 const loading = ref(false);
 const router = useRouter();
+const route = useRoute();
 const voice = ref<any>({});
 const config = reactive<CreateAudit>({
     name: '',
     description: '',
     prompt: '',
     welcome_text: '',
-    images: new Blob(),
+    file: null,
+    images: "",
     voice_id: '',
 });
 const voiceVisible = ref(false);
 const handleAvatarChange = (file: UploadFile) => {
-    config.images = file.raw!;
+    config.file = file.raw!;
 };
 const selectVoice = (item: any) => {
     config.voice_id = item.id;
@@ -108,29 +117,43 @@ const selectVoice = (item: any) => {
 };
 const submit = async () => {
     const formData = new FormData();
+    formData.append('id', route.query.id as string || '');
     formData.append('name', config.name);
     formData.append('description', config.description);
     formData.append('prompt', config.prompt);
     formData.append('welcome_text', config.welcome_text);
     formData.append('images', config.images);
     formData.append('voice_id', config.voice_id);
+    if (config.file) formData.append('file', config.file);
     loading.value = true;
     try {
-        const res = await createAuditModel(formData);
+        const res = route.query.id ? await updateAuditInfo(formData) : await createAuditModel(formData);
         if (res.code === 0) {
             ElMessage.success($at('提交成功'));
-            router.replace("/create");
+            router.replace("/create/audit");
         } else {
             ElMessage.error(res.msg || $at('提交失败'));
-        }
+        };
     } catch (error) {
         ElMessage.error($at('提交失败'));
     } finally {
         loading.value = false;
-    }
+    };
 };
+onMounted(async () => {
+    console.log(route.query.id);
+    if (route.query.id) {
+        await GetAuditDetail(Number(route.query.id));
+        config.name = auditDetail.value.name || '';
+        config.description = auditDetail.value.description || '';
+        config.prompt = auditDetail.value.prompt || '';
+        config.welcome_text = auditDetail.value.welcome_text || '';
+        config.images = auditDetail.value.images || '';
+        config.voice_id = auditDetail.value.voice_id || '';
+        voice.value = auditDetail.value.voice || {};
+    };
+});
 onUnmounted(() => {
-    // 将config重置为初始值
     Object.assign(config, {
         name: '',
         description: '',
@@ -446,6 +469,19 @@ textarea {
             background-color: #1a3a3a;
             color: #46b8b8;
         }
+    }
+}
+
+.upload-box {
+    display: flex;
+    gap: 10px;
+
+    .avatar {
+        width: 148px;
+        height: 148px;
+        border: 1px solid var(--el-border-color);
+        box-sizing: border-box;
+        border-radius: 8px;
     }
 }
 
