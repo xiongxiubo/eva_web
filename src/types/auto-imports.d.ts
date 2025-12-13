@@ -36,6 +36,8 @@ declare global {
   const deleteUserChat: typeof import('../api/index')['deleteUserChat']
   const effectScope: typeof import('vue')['effectScope']
   const ellipsis: typeof import('../utils/utils')['ellipsis']
+  const encodeWAV: typeof import('../utils/baseToaudio')['encodeWAV']
+  const encodeWav16bit: typeof import('../utils/baseToaudio')['encodeWav16bit']
   const float32ToInt16PCM: typeof import('../utils/convert')['float32ToInt16PCM']
   const formatTime: typeof import('../utils/time')['formatTime']
   const generateAvatar: typeof import('../utils/utils')['generateAvatar']
@@ -123,7 +125,8 @@ declare global {
   const updateUserInfo: typeof import('../api/index')['updateUserInfo']
   const useAttrs: typeof import('vue')['useAttrs']
   const useAudio: typeof import('../hooks/useAudio')['useAudio']
-  const useAuditStore: typeof import('../stores/audit')['useAuditStore']
+  const useAuditStore: typeof import('../stores/creation')['useAuditStore']
+  const useCreationStore: typeof import('../stores/creation')['useCreationStore']
   const useCssModule: typeof import('vue')['useCssModule']
   const useCssVars: typeof import('vue')['useCssVars']
   const useDevice: typeof import('../hooks/useDevice')['useDevice']
@@ -144,7 +147,7 @@ declare global {
   const useTalkieStore: typeof import('../stores/talkie')['useTalkieStore']
   const useTemplateRef: typeof import('vue')['useTemplateRef']
   const useUserStore: typeof import('../stores/user')['useUserStore']
-  const useVoiceStore: typeof import('../stores/voice')['useVoiceStore']
+  const useVoiceStore: typeof import('../stores/creation')['useVoiceStore']
   const visemeNames: typeof import('../hooks/renderUtils/data')['visemeNames']
   const watch: typeof import('vue')['watch']
   const watchEffect: typeof import('vue')['watchEffect']
@@ -169,6 +172,6 @@ declare global {
   export type { RigRender } from '../hooks/rigRender'
   import('../hooks/rigRender')
   // @ts-ignore
-  export type { VoiceParams, previewVoiceParams, CreateAudit, EditCharacter } from '../api/index'
+  export type { VoiceParams, CreateAudit, EditCharacter } from '../api/index'
   import('../api/index')
 }

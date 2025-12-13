@@ -106,10 +106,12 @@ const Gender = [
 
 // 试听音色
 const previewVoice = (item: any) => {
-    store.preview({
-        platform: item.platform,
-        voice_type: item.voice_type,
-    });
+    try {
+        const audio = new Audio(item.sample_audio_url);
+        audio.play();
+    } catch (error) {
+        console.log(error);
+    }
 };
 watch(selectedGender, (newGender) => {
     store.getVoice({

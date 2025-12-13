@@ -99,7 +99,7 @@ export function pcmBase64ToAudioUrl(base64: string, sampleRate = 48000, numChann
   return URL.createObjectURL(blob);
 }
 // 将 Float32 PCM 转成 WAV Buffer
-function encodeWAV(samples: Float32Array, sampleRate: number): ArrayBuffer {
+export function encodeWAV(samples: Float32Array, sampleRate: number): ArrayBuffer {
   const buffer = new ArrayBuffer(44 + samples.length * 2);
   const view = new DataView(buffer);
 
@@ -129,6 +129,46 @@ function encodeWAV(samples: Float32Array, sampleRate: number): ArrayBuffer {
 }
 
 function writeString(view: DataView, offset: number, str: string) {
+  for (let i = 0; i < str.length; i++) {
+    view.setUint8(offset + i, str.charCodeAt(i));
+  }
+}
+export function encodeWav16bit(float32ArrList: any[], sampleRate: number) {
+  let totalLength = float32ArrList.reduce((acc, arr) => acc + arr.length, 0);
+  const floatData = new Float32Array(totalLength);
+  let offset = 0;
+  for (const chunk of float32ArrList) {
+    floatData.set(chunk, offset);
+    offset += chunk.length;
+  }
+
+  const buffer = new ArrayBuffer(44 + floatData.length * 2);
+  const view = new DataView(buffer);
+
+  write(view, 0, "RIFF");
+  view.setUint32(4, 36 + floatData.length * 2, true);
+  write(view, 8, "WAVE");
+  write(view, 12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  write(view, 36, "data");
+  view.setUint32(40, floatData.length * 2, true);
+
+  let pos = 44;
+  for (let i = 0; i < floatData.length; i++, pos += 2) {
+    let s = Math.max(-1, Math.min(1, floatData[i]));
+    view.setInt16(pos, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+  }
+
+  return new Blob([view], { type: "audio/wav" });
+}
+
+function write(view: DataView<ArrayBuffer>, offset: number, str: string) {
   for (let i = 0; i < str.length; i++) {
     view.setUint8(offset + i, str.charCodeAt(i));
   }

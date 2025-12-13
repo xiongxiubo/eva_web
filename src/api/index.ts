@@ -35,11 +35,6 @@ export interface VoiceParams extends Params {
   gender?: string;
   is_public?: number;
 }
-
-export interface previewVoiceParams {
-  platform: string;
-  voice_type: string;
-}
 export interface CreateAudit {
   name: string;
   description: string;
@@ -100,8 +95,6 @@ export const updateSpeaker: (data: { audio_id: number; speaker: string }) => Pro
 export const getMemoryList: () => Promise<Response> = () => request.get("/memory/list");
 // 获取音色列表
 export const getVoiceList: (params: VoiceParams) => Promise<Response> = (params: VoiceParams) => request.get("/voice/list", { params });
-// 试听音色
-export const previewVoice: (data: previewVoiceParams) => Promise<Response> = (data: previewVoiceParams) => request.post("/voice/preview", data);
 // 克隆音色
 export const cloneVoice: (data: FormData) => Promise<Response> = (data: FormData) => request.post("/voice/clone", data);
 // 查看用户音色列表

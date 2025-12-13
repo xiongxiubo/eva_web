@@ -2,6 +2,9 @@
     <aside class="sidebar" :class="{ 'mobile-open': isMobileMenuOpen }">
         <div class="logo-area">
             <span class="logo-text">{{ $at('创作中心') }}</span>
+            <el-icon :size="20" @click="isMobileMenuOpen = !isMobileMenuOpen">
+                <Fold />
+            </el-icon>
         </div>
         <div class="nav-group">
             <button class="nav-btn back-home" @click="router.push('/')">
@@ -26,7 +29,7 @@
 import { useRouter } from 'vue-router';
 import { Avatar, CircleCloseFilled, Mic, Stamp } from '@element-plus/icons-vue';
 import { $at } from 'i18n-auto-extractor';
-const isMobileMenuOpen = ref(false); // 控制手机端菜单开关
+const { isMobileMenuOpen } = storeToRefs(useCreationStore());
 const router = useRouter();
 const route = useRoute();
 const menuItems = [
@@ -48,7 +51,8 @@ const setActiveItem = (index: number) => {
 /* --- 侧边栏 --- */
 .sidebar {
     width: 240px;
-    background-color: var(--el-menu-bg-color);
+    background: var(--menu-bg-color);
+    // background-color: #000;
     border-right: 1px solid var(--el-border-color);
     display: flex;
     flex-direction: column;
@@ -63,6 +67,7 @@ const setActiveItem = (index: number) => {
         margin-bottom: 24px;
         display: flex;
         align-items: center;
+        justify-content: space-between;
     }
 
     .nav-group {
@@ -129,15 +134,12 @@ const setActiveItem = (index: number) => {
         left: 0;
         height: 100%;
         transform: translateX(-100%);
-        /* 默认移出屏幕 */
-        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
-        background-color: #0a0a0a;
-        /* 稍微深一点以便区分 */
     }
 
     /* 激活时滑入 */
     .sidebar.mobile-open {
         transform: translateX(0);
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
     }
 }
 </style>

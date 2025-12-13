@@ -24,13 +24,13 @@
         </div>
     </div>
     <!-- 详情对话框 -->
-    <el-dialog v-model="detailDialogVisible" :center="true" :width="width">
-        <el-descriptions :title="$at('模型详情')" border direction="vertical" :column="4">
+    <el-dialog v-model="detailDialogVisible" :width="width">
+        <el-descriptions :title="$at('模型详情')" border direction="vertical" :column="column">
             <el-descriptions-item :width="140" :rowspan="2" :label="$at('图片')" align="center">
-                <el-image lazy style="width: 100px; height: 100px" :src="currentCard.avatar_url"
-                    :preview-src-list="[currentCard.avatar_url]" preview-teleported fit="contain" />
+                <el-image lazy style="width: 100px; height: 100px;border-radius: 10px;" :src="currentCard.avatar_url"
+                    :preview-src-list="[currentCard.avatar_url]" preview-teleported fit="cover" />
             </el-descriptions-item>
-            <el-descriptions-item :label="$at('模型名称')" :min-width="200">
+            <el-descriptions-item :label="$at('模型名称')">
                 <el-input v-model="edit.name" />
             </el-descriptions-item>
             <el-descriptions-item :label="$at('性别')">
@@ -39,7 +39,7 @@
                     <el-option label="女" value="F" />
                 </el-select>
             </el-descriptions-item>
-            <el-descriptions-item :label="$at('语言')">
+            <el-descriptions-item :label="$at('语言')" :width="140">
                 <el-select v-model="edit.language" placeholder="请选择语言">
                     <el-option label="中文" value="zh" />
                     <el-option label="英文" value="en" />
@@ -52,15 +52,18 @@
             <el-descriptions-item :label="$at('是否公开')">
                 <el-switch v-model="edit.is_public" :active-value="1" :inactive-value="0" />
             </el-descriptions-item>
+            <el-descriptions-item :label="$at('状态')">{{ currentCard.status }}</el-descriptions-item>
             <el-descriptions-item :label="$at('创建时间')">{{ formatTime(currentCard.created_at) }}</el-descriptions-item>
             <el-descriptions-item :label="$at('欢迎语')">
                 <el-input v-model="edit.welcome_text" />
             </el-descriptions-item>
-            <el-descriptions-item :label="$at('模型路径')" :span="2">{{ currentCard.model_url }}</el-descriptions-item>
-            <el-descriptions-item :label="$at('描述')" :span="4">
+            <el-descriptions-item :label="$at('是否推荐')">
+                <el-switch v-model="currentCard.is_recommended" :active-value="1" :inactive-value="0" />
+            </el-descriptions-item>
+            <el-descriptions-item :label="$at('描述')" :span="column">
                 <el-input v-model="edit.description" type="textarea" :rows="4" />
             </el-descriptions-item>
-            <el-descriptions-item :label="$at('提示词')" :span="4">
+            <el-descriptions-item :label="$at('提示词')" :span="column">
                 <el-input v-model="edit.prompt" type="textarea" :rows="4" />
             </el-descriptions-item>
         </el-descriptions>
@@ -75,7 +78,8 @@ import { formatTime } from '@/utils/time';
 const auditStore = useAuditStore();
 const { characterList } = storeToRefs(auditStore);
 const { isMobile } = useDevice();
-const width = computed(() => isMobile.value ? '100%' : '800px');
+const column = computed(() => isMobile.value ? 2 : 4);
+const width = computed(() => isMobile.value ? '95%' : '800px');
 const router = useRouter();
 const detailDialogVisible = ref(false);
 const currentCard = ref<any>({});
@@ -178,7 +182,10 @@ onMounted(() => {
         justify-content: center;
         align-items: center;
         border-bottom: 1px solid var(--el-border-color);
-        object-fit: contain;
+        object-fit: cover;
+        padding: 10px;
+        box-sizing: border-box;
+        border-radius: 20px;
     }
 
     .card-body {

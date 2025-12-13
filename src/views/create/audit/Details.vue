@@ -1,7 +1,7 @@
 <template>
     <!-- 详情对话框 -->
-    <el-dialog v-model="detailDialogVisible" width="600px" :center="true">
-        <el-descriptions :title="$at('模型详情')" border direction="vertical">
+    <el-dialog v-model="detailDialogVisible" :width="width" :center="true">
+        <el-descriptions :title="$at('模型详情')" border direction="vertical" :column="column">
             <el-descriptions-item :width="140" :rowspan="2" :label="$at('图片')" align="center">
                 <el-image style="width: 100px; height: 100px" :src="current.images" :preview-src-list="[current.images]"
                     preview-teleported fit="contain" />
@@ -35,6 +35,9 @@
 import { $at } from 'i18n-auto-extractor';
 const router = useRouter();
 const route = useRoute();
+const { isMobile } = useDevice();
+const width = computed(() => isMobile.value ? '95%' : '600px');
+const column = computed(() => isMobile.value ? 2 : 3);
 const detailDialogVisible = defineModel({
     default: false,
     type: Boolean,

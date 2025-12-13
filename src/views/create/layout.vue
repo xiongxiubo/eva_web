@@ -1,7 +1,7 @@
 <template>
     <div class="app-container">
-        <div class="mobile-overlay" :class="{ 'show': isMobileMenuOpen }" @click="closeMobileMenu"></div>
-        <Sidebar />
+        <div class="mobile-overlay" :class="{ 'show': isMobileMenuOpen }" @click="  isMobileMenuOpen = false;"></div>
+        <Sidebar ref="box" />
         <main class="main-content">
             <Header />
             <router-view />
@@ -12,11 +12,7 @@
 import Header from './header.vue'
 import Sidebar from './sidebar.vue'
 // --- 状态管理 ---
-const isMobileMenuOpen = ref(false); // 控制手机端菜单开关
-const closeMobileMenu = () => {
-    isMobileMenuOpen.value = false;
-};
-
+const { isMobileMenuOpen } = storeToRefs(useCreationStore()); // 控制手机端菜单开关
 </script>
 <style lang="scss" scoped>
 .app-container {

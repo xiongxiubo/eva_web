@@ -14,8 +14,8 @@
                         <div class="voice-details">
                             <div class="voice-name">{{ voice.name }}</div>
                             <div class="voice-tags">
-                                <span class="tag gender">{{ voice.gender === 'M' ? '男性' : '女性' }}</span>
-                                <span class="tag accent">{{ voice.language }}</span>
+                                <span class="tag gender">{{ getGenderLabel(voice.gender) }}</span>
+                                <span class="tag accent">{{ voice.language || $at('未知') }}</span>
                             </div>
                         </div>
                     </div>
@@ -36,13 +36,7 @@
             <h3 class="section-title">{{ $at('上传样本') }}</h3>
             <div class="upload-options">
                 <DragUpload class="option-card" @change="handleFileChange" />
-                <div class="option-card record-card" @click="isRecording ? stopRecord() : startRecord()">
-                    <el-icon :size="24">
-                        <Mic />
-                    </el-icon>
-                    <h4 class="record-title-text">{{ isRecording ? $at('停止记录') : $at('开始记录') }}</h4>
-                    <p>{{ $at('点击录音并讲话 10-60 秒.') }}</p>
-                </div>
+                <Record class="option-card " />
             </div>
             <div v-if="file" class="file-info">
                 <span class="file-name">{{ file.name }}</span>
@@ -73,7 +67,7 @@
 
         <footer class="modal-footer">
             <button class="btn btn-back" @click="visible = false">{{ $at('取消') }}</button>
-            <button class="btn btn-clone" :disabled="voiceName.length === 0" @click="clonevoice">
+            <button class="btn btn-clone" v-loading="loading" :disabled="voiceName.length === 0" @click="clonevoice">
                 {{ $at('克隆语音') }}
             </button>
         </footer>
@@ -81,9 +75,8 @@
 </template>
 <script setup lang="ts">
 import { $at } from 'i18n-auto-extractor';
-import { useRecordAudio } from '@/views/create/voice/recording';
 import Audio from '@/views/create/voice/Audio.vue';
-const { startRecord, stopRecord, isRecording, blob } = useRecordAudio();
+import Record from '@/views/create/voice/Record.vue';
 const store = useVoiceStore();
 const { userVoiceList } = storeToRefs(store);
 const { clone, getUserVoice } = store;
@@ -93,24 +86,42 @@ const voiceName = ref('');
 const file = ref<File>();
 const { isMobile } = useDevice();
 const width = computed(() => isMobile.value ? '100%' : '50%');
+const loading = ref(false);
+const blob = ref<Blob>();
 // 处理文件上传
 const handleFileChange = (e: File) => file.value = e;
 const clonevoice = async () => {
-    if (!file.value && !blob.value) return ElMessage.error("请上传或记录样本");
+    if (!file.value && !blob.value) return ElMessage.error($at('请上传或记录样本'));
     const formData = new FormData();
     formData.append('file', blob.value ?? file.value!);
     formData.append('name', voiceName.value);
     try {
-        await clone(formData);
+        loading.value = true;
+        const res = await clone(formData);
+        if (res) visible.value = false;
     } catch (error) {
-        console.error("克隆音色失败:", error);
-    };
+        console.error($at("克隆音色失败:"), error);
+    } finally {
+        loading.value = false;
+    }
 };
+
+function getGenderLabel(gender: string) {
+    switch (gender) {
+        case 'M':
+            return $at('男');
+        case 'F':
+            return $at('女');
+        default:
+            return $at('未知');
+    }
+}
+
 const getStatusTag = (status: string) => {
     const map: Record<string, { type: 'warning' | 'danger' | 'success'; label: string }> = {
-        pending: { type: 'warning', label: '待审核' },
-        rejected: { type: 'danger', label: '审核拒绝' },
-        active: { type: 'success', label: '审核通过' },
+        pending: { type: 'warning', label: $at('待审核') },
+        rejected: { type: 'danger', label: $at('审核拒绝') },
+        active: { type: 'success', label: $at('审核通过') },
     };
     const item = map[status];
     if (!item) return status;
@@ -126,7 +137,6 @@ onMounted(() => {
 </script>
 <style scoped lang="scss">
 @use "sass:color";
-$error-red: #ff4b4b;
 $info-yellow: #f8c940;
 $primary-color: #4b89ff;
 
@@ -309,22 +319,7 @@ $primary-color: #4b89ff;
             }
         }
 
-        .record-card {
-            border-color: $error-red;
 
-            svg {
-                color: $error-red;
-            }
-
-            .record-title-text {
-                color: $error-red;
-            }
-
-            &:hover {
-                border-color: rgba($color: $error-red, $alpha: 1.0);
-                background-color: rgba($error-red, 0.1);
-            }
-        }
     }
 
     .info-section {
