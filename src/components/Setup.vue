@@ -43,14 +43,10 @@
                         </div>
 
                         <div class="form-item">
-                            <label>{{ label }}</label>
-                            <el-input v-model="address" disabled />
+                            <label>{{ $at('邮箱') }}</label>
+                            <el-input v-model="email" disabled />
                         </div>
 
-                        <div class="form-item">
-                            <label>{{ $at('推特用户名') }}</label>
-                            <el-input v-model="twitter_username" :maxlength="100" show-word-limit />
-                        </div>
                     </div>
 
                     <!-- 保存按钮 -->
@@ -69,19 +65,11 @@ import { $at } from 'i18n-auto-extractor';
 import { generateAvatar } from "@/utils/utils";
 import { useUserStore } from "@/stores/user";
 import { eq } from 'lodash';
-
 const { user } = storeToRefs(useUserStore());
-
 const defaultValue = defineModel({ default: false })
-const label = computed(() => {
-    return user.value.Address === '' ? $at('邮箱') : $at('钱包地址')
-})
-const address = computed(() => {
-    return user.value.Address === '' ? user.value.Email : user.value.Address
-})
 // 响应式数据
 const username = ref(user.value.username);
-const twitter_username = ref(user.value.twitter);
+const email = ref(user.value.Email);
 
 // 关闭模态框的方法
 const handleClose = () => {
@@ -104,7 +92,6 @@ const handleSave = () => {
         // 确认保存
         const res = await updateUserInfo({
             username: username.value,
-            twitter_username: twitter_username.value
         })
         if (eq(res.code, 0)) {
             ElMessage.success($at('保存成功'));

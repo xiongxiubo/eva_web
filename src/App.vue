@@ -8,8 +8,8 @@
   </ElConfigProvider>
 </template>
 <script setup lang="ts">
-import { createAppKit } from '@reown/appkit/vue'
-import { ethersAdapter, networks, projectId } from '@/config/index'
+// import { createAppKit } from '@reown/appkit/vue'
+// import { ethersAdapter, networks, projectId } from '@/config/index'
 import { ElConfigProvider } from 'element-plus'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import en from 'element-plus/es/locale/lang/en'
@@ -30,23 +30,23 @@ const locale = computed(() => {
       return zhCn
   }
 })
-createAppKit({
-  adapters: [ethersAdapter],
-  networks,
-  projectId,
-  themeMode: "light",
-  features: {
-    analytics: true, // Optional - defaults to your Cloud configuration
-    socials: false,
-    email: false,
-  },
-  metadata: {
-    name: 'AppKit Vue Example',
-    description: 'AppKit Vue Example',
-    url: window.location.origin,
-    icons: ['https://avatars.githubusercontent.com/u/179229932?s=200&v=4']
-  },
-})
+// createAppKit({
+//   adapters: [ethersAdapter],
+//   networks,
+//   projectId,
+//   themeMode: "light",
+//   features: {
+//     analytics: true, // Optional - defaults to your Cloud configuration
+//     socials: false,
+//     email: false,
+//   },
+//   metadata: {
+//     name: 'AppKit Vue Example',
+//     description: 'AppKit Vue Example',
+//     url: window.location.origin,
+//     icons: ['https://avatars.githubusercontent.com/u/179229932?s=200&v=4']
+//   },
+// })
 
 // 禁止文字选中
 document.addEventListener('selectstart', e => e.preventDefault());

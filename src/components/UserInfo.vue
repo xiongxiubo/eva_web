@@ -3,7 +3,7 @@
         <div class="foot-user">
             <el-avatar :src="user.Address === '' ? generateAvatar(user.Email) : generateAvatar(user.Address)"
                 :size="20" />
-            <span>{{ user.Address === "" ? user.Email : ellipsis(user.Address) }}</span>
+            <span>{{ user.username }}</span>
         </div>
         <template #dropdown>
             <el-dropdown-menu>
@@ -40,6 +40,9 @@ const logout = async () => {
         console.log(error);
     }
 };
+onMounted(() => {
+    useUserStore().getUser();
+})
 </script>
 <style scoped lang="scss">
 .foot-user {

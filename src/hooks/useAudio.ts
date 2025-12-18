@@ -85,13 +85,14 @@ export function useAudio(avatarRef: any) {
     },
   );
   watch(
-    () => chattingAi.value?.model_3d,
+    () => chattingAi.value?.model_url,
     (newUrl, oldUrl) => {
       if (!newUrl || newUrl === oldUrl) return;
-      if (decodeTimer) clearTimeout(decodeTimer);
-      decodeTimer = window.setTimeout(() => {
-        getDecode(newUrl);
-      }, 200); // 防抖 200ms
+      // if (decodeTimer) clearTimeout(decodeTimer);
+      // decodeTimer = window.setTimeout(() => {
+      //   getDecode(newUrl);
+      // }, 200); // 防抖 200ms
+      modelUrl.value = newUrl;
     },
   );
   watch(modelUrl, (newUrl, oldUrl) => {

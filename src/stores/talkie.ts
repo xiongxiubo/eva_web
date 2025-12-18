@@ -8,6 +8,22 @@ export const useTalkieStore = defineStore("talkie", () => {
   const chatHistory = ref<any[]>([]);
   const page = ref<number>(1);
   const route = useRoute();
+  const router = useRouter();
+
+  async function getAiPrivate({ page_index = 1, page_count = 10 }) {
+    try {
+      const res = await getPrivateRoleList({
+        page_index,
+        page_count,
+      });
+      if (eq(res.code, 0)) {
+        const list = get(res, "data.list", []);
+        talkieList.value = list.sort((a: any, b: any) => a.id - b.id);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   async function getTag() {
     try {
@@ -40,6 +56,8 @@ export const useTalkieStore = defineStore("talkie", () => {
       const res = await getChattingAi(route.params.id as string);
       if (eq(res.code, 0)) {
         chattingAi.value = get(res, "data", {});
+      } else {
+        router.push({ name: "home" });
       }
     } catch (error) {
       console.log(error);
@@ -68,7 +86,7 @@ export const useTalkieStore = defineStore("talkie", () => {
     talkieList,
     chattingAi,
     chatHistory,
-    page,
+    getAiPrivate,
     getTag,
     getTalkie,
     getChatting,

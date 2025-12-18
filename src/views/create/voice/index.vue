@@ -7,22 +7,26 @@
                     <el-button type="primary" @click="visible = true">{{ $at('创建音色') }}</el-button>
                 </div>
             </template>
-            <ul class="voice-list">
-                <li v-for="voice in userVoiceList" :key="voice.id" class="voice-item">
-                    <div class="voice-info">
-                        <Audio :src="voice.voice_url" />
-                        <div class="voice-details">
-                            <div class="voice-name">{{ voice.name }}</div>
-                            <div class="voice-tags">
-                                <span class="tag gender">{{ getGenderLabel(voice.gender) }}</span>
-                                <span class="tag accent">{{ voice.language || $at('未知') }}</span>
+            <el-tabs v-model="status" type="border-card">
+                <el-tab-pane v-for="tab in tabs" :label="tab.label" :name="tab.name">
+                    <ul class="voice-list">
+                        <li v-for="voice in userVoiceList" :key="voice.id" class="voice-item">
+                            <div class="voice-info">
+                                <Audio :src="getVoiceUrl(voice)" />
+                                <div class="voice-details">
+                                    <div class="voice-name">{{ voice.name }}</div>
+                                    <div class="voice-tags">
+                                        <span class="tag gender">{{ getGenderLabel(voice.gender) }}</span>
+                                        <span class="tag accent">{{ voice.language || $at('未知') }}</span>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                    <!-- 状态 -->
-                    <component :is="getStatusTag(voice.status)" />
-                </li>
-            </ul>
+                            <!-- 状态 -->
+                            <component :is="getStatusTag(voice.status)" />
+                        </li>
+                    </ul>
+                </el-tab-pane>
+            </el-tabs>
         </el-card>
     </div>
 
@@ -36,12 +40,8 @@
             <h3 class="section-title">{{ $at('上传样本') }}</h3>
             <div class="upload-options">
                 <DragUpload class="option-card" @change="handleFileChange" />
-                <Record class="option-card " />
+                <Record class="option-card " @record-end="recordEnd" />
             </div>
-            <div v-if="file" class="file-info">
-                <span class="file-name">{{ file.name }}</span>
-            </div>
-
             <div class="info-section">
                 <div class="info-box">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
@@ -78,7 +78,7 @@ import { $at } from 'i18n-auto-extractor';
 import Audio from '@/views/create/voice/Audio.vue';
 import Record from '@/views/create/voice/Record.vue';
 const store = useVoiceStore();
-const { userVoiceList } = storeToRefs(store);
+const { userVoiceList, status } = storeToRefs(store);
 const { clone, getUserVoice } = store;
 const isConfirmed = ref(false);
 const visible = ref(false);
@@ -88,6 +88,17 @@ const { isMobile } = useDevice();
 const width = computed(() => isMobile.value ? '100%' : '50%');
 const loading = ref(false);
 const blob = ref<Blob>();
+const recordEnd = (b: Blob) => blob.value = b;
+
+const tabs = [
+    { label: $at('审核通过'), name: 'active', },
+    { label: $at('审核中'), name: 'pending', },
+    { label: $at('审核拒绝'), name: 'rejected', },
+]
+const getVoiceUrl = (voice: any) => {
+    if (voice.sample_audio_url) return voice.sample_audio_url;
+    return voice.voice_url;
+}
 // 处理文件上传
 const handleFileChange = (e: File) => file.value = e;
 const clonevoice = async () => {
@@ -178,10 +189,9 @@ $primary-color: #4b89ff;
     }
 
     .voice-list {
+        width: 100%;
+        height: calc(100vh - 240px);
         list-style: none;
-        padding: 0;
-        margin: 0;
-        flex-grow: 1;
         overflow-y: auto; // Crucial for scrolling the list within the modal
         @include dark-scrollbars;
 

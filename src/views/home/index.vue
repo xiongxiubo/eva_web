@@ -6,10 +6,11 @@
                     src="https://cdn.talkie-ai.com/public-cdn-s3-us-west-2/talkie-op-img/image/1660802544_1722257297570_recommend-star.svg">
             </h2>
             <div class="tabs">
-                <div class="tabitem" :class="{ 'active': activeTab === index }" v-for="(item, index) in tagList"
-                    :key="index" @click="handleTabClick(index)">
+                <div class="tabitem" :class="{ 'active': activeTab === index, 'private': item.id === 999 }"
+                    v-for="(item, index) in tagList" :key="index" @click="handleTabClick(index)">
                     {{ item.name }}
                 </div>
+                <div class="tabitem private" @click="store.getAiPrivate({})">private</div>
             </div>
             <div class="content">
                 <div class="cards">
@@ -21,7 +22,7 @@
                                 <p class="desc">{{ item.description }}</p>
                             </div>
                         </div>
-                        <p class="creator">{{ $at('由') }} @币安熊 {{ $at('创建') }}</p>
+                        <p class="creator">{{ $at('由') }} <el-link>@{{ item.user_name }}</el-link> {{ $at('创建') }}</p>
                         <div class="btn" @click="router.push(`/chat/${item.id}`)">
                             <el-icon>
                                 <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
@@ -138,6 +139,10 @@ onMounted(async () => {
             color: #161823;
         }
 
+        .private {
+            margin-left: auto;
+        }
+
     }
 
     .content {
@@ -213,6 +218,9 @@ onMounted(async () => {
                 }
 
                 .creator {
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
                     font-size: 12px;
                     color: #a2a2ac;
                 }

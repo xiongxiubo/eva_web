@@ -18,6 +18,7 @@ type Response = {
 interface Params {
   page_index: number;
   page_count: number;
+  status?: string;
 }
 interface AiParams extends Params {
   tags_type: string;
@@ -73,6 +74,8 @@ export const updateUserInfo: (data: { username?: string; twitter_username?: stri
 export const getTagList: () => Promise<Response> = () => request.get("/tags/list");
 // 获取ai角色列表
 export const getRoleList: (params: AiParams) => Promise<Response> = (params: AiParams) => request.get("/ai/list", { params });
+// 获取私有角色列表
+export const getPrivateRoleList: (params: Params) => Promise<Response> = (params: Params) => request.get("/ai/private", { params });
 // 获取正在聊的ai
 export const getChattingAi: (talkie_id: string) => Promise<Response> = (talkie_id: string) => request.get("/ai/current", { params: { talkie_id } });
 // 获取用户聊过的ai

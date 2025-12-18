@@ -15,7 +15,7 @@
                         <el-button color="#2D68FF" @click="handleSubmit">Log in</el-button>
                     </el-form-item>
                 </el-form>
-                <AppKitButton />
+                <!-- <AppKitButton /> -->
                 <p>Don't have an account? <el-link type="primary" @click="showRegister = true">Register</el-link></p>
             </div>
             <div class="login-box-content" v-show="showRegister">

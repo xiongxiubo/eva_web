@@ -66,6 +66,7 @@ export const useAuditStore = defineStore("audit", () => {
 export const useVoiceStore = defineStore("voice", () => {
   const voiceList = ref<any[]>([]);
   const userVoiceList = ref<any[]>([]);
+  const status = ref("active");
   // 获取音色列表
   async function getVoice(params: VoiceParams) {
     try {
@@ -77,12 +78,16 @@ export const useVoiceStore = defineStore("voice", () => {
       console.log(error);
     }
   }
+  watch(status, async newStatus => {
+    await getUserVoice();
+  });
   // 获取用户音色列表
   async function getUserVoice() {
     try {
       const res = await getUserVoiceList({
         page_index: 1,
         page_count: 50,
+        status: status.value,
       });
       if (eq(res.code, 0)) {
         userVoiceList.value = get(res, "data.list", []);
@@ -113,6 +118,7 @@ export const useVoiceStore = defineStore("voice", () => {
     getVoice,
     getUserVoice,
     clone,
+    status,
   };
 });
 
