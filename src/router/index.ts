@@ -57,16 +57,6 @@ const router = createRouter({
           name: "create-voice",
           component: () => import("@/views/create/voice/index.vue"),
         },
-        {
-          path: "/create/audit",
-          name: "create-audit",
-          component: () => import("@/views/create/audit/pending.vue"),
-        },
-        {
-          path: "/create/audit/rejected",
-          name: "create-audit-rejected",
-          component: () => import("@/views/create/audit/rejected.vue"),
-        },
       ],
     },
     // 创作中心-编辑

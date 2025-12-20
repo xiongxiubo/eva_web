@@ -40,7 +40,29 @@
                     </div>
                 </div>
             </div>
-
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 280" fill="none" shape-rendering="auto" width="64"
+                height="64">
+                <metadata xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dc="http://purl.org/dc/elements/1.1/"
+                    xmlns:dcterms="http://purl.org/dc/terms/">
+                    <rdf:RDF>
+                        <rdf:Description>
+                            <dc:title>Avataaars</dc:title>
+                            <dc:creator>Pablo Stanley</dc:creator>
+                            <dc:source xsi:type="dcterms:URI">https://avataaars.com/</dc:source>
+                            <dcterms:license xsi:type="dcterms:URI">https://avataaars.com/</dcterms:license>
+                            <dc:rights>Remix of „Avataaars” (https://avataaars.com/) by „Pablo Stanley”, licensed under
+                                „Free for personal and commercial use” (https://avataaars.com/)</dc:rights>
+                        </rdf:Description>
+                    </rdf:RDF>
+                </metadata>
+                <mask id="viewboxMask">
+                    <rect width="280" height="280" rx="0" ry="0" x="0" y="0" fill="#fff" />
+                </mask>
+                <g mask="url(#viewboxMask)">
+                    <g transform="translate(8)"></g>
+                </g>
+            </svg>
         </MainPage>
     </div>
     <div class="footer">

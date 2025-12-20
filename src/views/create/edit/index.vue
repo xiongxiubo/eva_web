@@ -15,31 +15,47 @@
             <section class="config-panel">
                 <div class="config-panel__section">
                     <h2 class="section-title">{{ $at('创建你的人物') }}</h2>
-                    <div class="input-group">
+                    <div class="input-group input-group-flex">
                         <label for="name">{{ $at('姓名') }}</label>
-                        <input id="name" type="text" :placeholder="$at('请输入姓名')" v-model="config.name" maxlength="30" />
-                        <span class="char-count">{{ config.name.length }}/30</span>
+                        <el-input type="text" :placeholder="$at('请输入姓名')" v-model="config.name" maxlength="30"
+                            show-word-limit />
+                    </div>
+                </div>
+                <div class="config-panel__section">
+                    <h2 class="section-title">{{ $at('性别') }}</h2>
+                    <div class="input-group">
+                        <el-radio-group v-model="config.gender">
+                            <el-radio label="M">{{ $at('男') }}</el-radio>
+                            <el-radio label="F">{{ $at('女') }}</el-radio>
+                        </el-radio-group>
+                    </div>
+                </div>
+                <div class="config-panel__section">
+                    <h2 class="section-title">{{ $at('年龄') }}</h2>
+                    <div class="input-group input-group-flex">
+                        <el-input type="number" :placeholder="$at('请输入年龄')" v-model="config.age" :max="999" />
+                    </div>
+                </div>
+                <div class="config-panel__section">
+                    <h2 class="section-title">{{ $at('语言') }}</h2>
+                    <div class="input-group input-group-flex">
+                        <el-select v-model="config.language">
+                            <el-option label="中文" value="zh-CN" />
+                            <el-option label="英文" value="en-US" />
+                        </el-select>
+                    </div>
+                </div>
+                <div class="config-panel__section">
+                    <h2 class="section-title">{{ $at('是否公开') }}</h2>
+                    <div class="input-group">
+                        <el-switch v-model="config.is_public" active-text="公开" inactive-text="不公开" />
                     </div>
                 </div>
                 <div class="config-panel__section">
                     <h2 class="section-title">{{ $at('提示词（影响角色的回复）') }}</h2>
                     <p class="section-description update-info"> **{{ $at('更新提示') }}:** {{ $at('不能被用户看到，仅影响对话效果') }} </p>
                     <p class="section-description">{{ $at('角色的提示词，包括所有背景信息、特征、角色与用户之间的关系等') }}</p>
-                    <textarea v-model="config.prompt" rows="5"></textarea>
-                    <div class="mention-tags"><span class="char-count">{{ config.prompt.length }}/4000</span></div>
-                </div>
-                <div class="config-panel__section">
-                    <h2 class="section-title">{{ $at('介绍（不影响角色的回复）') }}</h2>
-                    <p class="section-description update-info"> **{{ $at('更新提示') }}:** {{ $at('角色的介绍不会影响对话效果') }}</p>
-                    <p class="section-description">{{ $at('角色的介绍，用于展示角色的背景、特征、关系等') }}</p>
-                    <textarea v-model="config.description" :placeholder="$at('输入角色的介绍')" rows="4"></textarea>
-                    <span class="char-count">{{ config.description.length }}/500</span>
-                </div>
-                <div class="config-panel__section">
-                    <h2 class="section-title">{{ $at('开场白（不影响角色的回复）') }}</h2>
-                    <p class="section-description">{{ $at('开场白，用于开始对话并设置对话基调') }}</p>
-                    <textarea v-model="config.welcome_text" :placeholder="$at('输入开场白')" rows="4"></textarea>
-                    <span class="char-count">{{ config.welcome_text.length }}/500</span>
+                    <el-input type="textarea" v-model="config.prompt" :rows="8" show-word-limit maxlength="4000" />
                 </div>
             </section>
             <section class="media-and-preview-panel">
@@ -51,8 +67,7 @@
                     </div>
                     <p class="description"> {{ $at('添加图片，便于创建3D模型') }}</p>
                     <div class="upload-box">
-                        <el-image :src="config.images" fit="cover" class="avatar"
-                            v-if="!config.file && config.images" />
+                        <el-image :src="config.url" fit="cover" class="avatar" v-if="config.url" />
                         <el-upload class="avatar-uploader" action="#" list-type="picture-card" :auto-upload="false"
                             accept="image/*" :limit="1" @change="handleAvatarChange">
                             <el-icon>
@@ -82,6 +97,23 @@
                         <span class="tag accent">{{ voice.language }}</span>
                     </div>
                 </div>
+                <div class="config-panel__section">
+                    <h2 class="section-title">{{ $at('开场白（不影响角色的回复）') }}</h2>
+                    <p class="section-description">{{ $at('开场白，用于开始对话并设置对话基调') }}</p>
+                    <el-input type="textarea" v-model="config.welcome_text" :placeholder="$at('输入开场白')" :rows="8"
+                        show-word-limit maxlength="500" />
+                </div>
+                <div class="config-panel__section">
+                    <h2 class="section-title">{{ $at('介绍（不影响角色的回复）') }}</h2>
+                    <p class="section-description update-info"> **{{ $at('更新提示') }}:** {{ $at('角色的介绍不会影响对话效果') }}</p>
+                    <p class="section-description">{{ $at('角色的介绍，用于展示角色的背景、特征、关系等') }}</p>
+                    <el-input type="textarea" v-model="config.description" :placeholder="$at('输入角色的介绍')" :rows="8"
+                        show-word-limit maxlength="500" />
+                </div>
+            </section>
+            <section class="media-and-preview-panel">
+                <!-- 模型预览/3D模型 -->
+
             </section>
         </div>
         <Voice v-model="voiceVisible" @select="selectVoice" />
@@ -92,7 +124,8 @@
 import Voice from './voice.vue';
 import { $at } from 'i18n-auto-extractor';
 import { type UploadFile } from 'element-plus';
-const { GetAuditDetail } = useAuditStore();
+import { eq } from 'lodash';
+const { GetModelDetail } = useAuditStore();
 const { auditDetail } = storeToRefs(useAuditStore());
 const loading = ref(false);
 const router = useRouter();
@@ -103,34 +136,43 @@ const config = reactive<CreateAudit>({
     description: '',
     prompt: '',
     welcome_text: '',
-    file: null,
-    images: "",
+    url: "",
     voice_id: '',
+    gender: 'M',
+    age: 0,
+    language: 'zh-CN',
+    is_public: false,
+    tags: '',
 });
 const voiceVisible = ref(false);
-const handleAvatarChange = (file: UploadFile) => {
-    config.file = file.raw!;
+const handleAvatarChange = async (file: UploadFile) => {
+    if (!file.raw) return;
+    try {
+        const formData = new FormData();
+        formData.append('file', file.raw);
+        formData.append('file_type', "aimodel");
+        const res = await fileUpload(formData);
+        if (eq(res.code, 0)) {
+            config.url = res.data.url || '';
+        } else {
+            ElMessage.error(res.msg || $at('文件上传失败'));
+        };
+    } catch (error) {
+        ElMessage.error($at('文件上传失败'));
+    };
 };
 const selectVoice = (item: any) => {
     config.voice_id = item.id;
     voice.value = item;
 };
 const submit = async () => {
-    const formData = new FormData();
-    formData.append('id', route.query.id as string || '');
-    formData.append('name', config.name);
-    formData.append('description', config.description);
-    formData.append('prompt', config.prompt);
-    formData.append('welcome_text', config.welcome_text);
-    formData.append('images', config.images);
-    formData.append('voice_id', config.voice_id);
-    if (config.file) formData.append('file', config.file);
     loading.value = true;
     try {
-        const res = route.query.id ? await updateAuditInfo(formData) : await createAuditModel(formData);
+        // const res = route.query.id ? await updateAuditInfo({ ...config, id: Number(route.query.id) }) : await createUserModel(config);
+        const res = await createUserModel(config);
         if (res.code === 0) {
             ElMessage.success($at('提交成功'));
-            router.replace("/create/audit");
+            router.replace("/create");
         } else {
             ElMessage.error(res.msg || $at('提交失败'));
         };
@@ -143,12 +185,12 @@ const submit = async () => {
 onMounted(async () => {
     console.log(route.query.id);
     if (route.query.id) {
-        await GetAuditDetail(Number(route.query.id));
+        await GetModelDetail(Number(route.query.id));
         config.name = auditDetail.value.name || '';
         config.description = auditDetail.value.description || '';
         config.prompt = auditDetail.value.prompt || '';
         config.welcome_text = auditDetail.value.welcome_text || '';
-        config.images = auditDetail.value.images || '';
+        config.url = auditDetail.value.avatar_url || '';
         config.voice_id = auditDetail.value.voice_id || '';
         voice.value = auditDetail.value.voice || {};
     };
@@ -255,7 +297,7 @@ $publish-color: #a04bff;
     min-height: calc(100vh - 50px);
 
     .config-panel {
-        flex: 2;
+        flex: 1;
         min-width: 0;
         padding: 20px;
         border-right: 1px solid var(--el-border-color);
@@ -270,6 +312,7 @@ $publish-color: #a04bff;
         flex-direction: column;
         gap: 20px;
         overflow-y: auto;
+        border-right: 1px solid var(--el-border-color);
     }
 }
 
@@ -279,6 +322,9 @@ $publish-color: #a04bff;
     padding: 20px;
     border-radius: 8px;
     margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
 
     &:last-child {
         margin-bottom: 0;
@@ -317,28 +363,19 @@ $publish-color: #a04bff;
     }
 }
 
-// --- Input and Textarea Styles ---
-input[type='text'],
-textarea {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid var(--el-border-color);
-    border-radius: 4px;
-    font-size: 14px;
-    box-sizing: border-box;
-    resize: vertical;
-    margin-top: 10px;
-
-    &:focus {
-        outline: none;
-        border-color: var(--el-border-color);
-    }
+.input-group-flex {
+    flex-direction: column;
+    gap: 5px;
 }
 
 .input-group {
     margin-bottom: 15px;
+    display: flex;
+    align-items: center;
 
     label {
+        flex: 1;
+        width: 100%;
         display: block;
         font-size: 14px;
         margin-bottom: 5px;
@@ -503,6 +540,7 @@ textarea {
 
     .config-panel__section {
         padding: 15px;
+
     }
 
     .mention-tags {

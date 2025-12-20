@@ -35,8 +35,6 @@ const route = useRoute();
 const menuItems = [
     { name: $at('我的人物'), icon: Avatar, path: '/create' },
     { name: $at('我的音色'), icon: Mic, path: '/create/voice' },
-    { name: $at('审核中'), icon: Stamp, path: '/create/audit' },
-    { name: $at('审核失败'), icon: CircleCloseFilled, path: '/create/audit/rejected' },
 ];
 const activeIndex = computed(() => {
     const activePath = route.path;

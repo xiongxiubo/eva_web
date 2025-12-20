@@ -11,7 +11,13 @@ import mkcert from "vite-plugin-mkcert";
 export default defineConfig({
   base: "./",
   plugins: [
-    vue(),
+    vue({
+      template: {
+        compilerOptions: {
+          isCustomElement: tag => tag.includes(":"),
+        },
+      },
+    }),
     // vueDevTools(),
     // mkcert(),
     AutoImport({
@@ -26,6 +32,7 @@ export default defineConfig({
       dts: "src/types/components.d.ts",
     }),
   ],
+
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),

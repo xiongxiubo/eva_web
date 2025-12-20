@@ -12,9 +12,7 @@ interface Model {
 }
 interface streamOptions {
   sampleRate?: number;
-  lipsyncType: "words";
   gain: number;
-  lipsyncLang: string;
 }
 export class MixamoRender {
   nodeAvatar: HTMLElement;

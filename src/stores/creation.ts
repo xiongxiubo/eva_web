@@ -9,6 +9,7 @@ export const useAuditStore = defineStore("audit", () => {
   const charactertotal = ref(0);
   const page_index = ref(1);
   const page_count = ref(10);
+  const status = ref("active");
   async function GetAuditList(status: string) {
     try {
       const res = await getAuditModelList({
@@ -30,6 +31,7 @@ export const useAuditStore = defineStore("audit", () => {
       const res = await getCharacterList({
         page_index: page_index.value,
         page_count: page_count.value,
+        status: status.value,
       });
       if (eq(res.code, 0)) {
         characterList.value = get(res, "data.list", []);
@@ -39,10 +41,11 @@ export const useAuditStore = defineStore("audit", () => {
       console.log(error);
     }
   }
-  // 获取审核详情
-  async function GetAuditDetail(id: number) {
+  watch(status, async () => GetCharacterList());
+  // 获取人物详情
+  async function GetModelDetail(id: number) {
     try {
-      const res = await getAuditDetail(id);
+      const res = await getCharacterDetail(id);
       console.log(res);
       if (eq(res.code, 0)) {
         auditDetail.value = get(res, "data", {});
@@ -57,8 +60,9 @@ export const useAuditStore = defineStore("audit", () => {
     auditDetail,
     characterList,
     charactertotal,
+    status,
     GetAuditList,
-    GetAuditDetail,
+    GetModelDetail,
     GetCharacterList,
   };
 });
@@ -78,7 +82,7 @@ export const useVoiceStore = defineStore("voice", () => {
       console.log(error);
     }
   }
-  watch(status, async newStatus => {
+  watch(status, async () => {
     await getUserVoice();
   });
   // 获取用户音色列表

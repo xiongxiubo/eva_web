@@ -86,6 +86,7 @@ export const useTalkieStore = defineStore("talkie", () => {
     talkieList,
     chattingAi,
     chatHistory,
+    page,
     getAiPrivate,
     getTag,
     getTalkie,

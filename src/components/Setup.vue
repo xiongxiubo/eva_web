@@ -30,25 +30,19 @@
                 <div class="profile-content">
                     <!-- 头像 -->
                     <div class="avatar-section">
-                        <el-avatar
-                            :src="user.Address === '' ? generateAvatar(user.Email) : generateAvatar(user.Address)"
-                            :size="80" />
+                        <el-avatar :src="generateAvatar(user.Email)" :size="80" />
                     </div>
-
                     <!-- 表单 -->
                     <div class="form-section">
                         <div class="form-item">
                             <label>{{ $at('用户名') }}</label>
                             <el-input v-model="username" minlength="3" :maxlength="30" show-word-limit />
                         </div>
-
                         <div class="form-item">
                             <label>{{ $at('邮箱') }}</label>
                             <el-input v-model="email" disabled />
                         </div>
-
                     </div>
-
                     <!-- 保存按钮 -->
                     <div class="save-button-container">
                         <el-button type="primary" class="save-button" @click="handleSave">

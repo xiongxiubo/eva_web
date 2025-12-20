@@ -15,117 +15,23 @@ type sendMsgType = {
 };
 
 export function useAudio(avatarRef: any) {
+  const { chattingAi } = storeToRefs(useTalkieStore());
+  const { token } = storeToRefs(useUserStore());
+
+  const router = useRouter();
   const route = useRoute();
   const head = shallowRef<MixamoRender | null>(null);
+  const music = new Music();
+
   const isStreaming = ref(false);
   const loading = ref(true);
   const isSpeaker = ref(false); // 说话人是否可以说话
+
   let decodeTimer: number | null = null;
   let headInitTimer: number | null = null;
-
-  const { chattingAi } = storeToRefs(useTalkieStore());
-  const { modelUrl, getDecode, initWorker } = useEncodeWorker();
-  const { closeMusic, playMusic, pauseMusic, audioContextMusic } = useBgMusic();
-  const { connectWebSocket, sendMessage, closeWebSocket, wsMsg, bufferQueue } = useWebSocket(playMusic, pauseMusic);
-  const { startRecording, stopRecording, recordClose, formattedTime } = useRecordAudio(sendMessage, audioContextMusic);
-
-  async function NewHead() {
-    if (!avatarRef.value) return;
-    const render = new MixamoRender(avatarRef.value);
-    await render.showModel({ url: modelUrl.value }, (e: any) => {
-      if (e.loaded === e.total) {
-        setTimeout(() => {
-          loading.value = false;
-        }, 2000);
-      }
-    });
-    head.value = render;
-  }
-  async function playAudio() {
-    if (bufferQueue.value.length === 0 || isStreaming.value) return;
-    let audio = bufferQueue.value.shift();
-    await head.value?.streamStart(
-      { sampleRate: 16000, lipsyncType: "words", gain: 3, lipsyncLang: "en" },
-      () => (isStreaming.value = true),
-      () => {
-        isStreaming.value = false;
-        if (bufferQueue.value.length > 0) {
-          playAudio();
-        } else {
-          isSpeaker.value = false;
-        }
-      },
-    );
-    head.value?.streamAudio(audio);
-  }
-  // 关闭
-  const close = () => {
-    try {
-      closeMusic();
-      recordClose();
-      closeWebSocket();
-      chattingAi.value = {};
-    } catch (error) {
-      console.error("关闭连接失败:", error);
-    }
-  };
-  watch(
-    () => bufferQueue.value.length,
-    async len => {
-      if (len > 0 && !isStreaming.value) await playAudio();
-    },
-  );
-  watch(
-    () => route.params.id,
-    async (id, oldId) => {
-      if (id === oldId) return;
-      closeWebSocket();
-      await useTalkieStore().getChatting();
-      connectWebSocket();
-    },
-  );
-  watch(
-    () => chattingAi.value?.model_url,
-    (newUrl, oldUrl) => {
-      if (!newUrl || newUrl === oldUrl) return;
-      // if (decodeTimer) clearTimeout(decodeTimer);
-      // decodeTimer = window.setTimeout(() => {
-      //   getDecode(newUrl);
-      // }, 200); // 防抖 200ms
-      modelUrl.value = newUrl;
-    },
-  );
-  watch(modelUrl, (newUrl, oldUrl) => {
-    if (!newUrl || newUrl === oldUrl) return;
-    if (headInitTimer) clearTimeout(headInitTimer);
-    headInitTimer = window.setTimeout(() => {
-      NewHead();
-    }, 200);
-  });
-  onMounted(async () => {
-    initWorker();
-    await useTalkieStore().getChatting();
-    connectWebSocket();
-  });
-  onUnmounted(() => {
-    close();
-  });
-  return {
-    wsMsg,
-    loading,
-    isSpeaker,
-    formattedTime,
-    sendMessage,
-    startRecording,
-    stopRecording,
-    close,
-  };
-}
-// 解密线程
-function useEncodeWorker() {
+  // 解密部分
   const worker = new Worker(new URL("@/worker/encode/worker.js", import.meta.url));
   const modelUrl = ref<string>("");
-
   const initWorker = () => {
     worker.onmessage = e => {
       const { type, success, result, error } = e.data;
@@ -151,57 +57,11 @@ function useEncodeWorker() {
     const encrypted = uint8ToBase64(new Uint8Array(arrayBuffer));
     worker?.postMessage({ type: "decrypt", data: encrypted });
   };
-  return {
-    modelUrl,
-    getDecode,
-    initWorker,
-  };
-}
-// 背景音乐
-function useBgMusic() {
-  //音乐上下文
-  let audioContextMusic: AudioContext = new (window.AudioContext || window.webkitAudioContext)();
-  let sourceNode: AudioBufferSourceNode | null = null;
-  // 播放音乐
-  async function playMusic(arrayBuffer: ArrayBuffer | Blob) {
-    if (arrayBuffer instanceof Blob) {
-      arrayBuffer = await arrayBuffer.arrayBuffer();
-    }
-    const audioBuffer = await audioContextMusic.decodeAudioData(arrayBuffer);
-    pauseMusic();
-    sourceNode = audioContextMusic.createBufferSource();
-    sourceNode.buffer = audioBuffer;
-    sourceNode.connect(audioContextMusic.destination);
-    sourceNode.start();
-  }
-  // 关闭音乐
-  async function pauseMusic() {
-    try {
-      sourceNode?.stop();
-    } catch (error) {}
-    sourceNode?.disconnect();
-  }
-  function closeMusic() {
-    audioContextMusic?.close();
-    sourceNode?.disconnect();
-  }
-  return {
-    playMusic,
-    pauseMusic,
-    audioContextMusic,
-    closeMusic,
-  };
-}
-// 连接webdocket
-function useWebSocket(playMusic: (arrayBuffer: ArrayBuffer | Blob) => Promise<void>, pauseMusic: () => void) {
-  const router = useRouter();
-  const route = useRoute();
-  const { token } = storeToRefs(useUserStore());
+  // websocket 部分
   const isConnected = ref<boolean>(false);
   const ws = ref<WebSocket | null>(null);
   const wsMsg = ref<any>();
-  const bufferQueue = ref<any[]>([]);
-
+  const bufferQueue: any[] = [];
   // 连接websocket
   function connectWebSocket() {
     ws.value = new WebSocket(`${import.meta.env.VITE_WEBSOCKET}/api/ws?token=${token.value}`);
@@ -238,7 +98,7 @@ function useWebSocket(playMusic: (arrayBuffer: ArrayBuffer | Blob) => Promise<vo
         const message = JSON.parse(event.data);
         parseWebsocketMessage(message);
       } else {
-        playMusic(event.data);
+        music.play(event.data);
       }
     };
   }
@@ -252,7 +112,6 @@ function useWebSocket(playMusic: (arrayBuffer: ArrayBuffer | Blob) => Promise<vo
       }
     }, HEARTBEAT_INTERVAL);
   }
-
   function stopHeartbeat() {
     if (heartbeatTimer) {
       clearInterval(heartbeatTimer);
@@ -279,7 +138,7 @@ function useWebSocket(playMusic: (arrayBuffer: ArrayBuffer | Blob) => Promise<vo
         }
         break;
       case "closeMusic":
-        pauseMusic();
+        music.pauseMusic();
         break;
     }
   }
@@ -309,17 +168,7 @@ function useWebSocket(playMusic: (arrayBuffer: ArrayBuffer | Blob) => Promise<vo
     ws.value?.close();
     stopHeartbeat();
   }
-  return {
-    isConnected,
-    wsMsg,
-    bufferQueue,
-    sendMessage,
-    connectWebSocket,
-    closeWebSocket,
-  };
-}
-// 采集音频
-function useRecordAudio(sendMessage: (data: sendMsgType) => void, audioContextMusic: AudioContext) {
+  // 采集音频
   // 音频上下文
   let audioContext: AudioContext = new (window.AudioContext || window.webkitAudioContext)();
   let mediaStream: MediaStream | null = null;
@@ -333,7 +182,6 @@ function useRecordAudio(sendMessage: (data: sendMsgType) => void, audioContextMu
 
   const sendBuffer = ref<ArrayBuffer[]>([]); // 发送缓冲区
   let bufferTimer: number | null = null; // 发送定时器
-
   async function startRecording() {
     if (isRecording.value) return;
     if (audioContext.state === "suspended") {
@@ -369,7 +217,7 @@ function useRecordAudio(sendMessage: (data: sendMsgType) => void, audioContextMu
     }
   }
   async function createAudioProcessor() {
-    await audioContextMusic.suspend();
+    await music.pauseContext();
     try {
       // 尝试使用更现代的AudioWorklet API
       if ("AudioWorklet" in window && "AudioWorkletNode" in window) {
@@ -448,7 +296,7 @@ function useRecordAudio(sendMessage: (data: sendMsgType) => void, audioContextMu
     flushBuffer();
     sendMessage({ type: "end" });
     isRecording.value = false;
-    await audioContextMusic.resume();
+    await music.resumeContext();
     if (timerInterval.value) {
       clearInterval(timerInterval.value);
       timerInterval.value = null;
@@ -476,10 +324,98 @@ function useRecordAudio(sendMessage: (data: sendMsgType) => void, audioContextMu
     audioProcessor = null;
     mediaSource = null;
   }
+
+  async function NewHead() {
+    if (!avatarRef.value) return;
+    const render = new MixamoRender(avatarRef.value);
+    await render.showModel({ url: modelUrl.value }, (e: any) => {
+      if (e.loaded === e.total) {
+        setTimeout(() => {
+          loading.value = false;
+        }, 2000);
+      }
+    });
+    head.value = render;
+  }
+
+  async function playAudio() {
+    if (bufferQueue.length === 0 || isStreaming.value) return;
+    let audio = bufferQueue.shift();
+    await head.value?.streamStart(
+      { sampleRate: 16000, gain: 3 },
+      () => (isStreaming.value = true),
+      () => {
+        isStreaming.value = false;
+        if (bufferQueue.length > 0) {
+          playAudio();
+        } else {
+          isSpeaker.value = false;
+        }
+      },
+    );
+    head.value?.streamAudio(audio);
+  }
+  // 关闭
+  const close = () => {
+    try {
+      worker.terminate(); // 关闭解密线程
+      music.close(); // 关闭音乐上下文
+      recordClose();
+      closeWebSocket();
+      chattingAi.value = {};
+    } catch (error) {
+      console.error("关闭连接失败:", error);
+    }
+  };
+  watch(
+    () => bufferQueue.length,
+    async len => {
+      if (len > 0 && !isStreaming.value) await playAudio();
+    },
+  );
+  watch(
+    () => route.params.id,
+    async (id, oldId) => {
+      if (id === oldId) return;
+      closeWebSocket();
+      await useTalkieStore().getChatting();
+      connectWebSocket();
+    },
+  );
+  watch(
+    () => chattingAi.value?.model_url,
+    (newUrl, oldUrl) => {
+      if (!newUrl || newUrl === oldUrl) return;
+      if (decodeTimer) clearTimeout(decodeTimer);
+      decodeTimer = window.setTimeout(() => {
+        getDecode(newUrl, false);
+      }, 200); // 防抖 200ms
+      modelUrl.value = newUrl;
+    },
+  );
+  watch(modelUrl, (newUrl, oldUrl) => {
+    if (!newUrl || newUrl === oldUrl) return;
+    if (headInitTimer) clearTimeout(headInitTimer);
+    headInitTimer = window.setTimeout(() => {
+      NewHead();
+    }, 200);
+  });
+  onMounted(async () => {
+    initWorker();
+    await useTalkieStore().getChatting();
+    connectWebSocket();
+  });
+  onUnmounted(() => {
+    close();
+  });
   return {
+    wsMsg,
+    loading,
+    isSpeaker,
+    formattedTime,
+    sendMessage,
     startRecording,
     stopRecording,
-    recordClose,
-    formattedTime,
+    close,
   };
 }

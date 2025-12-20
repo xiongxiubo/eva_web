@@ -1,8 +1,7 @@
 <template>
     <el-dropdown>
         <div class="foot-user">
-            <el-avatar :src="user.Address === '' ? generateAvatar(user.Email) : generateAvatar(user.Address)"
-                :size="20" />
+            <el-avatar :src="generateAvatar(user.Email)" :size="20" />
             <span>{{ user.username }}</span>
         </div>
         <template #dropdown>

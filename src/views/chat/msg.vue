@@ -20,7 +20,7 @@
             <div class="msg-input" v-else>
                 <input type="text" v-model="input" :placeholder="`${$at('向')}${chattingAi.name} ${$at('发送消息')} `"
                     @keydown="handleEnter" :disabled="isSpeaker">
-                <el-button :icon="Position" type="primary" @click="handleSend" circle />
+                    <el-button :icon="Position" type="primary" @click="handleSend" circle />
             </div>
             <el-icon style="cursor: pointer;" :size="28" @click="isSpeech = !isSpeech">
                 <Microphone v-if="!isSpeech" />
@@ -44,18 +44,18 @@ import Loading from './loading.vue'
 import { $at } from 'i18n-auto-extractor';
 import { Position } from "@element-plus/icons-vue";
 import { eq } from 'lodash';
+import { useAudio } from '@/hooks/audio/useAudio';
 const route = useRoute();
 const router = useRouter();
 const { chattingAi } = storeToRefs(useTalkieStore());
 const isSpan = ref<boolean>(false);
 const chatFloat = ref<any[]>([]);
 const avatar: any = inject('avatar');
-const { startRecording, stopRecording, sendMessage, close, formattedTime, wsMsg, isSpeaker, loading } = useAudio(avatar);
+const { startRecording, stopRecording, sendWsMessage, formattedTime, wsMsg, isSpeaker, loading } = useAudio(avatar);
 const input = ref<string>('');
 const isSpeech = ref<boolean>(false);
 const isRecording = ref<boolean>(false);
 const closeLoading = () => {
-    close();
     router.back();
 }
 watch(() => wsMsg.value, async (newVal) => {
@@ -77,12 +77,12 @@ watch(() => route.params.id, async (newVal) => {
 });
 const handleEnter = (e: KeyboardEvent | Event) => {
     if (e instanceof KeyboardEvent && eq(e?.key, 'Enter') && !eq(input.value, "")) {
-        sendMessage({ type: "text", data: input.value });
+        sendWsMessage({ type: "text", data: input.value });
         input.value = '';
     };
 };
 const handleSend = () => {
-    sendMessage({ type: "text", data: input.value });
+    sendWsMessage({ type: "text", data: input.value });
     input.value = '';
 }
 const handleStart = () => {

@@ -31,7 +31,6 @@ type web3LoginParams = {
   msg: string;
   address: string;
 };
-
 export interface VoiceParams extends Params {
   gender?: string;
   is_public?: number;
@@ -41,14 +40,17 @@ export interface CreateAudit {
   description: string;
   prompt: string;
   welcome_text: string;
-  file: Blob | null;
-  images: string;
+  url: string;
   voice_id: string;
+  gender: string;
+  age: number;
+  language: string;
+  is_public: boolean;
+  tags: string;
 }
 interface auditParams extends Params {
   status: string;
 }
-
 export interface EditCharacter {
   id: number;
   name: string;
@@ -103,14 +105,19 @@ export const cloneVoice: (data: FormData) => Promise<Response> = (data: FormData
 // 查看用户音色列表
 export const getUserVoiceList: (params: Params) => Promise<Response> = (params: Params) => request.get("/voice/user/list", { params });
 // 创建审核模型
-export const createAuditModel: (data: FormData) => Promise<Response> = (data: FormData) => request.post("/audit/create", data);
+export const createUserModel: (data: CreateAudit) => Promise<Response> = (data: CreateAudit) => request.post("/model/user/create", data);
 // 获取审核模型列表
 export const getAuditModelList: (params: auditParams) => Promise<Response> = (params: auditParams) => request.get("/audit/list", { params });
 // 获取人物列表
-export const getCharacterList: (params: Params) => Promise<Response> = (params: Params) => request.get("/character/list", { params });
+export const getCharacterList: (params: Params) => Promise<Response> = (params: Params) => request.get("/model/user/list", { params });
+// 获取人物详情
+export const getCharacterDetail: (id: number) => Promise<Response> = (id: number) => request.get(`/model/user/detail`, { params: { id } });
+
 // 获取审核详情
 export const getAuditDetail: (id: number) => Promise<Response> = (id: number) => request.get(`/audit/detail`, { params: { id } });
 // 更改审核信息
-export const updateAuditInfo: (data: FormData) => Promise<Response> = (data: FormData) => request.put(`/audit/edit`, data);
+// export const updateAuditInfo: (data: FormData) => Promise<Response> = (data: FormData) => request.put(`/audit/edit`, data);
 // 修改人物信息
 export const updateCharacterInfo: (data: EditCharacter) => Promise<Response> = (data: EditCharacter) => request.put(`/character/edit`, data);
+
+export const fileUpload: (data: FormData) => Promise<Response> = (data: FormData) => request.post(`/file/upload`, data);

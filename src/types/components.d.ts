@@ -66,6 +66,7 @@ declare module 'vue' {
     Setup: typeof import('./../components/Setup.vue')['default']
     SoundWave: typeof import('./../components/SoundWave.vue')['default']
     Swiper: typeof import('./../components/Swiper.vue')['default']
+    Tabs: typeof import('./../components/Tabs.vue')['default']
     Theme: typeof import('./../components/Theme.vue')['default']
     UserInfo: typeof import('./../components/UserInfo.vue')['default']
   }

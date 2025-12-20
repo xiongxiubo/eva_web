@@ -1,33 +1,32 @@
 <template>
     <div class="create-voice">
-        <el-card>
-            <template #header>
-                <div class="card-header">
-                    <span>{{ $at('我的音色') }}</span>
-                    <el-button type="primary" @click="visible = true">{{ $at('创建音色') }}</el-button>
+        <div class="action-bar">
+            <button class="create-btn" @click="visible = true">
+                <el-icon style="width:16px; margin-right:4px">
+                    <Plus />
+                </el-icon>
+                <span class="btn-text">{{ $at('创建语音') }}</span>
+                <span class="btn-text-mobile">{{ $at('创建') }}</span>
+            </button>
+        </div>
+        <Tabs :tabList="tabs" v-model="status" />
+        <div class="voice-list">
+            <div v-for="voice in userVoiceList" :key="voice.id" class="voice-item">
+                <div class="voice-info">
+                    <AVCircle :src="getVoiceUrl(voice)" :outline-width="0" :progress-width="5" :outline-meter-space="5"
+                        :playtime="true" playtime-font=" 18px Monaco" :audio-controls="false" />
+                    <div class="voice-details">
+                        <div class="voice-name">{{ voice.name }}</div>
+                        <div class="voice-tags">
+                            <span class="tag gender">{{ getGenderLabel(voice.gender) }}</span>
+                            <span class="tag accent">{{ voice.language || $at('未知') }}</span>
+                        </div>
+                    </div>
                 </div>
-            </template>
-            <el-tabs v-model="status" type="border-card">
-                <el-tab-pane v-for="tab in tabs" :label="tab.label" :name="tab.name">
-                    <ul class="voice-list">
-                        <li v-for="voice in userVoiceList" :key="voice.id" class="voice-item">
-                            <div class="voice-info">
-                                <Audio :src="getVoiceUrl(voice)" />
-                                <div class="voice-details">
-                                    <div class="voice-name">{{ voice.name }}</div>
-                                    <div class="voice-tags">
-                                        <span class="tag gender">{{ getGenderLabel(voice.gender) }}</span>
-                                        <span class="tag accent">{{ voice.language || $at('未知') }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- 状态 -->
-                            <component :is="getStatusTag(voice.status)" />
-                        </li>
-                    </ul>
-                </el-tab-pane>
-            </el-tabs>
-        </el-card>
+                <!-- 状态 -->
+                <component :is="getStatusTag(voice.status)" />
+            </div>
+        </div>
     </div>
 
     <el-dialog v-model="visible" :show-close="false" :width="width">
@@ -77,6 +76,8 @@
 import { $at } from 'i18n-auto-extractor';
 import Audio from '@/views/create/voice/Audio.vue';
 import Record from '@/views/create/voice/Record.vue';
+import { AVCircle } from 'vue-audio-visual';
+
 const store = useVoiceStore();
 const { userVoiceList, status } = storeToRefs(store);
 const { clone, getUserVoice } = store;
@@ -91,9 +92,9 @@ const blob = ref<Blob>();
 const recordEnd = (b: Blob) => blob.value = b;
 
 const tabs = [
-    { label: $at('审核通过'), name: 'active', },
-    { label: $at('审核中'), name: 'pending', },
-    { label: $at('审核拒绝'), name: 'rejected', },
+    { label: $at('审核通过'), value: 'active', },
+    { label: $at('审核中'), value: 'pending', },
+    { label: $at('审核拒绝'), value: 'rejected', },
 ]
 const getVoiceUrl = (voice: any) => {
     if (voice.sample_audio_url) return voice.sample_audio_url;
@@ -151,6 +152,29 @@ onMounted(() => {
 $info-yellow: #f8c940;
 $primary-color: #4b89ff;
 
+.action-bar {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    padding: 10px 30px;
+
+    .create-btn {
+        background-color: var(--el-menu-active-bg-color);
+        color: var(--menu-active-color);
+        border: 1px solid var(--el-menu-border-color);
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+
+        .btn-text-mobile {
+            display: none;
+        }
+    }
+}
+
 @mixin dark-scrollbars {
     &::-webkit-scrollbar {
         width: 6px;
@@ -175,8 +199,6 @@ $primary-color: #4b89ff;
 }
 
 .create-voice {
-    padding: 0 20px;
-
     .card-header {
         display: flex;
         justify-content: space-between;
@@ -190,13 +212,16 @@ $primary-color: #4b89ff;
 
     .voice-list {
         width: 100%;
-        height: calc(100vh - 240px);
-        list-style: none;
         overflow-y: auto; // Crucial for scrolling the list within the modal
         @include dark-scrollbars;
+        padding: 0 20px;
+        box-sizing: border-box;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
 
         .voice-item {
             display: flex;
+            flex-direction: column;
             justify-content: space-between;
             align-items: center;
             padding: 15px 20px;
@@ -209,6 +234,7 @@ $primary-color: #4b89ff;
 
         .voice-info {
             display: flex;
+            flex-direction: column;
             align-items: center;
             gap: 15px;
         }

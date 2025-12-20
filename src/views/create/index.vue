@@ -8,10 +8,11 @@
             <span class="btn-text-mobile">{{ $at('创建') }}</span>
         </button>
     </div>
+    <Tabs v-model="status" :tabList="tabList" />
     <el-empty v-if="characterList.length === 0" description="还没有人物，快去创建一个吧" />
     <div class="content-grid">
         <div v-for="card in characterList" :key="card.id" class="card" @click="showDetailDialog(card)">
-            <img lazy :src="card.avatar_url" class="card-image" alt="">
+            <img lazy :src="card.images" class="card-image" alt="">
             <div class="card-body">
                 <div class="card-header">
                     <h3 class="card-title">{{ card.name }}</h3>
@@ -76,7 +77,7 @@
 import { $at } from 'i18n-auto-extractor';
 import { formatTime } from '@/utils/time';
 const auditStore = useAuditStore();
-const { characterList } = storeToRefs(auditStore);
+const { characterList, status } = storeToRefs(auditStore);
 const { isMobile } = useDevice();
 const column = computed(() => isMobile.value ? 2 : 4);
 const width = computed(() => isMobile.value ? '95%' : '800px');
@@ -95,6 +96,11 @@ const edit = reactive<EditCharacter>({
     description: "",
     prompt: "",
 })
+const tabList = [
+    { label: $at('审核通过'), value: 'active' },
+    { label: $at('审核中'), value: 'pending' },
+    { label: $at('审核拒绝'), value: 'rejected' },
+];
 
 const showDetailDialog = (card: any) => {
     currentCard.value = { ...card };
