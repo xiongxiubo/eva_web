@@ -40,7 +40,7 @@
                         <div class="voice-details">
                             <div class="voice-name">{{ voice.name }}</div>
                             <div class="voice-tags">
-                                <span class="tag gender">{{ voice.gender === 'M' ? '男性' : '女性' }}</span>
+                                <span class="tag gender">{{ getGender(voice.gender) }}</span>
                                 <span class="tag accent">{{ voice.language }}</span>
                             </div>
                         </div>
@@ -103,7 +103,16 @@ const Gender = [
     { name: $at('男性'), value: 'M' },
     { name: $at('女性'), value: 'F' },
 ]
-
+const getGender = (gender: string) => {
+    switch (gender) {
+        case 'M':
+            return $at('男性')
+        case 'F':
+            return $at('女性')
+        default:
+            return $at('未知')
+    }
+}
 // 试听音色
 const previewVoice = (item: any) => {
     try {

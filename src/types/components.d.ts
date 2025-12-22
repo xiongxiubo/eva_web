@@ -8,7 +8,9 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    3Dmodel: typeof import('./../components/3Dmodel.vue')['default']
     AppKitButton: typeof import('./../components/AppKitButton.vue')['default']
+    Audio: typeof import('./../components/Audio.vue')['default']
     Button: typeof import('./../components/Button.vue')['default']
     Card_pagination: typeof import('./../components/Card_pagination.vue')['default']
     CollapsibleText: typeof import('./../components/CollapsibleText.vue')['default']

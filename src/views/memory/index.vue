@@ -7,7 +7,7 @@
             <div class="list">
                 <div class="item" v-for="(item, index) in MemoryList" :key="index"
                     @click="router.push(`/chathistory/${item.talkie.id}`)">
-                    <img :src="item.talkie.avatar" class="avatar">
+                    <img :src="item.talkie.avatar_url" class="avatar">
                     <div class="header">
                         <div class="ainame">{{ item.talkie.name }}</div>
                         <div class="time">{{ $at('最后通话') }}：{{ timeFromNow(item.last_call_time, currentLang) }}</div>
@@ -19,12 +19,10 @@
                     </div>
                     <div class="footer">
                         <div class="ainame">
-                            <el-avatar :src="item.talkie.avatar" :size="24" />
+                            <el-avatar :src="item.talkie.avatar_url" :size="24" />
                             <span>{{ item.talkie.name }}</span>
                             <span>x</span>
-                            <el-avatar
-                                :src="user.Address === '' ? generateAvatar(user.Email) : generateAvatar(user.Address)"
-                                :size="24" />
+                            <el-avatar :src="generateAvatar(user.Email)" :size="24" />
                             <span>{{ user.username }}</span>
                         </div>
                         <div class="count">

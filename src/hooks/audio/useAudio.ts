@@ -27,7 +27,6 @@ export function useAudio(avatarRef: Ref<HTMLDivElement | null>) {
   const isRecording = ref(false);
   const modelUrl = ref("");
   const isSpeaker = ref(false); // 说话人是否可以说话
-  const timer = ref(0);
   const wsMsg = ref<any>({});
   let startTime = 0;
 

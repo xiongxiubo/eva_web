@@ -1,9 +1,7 @@
 <template>
   <ElConfigProvider :locale="locale">
     <RouterView v-slot="{ Component }">
-      <keep-alive>
-        <component :is="Component" />
-      </keep-alive>
+      <component :is="Component" />
     </RouterView>
   </ElConfigProvider>
 </template>

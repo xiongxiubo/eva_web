@@ -52,10 +52,18 @@
                     </div>
                 </div>
                 <div class="config-panel__section">
+                    <h2 class="section-title">{{ $at('标签') }}</h2>
+                    <div class="input-group">
+                        <el-select v-model="config.tags" filterable placeholder="请选择标签">
+                            <el-option v-for="tag in tags" :label="tag.name" :value="tag.name" />
+                        </el-select>
+                    </div>
+                </div>
+                <div class="config-panel__section">
                     <h2 class="section-title">{{ $at('提示词（影响角色的回复）') }}</h2>
                     <p class="section-description update-info"> **{{ $at('更新提示') }}:** {{ $at('不能被用户看到，仅影响对话效果') }} </p>
                     <p class="section-description">{{ $at('角色的提示词，包括所有背景信息、特征、角色与用户之间的关系等') }}</p>
-                    <el-input type="textarea" v-model="config.prompt" :rows="8" show-word-limit maxlength="4000" />
+                    <el-input type="textarea" v-model="config.prompt" :rows="4" show-word-limit maxlength="4000" />
                 </div>
             </section>
             <section class="media-and-preview-panel">
@@ -93,8 +101,13 @@
                         </el-icon>
                     </div>
                     <div class="voice-item" v-else>
-                        <p class="voice-name">{{ voice.name }}</p>
-                        <span class="tag accent">{{ voice.language }}</span>
+                        <div class="voice-box">
+                            <Audio :src="voice.voice_url" />
+                            <p class="voice-name">{{ voice.name }}</p>
+                        </div>
+                        <el-icon :size="20" style="cursor: pointer;" @click="voiceVisible = true">
+                            <Edit />
+                        </el-icon>
                     </div>
                 </div>
                 <div class="config-panel__section">
@@ -111,10 +124,39 @@
                         show-word-limit maxlength="500" />
                 </div>
             </section>
-            <section class="media-and-preview-panel">
-                <!-- 模型预览/3D模型 -->
-
-            </section>
+            <!-- 模型预览/3D模型 -->
+            <div class="chat-preview-page">
+                <header class="header">
+                    <h1 class="title">预览和测试</h1>
+                    <p class="subtitle">注意：Talkies 所说的一切都是人工智能编造的！</p>
+                </header>
+                <main class="main-content">
+                    <span class="not" v-if="auditDetail.model_url === ''">{{ $at('模型暂未创建') }}</span>
+                    <div class="avatar" />
+                </main>
+                <footer class="footer">
+                    <div class="floating-hint">
+                        请输入您的昵称、个人简介和开场白，开始对话。
+                    </div>
+                    <div class="input-bar">
+                        <div class="reset-action">
+                            <i class="icon-reset"></i>
+                            <span>重置</span>
+                        </div>
+                        <div class="input-container">
+                            <div class="input-field"></div>
+                            <div class="actions">
+                                <button class="btn-add">+</button>
+                                <button class="btn-send">
+                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            </div>
         </div>
         <Voice v-model="voiceVisible" @select="selectVoice" />
     </div>
@@ -127,6 +169,8 @@ import { type UploadFile } from 'element-plus';
 import { eq } from 'lodash';
 const { GetModelDetail } = useAuditStore();
 const { auditDetail } = storeToRefs(useAuditStore());
+const { tagList } = storeToRefs(useTalkieStore());
+const tags = computed(() => tagList.value.filter(item => item.name !== "Recommend"))
 const loading = ref(false);
 const router = useRouter();
 const route = useRoute();
@@ -163,13 +207,21 @@ const handleAvatarChange = async (file: UploadFile) => {
 };
 const selectVoice = (item: any) => {
     config.voice_id = item.id;
-    voice.value = item;
+    voice.value = {
+        id: item.id || '',
+        name: item.name || '',
+        voice_url: item.voice_url !== "" ? item.voice_url : item.sample_audio_url,
+    };
 };
 const submit = async () => {
     loading.value = true;
     try {
-        // const res = route.query.id ? await updateAuditInfo({ ...config, id: Number(route.query.id) }) : await createUserModel(config);
-        const res = await createUserModel(config);
+        const res = route.query.id ?
+            await updateAuditInfo({ ...config, id: Number(route.query.id), age: Number(config.age), }) :
+            await createUserModel({
+                ...config,
+                age: Number(config.age),
+            });
         if (res.code === 0) {
             ElMessage.success($at('提交成功'));
             router.replace("/create");
@@ -183,7 +235,6 @@ const submit = async () => {
     };
 };
 onMounted(async () => {
-    console.log(route.query.id);
     if (route.query.id) {
         await GetModelDetail(Number(route.query.id));
         config.name = auditDetail.value.name || '';
@@ -192,19 +243,32 @@ onMounted(async () => {
         config.welcome_text = auditDetail.value.welcome_text || '';
         config.url = auditDetail.value.avatar_url || '';
         config.voice_id = auditDetail.value.voice_id || '';
-        voice.value = auditDetail.value.voice || {};
+        voice.value = {
+            id: auditDetail.value.voice_id || '',
+            name: auditDetail.value.voice_name || '',
+            voice_url: auditDetail.value.voice_url || '',
+        };
+        config.gender = auditDetail.value.gender || 'M';
+        config.age = auditDetail.value.age || 0;
+        config.language = auditDetail.value.language || 'zh-CN';
+        config.is_public = auditDetail.value.is_public || false;
+        config.tags = auditDetail.value.tags || '';
     };
+    useTalkieStore().getTag();
 });
 onUnmounted(() => {
-    Object.assign(config, {
-        name: '',
-        description: '',
-        prompt: '',
-        welcome_text: '',
-        images: new Blob(),
-        voice_id: '',
-    });
-})
+    config.name = '';
+    config.description = '';
+    config.prompt = '';
+    config.welcome_text = '';
+    config.url = '';
+    config.voice_id = '';
+    config.gender = 'M';
+    config.age = 0;
+    config.language = 'zh-CN';
+    config.is_public = false;
+    config.tags = '';
+});
 </script>
 
 <style lang="scss" scoped>
@@ -294,7 +358,7 @@ $publish-color: #a04bff;
 // --- Main Content (Desktop: Dual Column) ---
 .talkie-creator__main-content {
     display: flex;
-    min-height: calc(100vh - 50px);
+    min-height: calc(100vh - 60px);
 
     .config-panel {
         flex: 1;
@@ -488,6 +552,12 @@ $publish-color: #a04bff;
     margin-bottom: 10px;
     border: 1px solid var(--el-border-color);
 
+    .voice-box {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
     .voice-name {
         font-size: 15px;
         font-weight: 600;
@@ -521,6 +591,152 @@ $publish-color: #a04bff;
         border-radius: 8px;
     }
 }
+
+// 颜色变量定义
+$bg-color: #0f0f0f;
+$text-primary: #ffffff;
+$text-secondary: #666666;
+$input-bg: #1e1e1e;
+$hint-bg: #1a1a1a;
+$accent-color: #8e8e8e;
+
+.chat-preview-page {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 60px);
+    background-color: $bg-color;
+    color: $text-primary;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow: hidden;
+
+    .header {
+        .title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 0.75rem;
+            color: $text-secondary;
+        }
+    }
+
+    .main-content {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+
+        .not {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: $text-secondary;
+        }
+
+    }
+
+    .footer {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        padding-bottom: 10px;
+
+        .floating-hint {
+            background-color: $hint-bg;
+            color: $accent-color;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .input-bar {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+
+            .reset-action {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                cursor: pointer;
+                color: $accent-color;
+
+                .icon-reset {
+                    width: 20px;
+                    height: 20px;
+                    border: 2px solid $accent-color;
+                    border-radius: 50%;
+                    margin-bottom: 4px;
+                    position: relative;
+
+                    &::after {
+                        content: 'N'; // 模拟图中的图标
+                        font-size: 10px;
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                    }
+                }
+
+                span {
+                    font-size: 0.7rem;
+                }
+            }
+
+            .input-container {
+                flex: 1;
+                height: 44px;
+                background-color: $input-bg;
+                border-radius: 22px;
+                display: flex;
+                align-items: center;
+                padding: 0 12px 0 20px;
+
+                .input-field {
+                    flex: 1;
+                }
+
+                .actions {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    color: $accent-color;
+
+                    button {
+                        background: none;
+                        border: none;
+                        color: inherit;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        padding: 0;
+
+                        &.btn-add {
+                            font-size: 1.5rem;
+                            line-height: 1;
+                        }
+
+                        &.btn-send {
+                            transform: rotate(-10deg); // 稍微倾斜还原图标角度
+                            opacity: 0.6;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 
 @media (max-width: 900px) {

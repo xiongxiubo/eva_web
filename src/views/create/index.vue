@@ -1,6 +1,6 @@
 <template>
     <div class="action-bar">
-        <button class="create-btn" @click="router.push('/create/edit')">
+        <button class="create-btn" @click="router.push('/create/edit?')">
             <el-icon style="width:16px; margin-right:4px">
                 <Plus />
             </el-icon>
@@ -103,17 +103,18 @@ const tabList = [
 ];
 
 const showDetailDialog = (card: any) => {
-    currentCard.value = { ...card };
-    edit.id = card.id;
-    edit.name = card.name;
-    edit.gender = card.gender;
-    edit.language = card.language;
-    edit.age = card.age;
-    edit.is_public = card.is_public;
-    edit.welcome_text = card.welcome_text;
-    edit.description = card.description;
-    edit.prompt = card.prompt;
-    detailDialogVisible.value = true;
+    // currentCard.value = { ...card };
+    // edit.id = card.id;
+    // edit.name = card.name;
+    // edit.gender = card.gender;
+    // edit.language = card.language;
+    // edit.age = card.age;
+    // edit.is_public = card.is_public;
+    // edit.welcome_text = card.welcome_text;
+    // edit.description = card.description;
+    // edit.prompt = card.prompt;
+    // detailDialogVisible.value = true;
+    router.push(`/create/edit?id=${card.id}`);
 }
 
 const handleSave = async () => {

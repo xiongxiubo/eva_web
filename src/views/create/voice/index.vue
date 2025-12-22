@@ -74,7 +74,7 @@
 </template>
 <script setup lang="ts">
 import { $at } from 'i18n-auto-extractor';
-import Audio from '@/views/create/voice/Audio.vue';
+import Audio from '@/components/Audio.vue';
 import Record from '@/views/create/voice/Record.vue';
 import { AVCircle } from 'vue-audio-visual';
 

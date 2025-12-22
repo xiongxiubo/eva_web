@@ -108,6 +108,9 @@ export const getUserVoiceList: (params: Params) => Promise<Response> = (params: 
 export const createUserModel: (data: CreateAudit) => Promise<Response> = (data: CreateAudit) => request.post("/model/user/create", data);
 // 获取审核模型列表
 export const getAuditModelList: (params: auditParams) => Promise<Response> = (params: auditParams) => request.get("/audit/list", { params });
+// 更改审核信息
+export const updateAuditInfo: (data: any) => Promise<Response> = (data: any) => request.put(`/model/user/edit`, data);
+
 // 获取人物列表
 export const getCharacterList: (params: Params) => Promise<Response> = (params: Params) => request.get("/model/user/list", { params });
 // 获取人物详情
@@ -115,8 +118,7 @@ export const getCharacterDetail: (id: number) => Promise<Response> = (id: number
 
 // 获取审核详情
 export const getAuditDetail: (id: number) => Promise<Response> = (id: number) => request.get(`/audit/detail`, { params: { id } });
-// 更改审核信息
-// export const updateAuditInfo: (data: FormData) => Promise<Response> = (data: FormData) => request.put(`/audit/edit`, data);
+
 // 修改人物信息
 export const updateCharacterInfo: (data: EditCharacter) => Promise<Response> = (data: EditCharacter) => request.put(`/character/edit`, data);
 
