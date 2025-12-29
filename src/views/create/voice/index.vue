@@ -11,21 +11,7 @@
         </div>
         <Tabs :tabList="tabs" v-model="status" />
         <div class="voice-list">
-            <div v-for="voice in userVoiceList" :key="voice.id" class="voice-item">
-                <div class="voice-info">
-                    <AVCircle :src="getVoiceUrl(voice)" :outline-width="0" :progress-width="5" :outline-meter-space="5"
-                        :playtime="true" playtime-font=" 18px Monaco" :audio-controls="false" />
-                    <div class="voice-details">
-                        <div class="voice-name">{{ voice.name }}</div>
-                        <div class="voice-tags">
-                            <span class="tag gender">{{ getGenderLabel(voice.gender) }}</span>
-                            <span class="tag accent">{{ voice.language || $at('未知') }}</span>
-                        </div>
-                    </div>
-                </div>
-                <!-- 状态 -->
-                <component :is="getStatusTag(voice.status)" />
-            </div>
+            <AudioCard v-for="voice in userVoiceList" :key="voice.id" :item="voice" />
         </div>
     </div>
 
@@ -74,9 +60,8 @@
 </template>
 <script setup lang="ts">
 import { $at } from 'i18n-auto-extractor';
-import Audio from '@/components/Audio.vue';
 import Record from '@/views/create/voice/Record.vue';
-import { AVCircle } from 'vue-audio-visual';
+import AudioCard from '@/views/create/components/AudioCard.vue';
 
 const store = useVoiceStore();
 const { userVoiceList, status } = storeToRefs(store);
@@ -84,28 +69,24 @@ const { clone, getUserVoice } = store;
 const isConfirmed = ref(false);
 const visible = ref(false);
 const voiceName = ref('');
-const file = ref<File>();
+const file = ref<string>('');
 const { isMobile } = useDevice();
 const width = computed(() => isMobile.value ? '100%' : '50%');
 const loading = ref(false);
-const blob = ref<Blob>();
-const recordEnd = (b: Blob) => blob.value = b;
+const recordEnd = (b: string) => file.value = b;
 
 const tabs = [
     { label: $at('审核通过'), value: 'active', },
     { label: $at('审核中'), value: 'pending', },
     { label: $at('审核拒绝'), value: 'rejected', },
 ]
-const getVoiceUrl = (voice: any) => {
-    if (voice.sample_audio_url) return voice.sample_audio_url;
-    return voice.voice_url;
-}
+
 // 处理文件上传
-const handleFileChange = (e: File) => file.value = e;
+const handleFileChange = (e: string) => file.value = e;
 const clonevoice = async () => {
-    if (!file.value && !blob.value) return ElMessage.error($at('请上传或记录样本'));
+    if (file.value.trim() === '') return ElMessage.error($at('请上传或记录样本'));
     const formData = new FormData();
-    formData.append('file', blob.value ?? file.value!);
+    formData.append('url', file.value);
     formData.append('name', voiceName.value);
     try {
         loading.value = true;
@@ -115,34 +96,11 @@ const clonevoice = async () => {
         console.error($at("克隆音色失败:"), error);
     } finally {
         loading.value = false;
+        file.value = '';
+        voiceName.value = '';
     }
 };
 
-function getGenderLabel(gender: string) {
-    switch (gender) {
-        case 'M':
-            return $at('男');
-        case 'F':
-            return $at('女');
-        default:
-            return $at('未知');
-    }
-}
-
-const getStatusTag = (status: string) => {
-    const map: Record<string, { type: 'warning' | 'danger' | 'success'; label: string }> = {
-        pending: { type: 'warning', label: $at('待审核') },
-        rejected: { type: 'danger', label: $at('审核拒绝') },
-        active: { type: 'success', label: $at('审核通过') },
-    };
-    const item = map[status];
-    if (!item) return status;
-    return h(
-        ElTag,
-        { type: item.type },
-        () => item.label
-    );
-};
 onMounted(() => {
     getUserVoice();
 });
@@ -210,91 +168,92 @@ $primary-color: #4b89ff;
         }
     }
 
-    .voice-list {
-        width: 100%;
-        overflow-y: auto; // Crucial for scrolling the list within the modal
-        @include dark-scrollbars;
-        padding: 0 20px;
-        box-sizing: border-box;
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
 
-        .voice-item {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 20px;
-            transition: background-color 0.2s;
-            background-color: var(--el-menu-bg-color);
-            border-radius: 10px;
-            margin-bottom: 10px;
-            border: 1px solid var(--el-border-color);
-        }
+}
 
-        .voice-info {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-        }
+.voice-list {
+    overflow-y: auto; // Crucial for scrolling the list within the modal
+    padding: 20px 30px;
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
 
-        .play-button {
-            background-color: var(--msg-input-bg-color);
-            border: none;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            flex-shrink: 0; // Prevent button from shrinking
-        }
+    .voice-item {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        transition: background-color 0.2s;
+        background-color: var(--el-menu-bg-color);
+        border-radius: 10px;
+        margin-bottom: 10px;
+        border: 1px solid var(--el-border-color);
+    }
 
-        .voice-name {
-            font-size: 15px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
+    .voice-info {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
 
-        .voice-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
+    .play-button {
+        background-color: var(--msg-input-bg-color);
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        flex-shrink: 0; // Prevent button from shrinking
+    }
 
-            .tag {
-                font-size: 11px;
-                padding: 3px 8px;
-                border-radius: 12px;
-                background-color: #383838;
-                white-space: nowrap;
+    .voice-name {
+        font-size: 15px;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
 
-                // Optional: Specific color for certain tags
-                &.gender {
-                    background-color: #444;
-                    color: #ccc;
-                }
+    .voice-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
 
-                &.accent {
-                    background-color: #1a3a3a;
-                    color: #46b8b8;
-                }
+        .tag {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            background-color: #383838;
+            white-space: nowrap;
+
+            // Optional: Specific color for certain tags
+            &.gender {
+                background-color: #444;
+                color: #ccc;
+            }
+
+            &.accent {
+                background-color: #1a3a3a;
+                color: #46b8b8;
             }
         }
+    }
 
-        .use-button {
-            border: none;
-            padding: 8px 15px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: 500;
-            flex-shrink: 0;
+    .use-button {
+        border: none;
+        padding: 8px 15px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-weight: 500;
+        flex-shrink: 0;
 
-            &:hover {
-                background-color: rgba($color: transparent, $alpha: 0.8);
-                color: white;
-            }
+        &:hover {
+            background-color: rgba($color: transparent, $alpha: 0.8);
+            color: white;
         }
     }
 }
@@ -504,6 +463,13 @@ $primary-color: #4b89ff;
         .confirmation-text {
             font-size: 12px;
         }
+    }
+
+    .voice-list {
+        gap: 16px;
+        padding: 16px;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+
     }
 }
 </style>

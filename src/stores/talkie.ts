@@ -1,20 +1,30 @@
 import { getChattingAi, getRoleList, getTagList } from "@/api";
-import { eq, get } from "lodash";
+import { debounce, eq, get } from "lodash";
 
 export const useTalkieStore = defineStore("talkie", () => {
   const talkieList = ref<any[]>([]);
   const tagList = ref<any[]>([]);
   const chattingAi = ref<any>({});
   const chatHistory = ref<any[]>([]);
+  const chatHistoryTotal = ref<number>(0);
   const page = ref<number>(1);
+  const gender = ref<string>("all");
+  const language = ref<string>("all");
+  const tags_type = ref<string>("ALL");
   const route = useRoute();
   const router = useRouter();
+  const isPrivate = ref<boolean>(false);
+  const loading = ref<boolean>(false);
 
-  async function getAiPrivate({ page_index = 1, page_count = 10 }) {
+  async function getAiPrivate() {
     try {
+      loading.value = true;
       const res = await getPrivateRoleList({
-        page_index,
-        page_count,
+        page_index: 1,
+        page_count: 20,
+        tags_type: tags_type.value,
+        gender: gender.value,
+        language: language.value,
       });
       if (eq(res.code, 0)) {
         const list = get(res, "data.list", []);
@@ -22,6 +32,8 @@ export const useTalkieStore = defineStore("talkie", () => {
       }
     } catch (error) {
       console.log(error);
+    } finally {
+      loading.value = false;
     }
   }
 
@@ -36,18 +48,33 @@ export const useTalkieStore = defineStore("talkie", () => {
       console.log(error);
     }
   }
-  async function getTalkie({ page_index = 1, page_count = 10, tags_type = "" }) {
+
+  const debounceGetTalkie = debounce(() => getTalkie(), 500);
+  const debounceGetAiPrivate = debounce(() => getAiPrivate(), 500);
+
+  watch(
+    () => [gender.value, language.value, tags_type.value, isPrivate.value],
+    () => {
+      isPrivate.value ? debounceGetAiPrivate() : debounceGetTalkie();
+    },
+  );
+  async function getTalkie() {
     try {
+      loading.value = true;
       const res = await getRoleList({
-        page_index,
-        page_count,
-        tags_type,
+        page_index: 1,
+        page_count: 20,
+        tags_type: tags_type.value,
+        gender: gender.value,
+        language: language.value,
       });
       if (eq(res.code, 0)) {
         talkieList.value = get(res, "data.list", []);
       }
     } catch (error) {
       console.log(error);
+    } finally {
+      loading.value = false;
     }
   }
   // 获取正在聊的ai
@@ -75,6 +102,7 @@ export const useTalkieStore = defineStore("talkie", () => {
           .filter((item: any) => item.role !== "tool")
           .filter((item: any) => item.content !== "");
         page.value === 1 ? (chatHistory.value = list) : (chatHistory.value = [...chatHistory.value, ...list]);
+        chatHistoryTotal.value = get(res, "data.total", 0);
       }
     } catch (error) {
       console.log(error);
@@ -86,7 +114,13 @@ export const useTalkieStore = defineStore("talkie", () => {
     talkieList,
     chattingAi,
     chatHistory,
+    chatHistoryTotal,
     page,
+    gender,
+    language,
+    tags_type,
+    isPrivate,
+    loading,
     getAiPrivate,
     getTag,
     getTalkie,

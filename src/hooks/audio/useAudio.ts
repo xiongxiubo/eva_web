@@ -28,6 +28,7 @@ export function useAudio(avatarRef: Ref<HTMLDivElement | null>) {
   const modelUrl = ref("");
   const isSpeaker = ref(false); // 说话人是否可以说话
   const wsMsg = ref<any>({});
+  const isXModel = ref(false);
   let startTime = 0;
 
   // --- 3. [核心] WASM 解密逻辑 ---
@@ -117,6 +118,9 @@ export function useAudio(avatarRef: Ref<HTMLDivElement | null>) {
       case "closeMusic":
         music.pauseMusic();
         break;
+      case "modelAction":
+        head.value.setAction(msg.text);
+        break;
     }
   };
   const checkAndPlayNext = async () => {
@@ -165,9 +169,11 @@ export function useAudio(avatarRef: Ref<HTMLDivElement | null>) {
     }
   }
   const stopRecording = () => {
+    if (!isRecording.value) return;
     isRecording.value = false;
     audioProcessor?.disconnect();
     mediaStream?.getTracks().forEach(t => t.stop());
+    audioContext.close();
 
     clearInterval(bufferTimer);
     flushBuffer();
@@ -198,8 +204,12 @@ export function useAudio(avatarRef: Ref<HTMLDivElement | null>) {
   // --- 渲染器初始化 ---
   const initHead = async () => {
     if (!avatarRef.value || !modelUrl.value) return;
-    const render = new MixamoRender(avatarRef.value);
-    await render.showModel({ url: modelUrl.value }, e => {
+    const opt = {
+      url: modelUrl.value,
+      isXModel: isXModel.value,
+    };
+    const render = new ModelRender(avatarRef.value, opt);
+    await render.showModel(e => {
       if (e.loaded === e.total) {
         setTimeout(() => {
           loading.value = false;
@@ -209,8 +219,12 @@ export function useAudio(avatarRef: Ref<HTMLDivElement | null>) {
     head.value = render;
   };
   // --- 生命周期 ---
-  onMounted(() => {
+  onMounted(async () => {
     initWorker();
+    if (route.params.id) {
+      await useTalkieStore().getChatting();
+      connectWebSocket();
+    }
   });
   onUnmounted(() => {
     worker.terminate();
@@ -218,21 +232,17 @@ export function useAudio(avatarRef: Ref<HTMLDivElement | null>) {
     worker.terminate();
     music.close();
     if (modelUrl.value.startsWith("blob:")) URL.revokeObjectURL(modelUrl.value);
+    chattingAi.value = {};
+    head.value?.clone();
+    console.log(123);
   });
   // --- 监听 ---
   watch(
     () => chattingAi.value?.model_url,
     val => {
       if (!val) return;
+      isXModel.value = val.includes("_X");
       getDecode(val, false);
-    },
-    { immediate: true },
-  );
-  watch(
-    () => route.params.id,
-    async () => {
-      await useTalkieStore().getChatting();
-      connectWebSocket();
     },
     { immediate: true },
   );

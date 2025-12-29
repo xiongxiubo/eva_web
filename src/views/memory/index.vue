@@ -6,21 +6,21 @@
             </div>
             <div class="list">
                 <div class="item" v-for="(item, index) in MemoryList" :key="index"
-                    @click="router.push(`/chathistory/${item.talkie.id}`)">
-                    <img :src="item.talkie.avatar_url" class="avatar">
+                    @click="router.push(`/chathistory/${item.talkie_id}`)">
+                    <img :src="item.talkie_avatar" class="avatar">
                     <div class="header">
-                        <div class="ainame">{{ item.talkie.name }}</div>
-                        <div class="time">{{ $at('最后通话') }}：{{ timeFromNow(item.last_call_time, currentLang) }}</div>
+                        <div class="ainame">{{ item.talkie_name }}</div>
+                        <div class="time">{{ $at('最后通话') }}：{{ timeFromNow(item.last_talk_time, currentLang) }}</div>
                     </div>
                     <div class="content">
                         <div class="text">
-                            {{ item.summary }}
+                            {{ item.talk_summary }}
                         </div>
                     </div>
                     <div class="footer">
                         <div class="ainame">
-                            <el-avatar :src="item.talkie.avatar_url" :size="24" />
-                            <span>{{ item.talkie.name }}</span>
+                            <el-avatar :src="item.talkie_avatar" :size="24" />
+                            <span>{{ item.talkie_name }}</span>
                             <span>x</span>
                             <el-avatar :src="generateAvatar(user.Email)" :size="24" />
                             <span>{{ user.username }}</span>
@@ -28,7 +28,7 @@
                         <div class="count">
                             <el-icon>
                                 <Phone />
-                            </el-icon>： {{ item.count }}
+                            </el-icon>： {{ item.talk_count }}
                         </div>
                     </div>
                 </div>

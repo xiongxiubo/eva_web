@@ -21,7 +21,7 @@
 </template>
 <script setup lang="ts">
 import { $at } from 'i18n-auto-extractor';
-import { generateAvatar, ellipsis } from "@/utils/utils";
+import { generateAvatar } from "@/utils/utils";
 import { useDisconnect } from "@reown/appkit/vue";
 
 const dialogTableVisible = ref(false);

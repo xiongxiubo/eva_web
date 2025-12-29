@@ -1,6 +1,6 @@
 :root {
   --title: #fff;
-  --swiper-color: #000;
+  --tab-active: #000;
   --tab-item-bg: hsla(0, 65%, 15%, 0.059);
   --main-bg: #f4f4f5;
   --el-menu-active-color: #202024;
@@ -23,8 +23,22 @@
   --speaker-card-item-bg-color: #fff;
   --menu-active-color: #202024;
   --menu-bg-color: #fafafa;
+  --audio-card-backage-color: #8f8f94;
+  --icon-bg-color: rgb(255, 255, 255);
+  --segmented-control-bg-color: #eeeeef;
+  --segmented-thumb-bg-color: #ffffff;
+  --segmented-item-active-color: #000;
+  --select-trigger-hove-bg-color: #f8fafc;
+  --select-trigger-hove-border-color: #cbd5e1;
 }
 .dark {
+  --select-trigger-hove-bg-color: #16181d;
+  --select-trigger-hove-border-color: #2d3139;
+  --segmented-item-active-color: #fff;
+  --segmented-thumb-bg-color: #2d3139;
+  --segmented-control-bg-color: #0f1115;
+  --icon-bg-color: rgb(37, 40, 49);
+  --audio-card-backage-color: #2c2c2e;
   --menu-bg-color: #202024;
   --menu-active-color: #fff;
   --speaker-card-item-bg-color: #1d1e1f;
@@ -36,7 +50,7 @@
   --chat-loading-backgroud: radial-gradient(circle at center, rgb(54 97 160) 0%, #121212 50%, #121212 100%);
   --home-crad-item-background: #50515487;
   --swiper-header-icon-background: #505154;
-  --swiper-color: #fff;
+  --tab-active: #fff;
   --tab-item-bg: hsla(0, 0%, 100%, 0.059);
   --main-bg: transparent;
   --el-menu-active-color: #fff;

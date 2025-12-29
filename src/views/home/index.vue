@@ -5,16 +5,25 @@
                 <img
                     src="https://cdn.talkie-ai.com/public-cdn-s3-us-west-2/talkie-op-img/image/1660802544_1722257297570_recommend-star.svg">
             </h2>
-            <div class="tabs">
-                <div class="tabitem" :class="{ 'active': activeTab === index, 'private': item.id === 999 }"
-                    v-for="(item, index) in tagList" :key="index" @click="handleTabClick(index)">
-                    {{ item.name }}
-                </div>
-                <div class="tabitem private" @click="store.getAiPrivate({})">private</div>
-            </div>
+            <FilterBar />
             <div class="content">
+                <Empty v-show="talkieList.length === 0" />
                 <div class="cards">
-                    <div :xs="12" :sm="6" :md="4" class="card_item" v-for="item in talkieList" :key="item">
+                    <el-skeleton class="card_item" animated v-show="loading">
+                        <template #template>
+                            <div class="cover">
+                                <el-skeleton-item variant="image" class="el-image" />
+                                <div class="info">
+                                    <el-skeleton-item variant="p" />
+                                    <el-skeleton-item variant="p" />
+                                </div>
+                            </div>
+                            <el-skeleton-item variant="p" style="width: 50%;" />
+                            <el-skeleton-item variant="p" />
+                            <el-skeleton-item variant="p" />
+                        </template>
+                    </el-skeleton>
+                    <div class=" card_item" v-for="item in talkieList" :key="item">
                         <div class="cover">
                             <el-image loading="lazy" :src="item.avatar" fit="cover" />
                             <div class="info">
@@ -22,7 +31,8 @@
                                 <p class="desc">{{ item.description }}</p>
                             </div>
                         </div>
-                        <p class="creator">{{ $at('由') }} <el-link>@{{ item.user_name }}</el-link> {{ $at('创建') }}</p>
+                        <p class="creator">{{ $at('由') }} <el-link>@{{ item.user_name }}</el-link> {{ $at('创建')
+                            }}</p>
                         <div class="btn" @click="router.push(`/chat/${item.id}`)">
                             <el-icon>
                                 <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
@@ -39,55 +49,35 @@
                         </div>
                     </div>
                 </div>
+
             </div>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 280" fill="none" shape-rendering="auto" width="64"
-                height="64">
-                <metadata xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dc="http://purl.org/dc/elements/1.1/"
-                    xmlns:dcterms="http://purl.org/dc/terms/">
-                    <rdf:RDF>
-                        <rdf:Description>
-                            <dc:title>Avataaars</dc:title>
-                            <dc:creator>Pablo Stanley</dc:creator>
-                            <dc:source xsi:type="dcterms:URI">https://avataaars.com/</dc:source>
-                            <dcterms:license xsi:type="dcterms:URI">https://avataaars.com/</dcterms:license>
-                            <dc:rights>Remix of „Avataaars” (https://avataaars.com/) by „Pablo Stanley”, licensed under
-                                „Free for personal and commercial use” (https://avataaars.com/)</dc:rights>
-                        </rdf:Description>
-                    </rdf:RDF>
-                </metadata>
-                <mask id="viewboxMask">
-                    <rect width="280" height="280" rx="0" ry="0" x="0" y="0" fill="#fff" />
-                </mask>
-                <g mask="url(#viewboxMask)">
-                    <g transform="translate(8)"></g>
-                </g>
-            </svg>
+            <div class="footer">
+                <div class="logo">
+                    <img :src="isDark ? '/image/logo_dark.png' : '/image/logo_light.png'" />
+                    <span>Aianace</span>
+                </div>
+                <div class="footIcon">
+                    <a v-for="item in iconList" :href="item.url" target="_blank" rel="noopener noreferrer">
+                        <svg t="1721024055673" class="iconItem" viewBox="0 0 1024 1024" version="1.1"
+                            xmlns="http://www.w3.org/2000/svg" p-id="4831" width="200" height="200">
+                            <path :d="item.icon" p-id="4832" fill="#96979b"></path>
+                        </svg>
+                    </a>
+                </div>
+                <div class="copyright">
+                    Copyright © 2025 Aianace. All rights reserved.
+                </div>
+            </div>
         </MainPage>
     </div>
-    <div class="footer">
-        <div class="logo">
-            <img :src="isDark ? '/image/logo_dark.png' : '/image/logo_light.png'" />
-            <span>Aianace</span>
-        </div>
-        <div class="footIcon">
-            <a v-for="item in iconList" :href="item.url" target="_blank" rel="noopener noreferrer">
-                <svg t="1721024055673" class="iconItem" viewBox="0 0 1024 1024" version="1.1"
-                    xmlns="http://www.w3.org/2000/svg" p-id="4831" width="200" height="200">
-                    <path :d="item.icon" p-id="4832" fill="#96979b"></path>
-                </svg>
-            </a>
-        </div>
-        <div class="copyright">
-            Copyright © 2025 Aianace. All rights reserved.
-        </div>
-    </div>
+
 
 </template>
 <script setup lang="ts">
 import { $at } from 'i18n-auto-extractor';
 import MainPage from '@/components/mainPage.vue'
 import { useDark } from '@vueuse/core';
+import FilterBar from './FilterBar.vue';
 const isDark = useDark();
 const iconList = [
     { icon: svg.twitter, url: '#' },
@@ -98,17 +88,9 @@ const iconList = [
 ]
 const router = useRouter();
 const store = useTalkieStore();
-const { tagList, talkieList } = storeToRefs(store);
-
-const activeTab = ref(0);
-const handleTabClick = (index: number) => {
-    activeTab.value = index;
-    getAiList();
-};
+const { talkieList, loading } = storeToRefs(store);
 const getAiList = async () => {
-    await store.getTalkie({
-        tags_type: tagList.value[activeTab.value].name
-    });
+    await store.getTalkie();
 };
 
 onMounted(async () => {
@@ -177,28 +159,23 @@ onMounted(async () => {
         .cards {
             width: 100%;
             margin-top: 10px;
-            display: flex;
+            display: grid;
             gap: 20px;
             flex-wrap: wrap;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
 
             @media (max-width: 768px) {
                 gap: 10px;
-                justify-content: space-around;
-
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
             }
 
             .card_item {
                 aspect-ratio: 1 / 1.34;
-                max-width: 212px;
                 position: relative;
                 padding: 10px;
                 background: var(--home-crad-item-background); //rgb(228 228 231);
                 border-radius: 10px;
                 box-sizing: border-box;
-
-                @media (max-width: 768px) {
-                    max-width: 170px;
-                }
 
                 .cover {
                     aspect-ratio: 1 / 1;
@@ -245,6 +222,10 @@ onMounted(async () => {
                     gap: 4px;
                     font-size: 12px;
                     color: #a2a2ac;
+
+                    .el-link {
+                        font-size: 12px;
+                    }
                 }
 
                 .btn {
@@ -275,7 +256,7 @@ onMounted(async () => {
     justify-content: center;
     flex-direction: column;
     font-size: 14px;
-    margin-top: 20px;
+    margin-top: auto;
 
     .logo {
         display: flex;

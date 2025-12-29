@@ -98,6 +98,7 @@ const emits = defineEmits(['select'])
 const isCreate = ref(false);
 const activeTab = ref<'library' | 'mine'>('library');
 const selectedGender = ref<string>('ALL');
+const audio = ref<any>();
 const Gender = [
     { name: $at('所有性别'), value: 'ALL' },
     { name: $at('男性'), value: 'M' },
@@ -115,9 +116,11 @@ const getGender = (gender: string) => {
 }
 // 试听音色
 const previewVoice = (item: any) => {
+    const url = item.sample_audio_url || item.voice_url;
     try {
-        const audio = new Audio(item.sample_audio_url);
-        audio.play();
+        if (audio.value) audio.value.pause();
+        audio.value = new Audio(url);
+        audio.value.play();
     } catch (error) {
         console.log(error);
     }

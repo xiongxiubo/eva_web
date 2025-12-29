@@ -6,14 +6,13 @@
         <AVMedia v-if="stream && isRecording" :media="stream" type="wform" line-color="#ff4b4b" />
         <h4 class="record-title-text">{{ isRecording ? $at('停止记录') : $at('开始记录') }}</h4>
         <p v-if="recordDuration > 0">{{ $at('录音时长') }} {{ recordDuration }} {{ $at('秒') }}</p>
-        <p v-else>{{ $at('点击录音并讲话 10-60 秒.') }}</p>
+        <p v-else>{{ $at('点击录音并讲话 10-30 秒.') }}</p>
     </div>
 </template>
 <script setup lang="ts">
 import { $at } from 'i18n-auto-extractor';
 import { AVMedia } from 'vue-audio-visual';
 import { useUserMedia } from '@vueuse/core';
-import { eq } from 'lodash';
 const { stream, start, stop } = useUserMedia({ constraints: { audio: true } });
 const audioContext = ref<AudioContext | null>(null);
 const sourceNode = ref<MediaStreamAudioSourceNode | null>(null);
@@ -44,7 +43,7 @@ async function startRecord() {
         recordDuration.value = Math.floor((Date.now() - recordStartTime) / 1000);//取整
     }, 1000);
     // 60s 后自动停止
-    autoStopTimer = window.setTimeout(stopRecord, 60000);
+    autoStopTimer = window.setTimeout(stopRecord, 30000);
 };
 async function stopRecord() {
     if (!isRecording.value) return;
@@ -64,24 +63,19 @@ async function stopRecord() {
     sourceNode.value?.disconnect();
     stop();
     audioContext.value?.close();
-    const blob = encodeWav16bit(buffer.value, 16000); // 保存录音文件
-    const formData = new FormData();
-    formData.append('file_type', 'useraudio');
-    formData.append('file', blob);
-    loading.value = true;
-    try {
-        const res = await fileUpload(formData);
-        if (eq(res.code, 0)) {
-            emit('recordEnd', res.data.url || '');
-        } else {
-            ElMessage.error(res.msg || $at('文件上传失败'));
-        };
-    } catch (error) {
-        ElMessage.error($at('文件上传失败'))
-    }
+    const mergedFloat32 = concatFloat32(buffer.value);
+    const resampled = await resampleTo16k(mergedFloat32, 16000)
+    const pcm16 = float32ToInt16(resampled)
+    const base64 = pcm16ToBase64(pcm16)
+    emit("recordEnd", base64);
     buffer.value = [];
-    loading.value = false;
 };
+function resetRecord() {
+    isRecording.value = false;
+    recordDuration.value = 0;
+    buffer.value = [];
+}
+defineExpose({ resetRecord })
 </script>
 <style scoped lang="scss">
 $error-red: #ff4b4b;

@@ -11,10 +11,9 @@ const request = axios.create({
 request.interceptors.request.use(
   config => {
     const token = localStorage.getItem("token");
-    if (token) {
-      config.headers["Authorization"] = token;
-    }
-
+    if (token) config.headers["Authorization"] = token;
+    const lang = JSON.parse(localStorage.getItem("lang") || "{}").currentLang;
+    if (lang) config.headers["Accept-Language"] = lang;
     return config;
   },
   error => {

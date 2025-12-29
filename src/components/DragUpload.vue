@@ -10,6 +10,7 @@
 
 <script setup lang="ts">
 import { $at } from "i18n-auto-extractor";
+import { eq } from "lodash";
 const File = ref<File | null>(null);
 const emits = defineEmits(['change']);
 const isDragOver = ref(false);
@@ -26,7 +27,9 @@ const onDrop = async (e: any) => {
     // 效验文件
     const valid = await validateFile(files[0]);
     if (!valid) return;
-    emits('change', files[0]);
+    File.value = files[0];
+    // 上传文件
+    await upfile(files[0]);
 }
 
 const onFileChange = async (e: any) => {
@@ -35,7 +38,25 @@ const onFileChange = async (e: any) => {
     const valid = await validateFile(file);
     if (!valid) return;
     File.value = file;
-    emits('change', file);
+    // 上传文件
+    await upfile(file);
+
+}
+// 上传文件
+const upfile = async (file: File) => {
+    const formData = new FormData();
+    formData.append('file_type', 'useraudio');
+    formData.append('file', file);
+    try {
+        const res = await fileUpload(formData);
+        if (eq(res.code, 0)) {
+            emits('change', res.data.url || '');
+        } else {
+            ElMessage.error(res.msg || $at('文件上传失败'));
+        };
+    } catch (error) {
+        ElMessage.error($at('文件上传失败'))
+    }
 }
 // 文件效验
 const validateFile = async (file: File) => {

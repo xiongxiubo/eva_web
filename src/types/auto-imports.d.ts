@@ -14,20 +14,25 @@ declare global {
   const ElMessageBox: typeof import('element-plus/es')['ElMessageBox']
   const ElTag: typeof import('element-plus/es')['ElTag']
   const EncodeWorker: typeof import('../hooks/audio/encodeWork')['EncodeWorker']
+  const FbxRender: typeof import('../hooks/renderUtils/fbxRender')['FbxRender']
   const Lipsync: typeof import('../hooks/renderUtils/lipsync')['Lipsync']
   const LipsyncEn: typeof import("../hooks/head/lipsync-en.mjs")["LipsyncEn"]
-  const MixamoRender: typeof import('../hooks/mixamoRender')['MixamoRender']
+  const MixamoRender: typeof import('../hooks/renderUtils/ModelRender')['MixamoRender']
+  const ModalRender: typeof import('../hooks/mixamoRender')['ModalRender']
+  const ModelRender: typeof import('../hooks/renderUtils/modelRender')['ModelRender']
   const Music: typeof import('../hooks/audio/music')['Music']
   const Render: typeof import("../hooks/mixamoRender")["Render"]
   const RigRender: typeof import("../hooks/rigRender")["RigRender"]
   const TalkingHead: typeof import("../hooks/head/talkinghead.mjs")["TalkingHead"]
   const acceptHMRUpdate: typeof import('pinia')['acceptHMRUpdate']
   const addSpeaker: typeof import('../api/index')['addSpeaker']
+  const animEmojis: typeof import('../hooks/renderUtils/data')['animEmojis']
   const arrayBufferToBase64: typeof import('../utils/convert')['arrayBufferToBase64']
   const base64ToArrayBuffer: typeof import('../utils/convert')['base64ToArrayBuffer']
   const baseVisemeNames: typeof import("../hooks/renderUtils/data")["baseVisemeNames"]
   const cloneVoice: typeof import('../api/index')['cloneVoice']
   const computed: typeof import('vue')['computed']
+  const concatFloat32: typeof import('../utils/baseToaudio')['concatFloat32']
   const createApp: typeof import('vue')['createApp']
   const createAuditModel: typeof import('../api/index')['createAuditModel']
   const createPinia: typeof import('pinia')['createPinia']
@@ -38,11 +43,14 @@ declare global {
   const defineStore: typeof import('pinia')['defineStore']
   const deleteSpeaker: typeof import('../api/index')['deleteSpeaker']
   const deleteUserChat: typeof import('../api/index')['deleteUserChat']
+  const delvoice: typeof import('../api/index')['delvoice']
   const effectScope: typeof import('vue')['effectScope']
   const ellipsis: typeof import('../utils/utils')['ellipsis']
   const encodeWAV: typeof import('../utils/baseToaudio')['encodeWAV']
   const encodeWav16bit: typeof import('../utils/baseToaudio')['encodeWav16bit']
+  const fbxVisemeNames: typeof import('../hooks/renderUtils/data')['fbxVisemeNames']
   const fileUpload: typeof import('../api/index')['fileUpload']
+  const float32ToInt16: typeof import('../utils/baseToaudio')['float32ToInt16']
   const float32ToInt16PCM: typeof import('../utils/convert')['float32ToInt16PCM']
   const formatTime: typeof import('../utils/time')['formatTime']
   const generateAvatar: typeof import('../utils/utils')['generateAvatar']
@@ -101,6 +109,7 @@ declare global {
   const onUnmounted: typeof import('vue')['onUnmounted']
   const onUpdated: typeof import('vue')['onUpdated']
   const onWatcherCleanup: typeof import('vue')['onWatcherCleanup']
+  const pcm16ToBase64: typeof import('../utils/baseToaudio')['pcm16ToBase64']
   const pcmBase64ToAudioUrl: typeof import('../utils/baseToaudio')['pcmBase64ToAudioUrl']
   const playPCM: typeof import('../utils/baseToaudio')['playPCM']
   const previewVoice: typeof import("../api/index")["previewVoice"]
@@ -110,6 +119,7 @@ declare global {
   const ref: typeof import('vue')['ref']
   const register: typeof import('../api/index')['register']
   const request: typeof import('../utils/request')['default']
+  const resampleTo16k: typeof import('../utils/baseToaudio')['resampleTo16k']
   const resolveComponent: typeof import('vue')['resolveComponent']
   const setActivePinia: typeof import('pinia')['setActivePinia']
   const setMapStoreSuffix: typeof import('pinia')['setMapStoreSuffix']
@@ -131,8 +141,12 @@ declare global {
   const updateSpeaker: typeof import('../api/index')['updateSpeaker']
   const updateUserInfo: typeof import('../api/index')['updateUserInfo']
   const useAttrs: typeof import('vue')['useAttrs']
-  const useAudio: typeof import('../hooks/useAudio')['useAudio']
+  const useAudio: typeof import('../hooks/audio/useAudio')['useAudio']
   const useAuditStore: typeof import('../stores/creation')['useAuditStore']
+  const useCoreEncode: typeof import('../hooks/core/useCoreEncode')['useCoreEncode']
+  const useCoreRecord: typeof import('../hooks/core/useCoreRecord')['useCoreRecord']
+  const useCoreRunder: typeof import('../hooks/core/useCoreRunder')['useCoreRunder']
+  const useCoreWebSocket: typeof import('../hooks/core/useCoreWebSocket')['useCoreWebSocket']
   const useCreationStore: typeof import('../stores/creation')['useCreationStore']
   const useCssModule: typeof import('vue')['useCssModule']
   const useCssVars: typeof import('vue')['useCssVars']
@@ -155,6 +169,7 @@ declare global {
   const useTemplateRef: typeof import('vue')['useTemplateRef']
   const useUserStore: typeof import('../stores/user')['useUserStore']
   const useVoiceStore: typeof import('../stores/creation')['useVoiceStore']
+  const useWebsocketAudio: typeof import('../hooks/audio/useWebsocketAudio')['useWebsocketAudio']
   const visemeNames: typeof import('../hooks/renderUtils/data')['visemeNames']
   const watch: typeof import('vue')['watch']
   const watchEffect: typeof import('vue')['watchEffect']
@@ -170,14 +185,14 @@ declare global {
   export type { Music } from '../hooks/audio/music'
   import('../hooks/audio/music')
   // @ts-ignore
-  export type { MixamoRender } from '../hooks/mixamoRender'
-  import('../hooks/mixamoRender')
-  // @ts-ignore
   export type { DynamicBones } from '../hooks/renderUtils/dynamicbones'
   import('../hooks/renderUtils/dynamicbones')
   // @ts-ignore
   export type { Lipsync } from '../hooks/renderUtils/lipsync'
   import('../hooks/renderUtils/lipsync')
+  // @ts-ignore
+  export type { ModelRender } from '../hooks/renderUtils/modelRender'
+  import('../hooks/renderUtils/modelRender')
   // @ts-ignore
   export type { VoiceParams, CreateAudit, EditCharacter } from '../api/index'
   import('../api/index')

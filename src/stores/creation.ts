@@ -46,7 +46,6 @@ export const useAuditStore = defineStore("audit", () => {
   async function GetModelDetail(id: number) {
     try {
       const res = await getCharacterDetail(id);
-      console.log(res);
       if (eq(res.code, 0)) {
         auditDetail.value = get(res, "data", {});
       }

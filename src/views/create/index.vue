@@ -11,91 +11,15 @@
     <Tabs v-model="status" :tabList="tabList" />
     <el-empty v-if="characterList.length === 0" description="还没有人物，快去创建一个吧" />
     <div class="content-grid">
-        <div v-for="card in characterList" :key="card.id" class="card" @click="showDetailDialog(card)">
-            <img lazy :src="card.images" class="card-image" alt="">
-            <div class="card-body">
-                <div class="card-header">
-                    <h3 class="card-title">{{ card.name }}</h3>
-                </div>
-                <p class="card-desc">{{ card.description }}</p>
-                <div class="card-footer">
-                    {{ formatTime(card.created_at) }}
-                </div>
-            </div>
-        </div>
+        <Card v-for="card in characterList" :key="card.id" :item="card" @click="showDetailDialog(card)" />
     </div>
-    <!-- 详情对话框 -->
-    <el-dialog v-model="detailDialogVisible" :width="width">
-        <el-descriptions :title="$at('模型详情')" border direction="vertical" :column="column">
-            <el-descriptions-item :width="140" :rowspan="2" :label="$at('图片')" align="center">
-                <el-image lazy style="width: 100px; height: 100px;border-radius: 10px;" :src="currentCard.avatar_url"
-                    :preview-src-list="[currentCard.avatar_url]" preview-teleported fit="cover" />
-            </el-descriptions-item>
-            <el-descriptions-item :label="$at('模型名称')">
-                <el-input v-model="edit.name" />
-            </el-descriptions-item>
-            <el-descriptions-item :label="$at('性别')">
-                <el-select v-model="edit.gender" placeholder="请选择性别">
-                    <el-option label="男" value="M" />
-                    <el-option label="女" value="F" />
-                </el-select>
-            </el-descriptions-item>
-            <el-descriptions-item :label="$at('语言')" :width="140">
-                <el-select v-model="edit.language" placeholder="请选择语言">
-                    <el-option label="中文" value="zh" />
-                    <el-option label="英文" value="en" />
-                </el-select>
-            </el-descriptions-item>
-            <el-descriptions-item :label="$at('语音信息')"> 语音名称：{{ currentCard.voice_name }} </el-descriptions-item>
-            <el-descriptions-item :label="$at('年龄')">
-                <el-input v-model="edit.age" type="number" />
-            </el-descriptions-item>
-            <el-descriptions-item :label="$at('是否公开')">
-                <el-switch v-model="edit.is_public" :active-value="1" :inactive-value="0" />
-            </el-descriptions-item>
-            <el-descriptions-item :label="$at('状态')">{{ currentCard.status }}</el-descriptions-item>
-            <el-descriptions-item :label="$at('创建时间')">{{ formatTime(currentCard.created_at) }}</el-descriptions-item>
-            <el-descriptions-item :label="$at('欢迎语')">
-                <el-input v-model="edit.welcome_text" />
-            </el-descriptions-item>
-            <el-descriptions-item :label="$at('是否推荐')">
-                <el-switch v-model="currentCard.is_recommended" :active-value="1" :inactive-value="0" />
-            </el-descriptions-item>
-            <el-descriptions-item :label="$at('描述')" :span="column">
-                <el-input v-model="edit.description" type="textarea" :rows="4" />
-            </el-descriptions-item>
-            <el-descriptions-item :label="$at('提示词')" :span="column">
-                <el-input v-model="edit.prompt" type="textarea" :rows="4" />
-            </el-descriptions-item>
-        </el-descriptions>
-        <template #footer>
-            <el-button type="primary" @click="handleSave">{{ $at('保存') }}</el-button>
-        </template>
-    </el-dialog>
 </template>
 <script setup lang="ts">
+import Card from '@/views/create/components/Card.vue';
 import { $at } from 'i18n-auto-extractor';
-import { formatTime } from '@/utils/time';
 const auditStore = useAuditStore();
 const { characterList, status } = storeToRefs(auditStore);
-const { isMobile } = useDevice();
-const column = computed(() => isMobile.value ? 2 : 4);
-const width = computed(() => isMobile.value ? '95%' : '800px');
 const router = useRouter();
-const detailDialogVisible = ref(false);
-const currentCard = ref<any>({});
-const saveLoading = ref(false);
-const edit = reactive<EditCharacter>({
-    id: 0,
-    name: "",
-    gender: "",
-    language: "",
-    age: 0,
-    is_public: false,
-    welcome_text: "",
-    description: "",
-    prompt: "",
-})
 const tabList = [
     { label: $at('审核通过'), value: 'active' },
     { label: $at('审核中'), value: 'pending' },
@@ -103,37 +27,7 @@ const tabList = [
 ];
 
 const showDetailDialog = (card: any) => {
-    // currentCard.value = { ...card };
-    // edit.id = card.id;
-    // edit.name = card.name;
-    // edit.gender = card.gender;
-    // edit.language = card.language;
-    // edit.age = card.age;
-    // edit.is_public = card.is_public;
-    // edit.welcome_text = card.welcome_text;
-    // edit.description = card.description;
-    // edit.prompt = card.prompt;
-    // detailDialogVisible.value = true;
     router.push(`/create/edit?id=${card.id}`);
-}
-
-const handleSave = async () => {
-    saveLoading.value = true;
-    try {
-        const res = await updateCharacterInfo({
-            ...edit,
-            age: Number(edit.age),
-        });
-        if (res.code != 0) return ElMessage.error(res.msg);
-        ElMessage.success('修改成功');
-    } catch (error) {
-        ElMessage.error('修改失败');
-    } finally {
-        detailDialogVisible.value = false;
-        saveLoading.value = false;
-        auditStore.GetCharacterList();
-    }
-
 }
 onMounted(() => {
     auditStore.GetCharacterList();

@@ -8,62 +8,77 @@
                 <span class="draft-text">{{ $at('返回') }}</span>
             </div>
             <div class="header-right">
-                <button class="btn btn-publish" @click="submit" v-loading="loading">{{ $at('提交审核') }}</button>
+                <button class="btn btn-publish" v-if="isSave || auditDetail.status !== 'active'" @click="submit"
+                    v-loading="loading" :disabled="auditDetail.status === 'pending'"
+                    :style="{ cursor: auditDetail.status === 'pending' ? 'not-allowed' : 'pointer' }">
+                    {{ btnText }}
+                </button>
             </div>
         </header>
         <div class="talkie-creator__main-content">
             <section class="config-panel">
-                <div class="config-panel__section">
-                    <h2 class="section-title">{{ $at('创建你的人物') }}</h2>
-                    <div class="input-group input-group-flex">
-                        <label for="name">{{ $at('姓名') }}</label>
-                        <el-input type="text" :placeholder="$at('请输入姓名')" v-model="config.name" maxlength="30"
-                            show-word-limit />
+                <h2 class="section-title">{{ $at('创建你的人物') }}</h2>
+                <div class="config-panel-gaid">
+                    <div class="config-panel__section">
+                        <h2 class="section-title">{{ $at('姓名') }}</h2>
+                        <div class="input-group input-group-flex">
+                            <el-input type="text" :placeholder="$at('请输入姓名')" v-model="config.name" maxlength="30"
+                                show-word-limit />
+                        </div>
+                    </div>
+                    <div class="config-panel__section">
+                        <h2 class="section-title">{{ $at('语言') }}</h2>
+                        <div class="input-group input-group-flex">
+                            <el-select v-model="config.language">
+                                <el-option label="中文" value="zh-CN" />
+                                <el-option label="英文" value="en-US" />
+                            </el-select>
+                        </div>
+                    </div>
+                    <div class="config-panel__section">
+                        <h2 class="section-title">{{ $at('性别') }}</h2>
+                        <div class="input-group">
+                            <el-radio-group v-model="config.gender">
+                                <el-radio label="M">{{ $at('男') }}</el-radio>
+                                <el-radio label="F">{{ $at('女') }}</el-radio>
+                            </el-radio-group>
+                        </div>
+                    </div>
+                    <div class="config-panel__section">
+                        <h2 class="section-title">{{ $at('年龄') }}</h2>
+                        <div class="input-group input-group-flex">
+                            <el-input type="number" :placeholder="$at('请输入年龄')" v-model="config.age" :max="999" />
+                        </div>
+                    </div>
+
+                    <div class="config-panel__section">
+                        <h2 class="section-title">{{ $at('是否公开') }}</h2>
+                        <div class="input-group">
+                            <el-switch v-model="config.is_public" active-text="公开" inactive-text="不公开" />
+                        </div>
+                    </div>
+                    <div class="config-panel__section">
+                        <h2 class="section-title">{{ $at('标签') }}</h2>
+                        <div class="input-group">
+                            <el-select v-model="config.tags" filterable placeholder="请选择标签">
+                                <el-option v-for="tag in tags" :label="tag.name" :value="tag.name" />
+                            </el-select>
+                        </div>
                     </div>
                 </div>
-                <div class="config-panel__section">
-                    <h2 class="section-title">{{ $at('性别') }}</h2>
-                    <div class="input-group">
-                        <el-radio-group v-model="config.gender">
-                            <el-radio label="M">{{ $at('男') }}</el-radio>
-                            <el-radio label="F">{{ $at('女') }}</el-radio>
-                        </el-radio-group>
-                    </div>
-                </div>
-                <div class="config-panel__section">
-                    <h2 class="section-title">{{ $at('年龄') }}</h2>
-                    <div class="input-group input-group-flex">
-                        <el-input type="number" :placeholder="$at('请输入年龄')" v-model="config.age" :max="999" />
-                    </div>
-                </div>
-                <div class="config-panel__section">
-                    <h2 class="section-title">{{ $at('语言') }}</h2>
-                    <div class="input-group input-group-flex">
-                        <el-select v-model="config.language">
-                            <el-option label="中文" value="zh-CN" />
-                            <el-option label="英文" value="en-US" />
-                        </el-select>
-                    </div>
-                </div>
-                <div class="config-panel__section">
-                    <h2 class="section-title">{{ $at('是否公开') }}</h2>
-                    <div class="input-group">
-                        <el-switch v-model="config.is_public" active-text="公开" inactive-text="不公开" />
-                    </div>
-                </div>
-                <div class="config-panel__section">
-                    <h2 class="section-title">{{ $at('标签') }}</h2>
-                    <div class="input-group">
-                        <el-select v-model="config.tags" filterable placeholder="请选择标签">
-                            <el-option v-for="tag in tags" :label="tag.name" :value="tag.name" />
-                        </el-select>
-                    </div>
-                </div>
+
                 <div class="config-panel__section">
                     <h2 class="section-title">{{ $at('提示词（影响角色的回复）') }}</h2>
                     <p class="section-description update-info"> **{{ $at('更新提示') }}:** {{ $at('不能被用户看到，仅影响对话效果') }} </p>
                     <p class="section-description">{{ $at('角色的提示词，包括所有背景信息、特征、角色与用户之间的关系等') }}</p>
-                    <el-input type="textarea" v-model="config.prompt" :rows="4" show-word-limit maxlength="4000" />
+                    <el-input type="textarea" v-model="config.prompt" :rows="8" show-word-limit maxlength="4000" />
+                </div>
+                <div class="config-panel__section">
+                    <h2 class="section-title">{{ $at('介绍（不影响角色的回复）') }}</h2>
+                    <p class="section-description update-info"> **{{ $at('更新提示') }}:** {{ $at('角色的介绍不会影响对话效果') }}</p>
+                    <p class="section-description">{{ $at('角色的介绍，用于展示角色的背景、特征、关系等') }}</p>
+                    <el-input type="textarea" v-model="config.description" :placeholder="$at('输入角色的介绍')" :rows="8"
+                        show-word-limit maxlength="500" />
                 </div>
             </section>
             <section class="media-and-preview-panel">
@@ -75,9 +90,10 @@
                     </div>
                     <p class="description"> {{ $at('添加图片，便于创建3D模型') }}</p>
                     <div class="upload-box">
-                        <el-image :src="config.url" fit="cover" class="avatar" v-if="config.url" />
+                        <!-- <el-image :src="config.url" fit="cover" class="avatar" v-if="config.url" /> -->
                         <el-upload class="avatar-uploader" action="#" list-type="picture-card" :auto-upload="false"
-                            accept="image/*" :limit="1" @change="handleAvatarChange">
+                            accept="image/*" :limit="1" @change="handleAvatarChange" v-model:file-list="files"
+                            :on-remove="handleRemove" v-loading="uploadloading">
                             <el-icon>
                                 <Plus />
                             </el-icon>
@@ -114,59 +130,22 @@
                     <h2 class="section-title">{{ $at('开场白（不影响角色的回复）') }}</h2>
                     <p class="section-description">{{ $at('开场白，用于开始对话并设置对话基调') }}</p>
                     <el-input type="textarea" v-model="config.welcome_text" :placeholder="$at('输入开场白')" :rows="8"
-                        show-word-limit maxlength="500" />
+                        show-word-limit maxlength="100" />
                 </div>
-                <div class="config-panel__section">
-                    <h2 class="section-title">{{ $at('介绍（不影响角色的回复）') }}</h2>
-                    <p class="section-description update-info"> **{{ $at('更新提示') }}:** {{ $at('角色的介绍不会影响对话效果') }}</p>
-                    <p class="section-description">{{ $at('角色的介绍，用于展示角色的背景、特征、关系等') }}</p>
-                    <el-input type="textarea" v-model="config.description" :placeholder="$at('输入角色的介绍')" :rows="8"
-                        show-word-limit maxlength="500" />
-                </div>
+
             </section>
             <!-- 模型预览/3D模型 -->
-            <div class="chat-preview-page">
-                <header class="header">
-                    <h1 class="title">预览和测试</h1>
-                    <p class="subtitle">注意：Talkies 所说的一切都是人工智能编造的！</p>
-                </header>
-                <main class="main-content">
-                    <span class="not" v-if="auditDetail.model_url === ''">{{ $at('模型暂未创建') }}</span>
-                    <div class="avatar" />
-                </main>
-                <footer class="footer">
-                    <div class="floating-hint">
-                        请输入您的昵称、个人简介和开场白，开始对话。
-                    </div>
-                    <div class="input-bar">
-                        <div class="reset-action">
-                            <i class="icon-reset"></i>
-                            <span>重置</span>
-                        </div>
-                        <div class="input-container">
-                            <div class="input-field"></div>
-                            <div class="actions">
-                                <button class="btn-add">+</button>
-                                <button class="btn-send">
-                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </footer>
-            </div>
+            <Model3D ref="model3DRef" />
         </div>
         <Voice v-model="voiceVisible" @select="selectVoice" />
     </div>
 </template>
-
 <script setup lang="ts">
+import Model3D from './Model3D.vue';
 import Voice from './voice.vue';
 import { $at } from 'i18n-auto-extractor';
-import { type UploadFile } from 'element-plus';
-import { eq } from 'lodash';
+import type { UploadFile, UploadUserFile } from 'element-plus';
+import { eq, isEqual } from 'lodash';
 const { GetModelDetail } = useAuditStore();
 const { auditDetail } = storeToRefs(useAuditStore());
 const { tagList } = storeToRefs(useTalkieStore());
@@ -175,6 +154,10 @@ const loading = ref(false);
 const router = useRouter();
 const route = useRoute();
 const voice = ref<any>({});
+const files = ref<UploadUserFile[]>([]);
+const uploadloading = ref(false);
+const model3DRef = ref<any>(null);
+
 const config = reactive<CreateAudit>({
     name: '',
     description: '',
@@ -188,10 +171,33 @@ const config = reactive<CreateAudit>({
     is_public: false,
     tags: '',
 });
+
+const apiConfig = reactive<CreateAudit>({
+    name: '',
+    description: '',
+    prompt: '',
+    welcome_text: '',
+    url: "",
+    voice_id: '',
+    gender: 'M',
+    age: 0,
+    language: 'zh-CN',
+    is_public: false,
+    tags: '',
+});
+
 const voiceVisible = ref(false);
+const isSave = ref(false);
+const btnText = computed(() => {
+    if (!route.query.id) return $at('提交审核');
+    if (auditDetail.value.status === 'pending') return $at('审核中');
+    if (auditDetail.value.status === 'rejected') return $at('重新提交');
+    if (auditDetail.value.status === 'active') return $at('保存');
+})
 const handleAvatarChange = async (file: UploadFile) => {
     if (!file.raw) return;
     try {
+        uploadloading.value = true;
         const formData = new FormData();
         formData.append('file', file.raw);
         formData.append('file_type', "aimodel");
@@ -203,7 +209,12 @@ const handleAvatarChange = async (file: UploadFile) => {
         };
     } catch (error) {
         ElMessage.error($at('文件上传失败'));
+    } finally {
+        uploadloading.value = false;
     };
+};
+const handleRemove = (file: UploadUserFile) => {
+    if (file.url === config.url) config.url = '';
 };
 const selectVoice = (item: any) => {
     config.voice_id = item.id;
@@ -213,18 +224,16 @@ const selectVoice = (item: any) => {
         voice_url: item.voice_url !== "" ? item.voice_url : item.sample_audio_url,
     };
 };
+
 const submit = async () => {
     loading.value = true;
     try {
         const res = route.query.id ?
             await updateAuditInfo({ ...config, id: Number(route.query.id), age: Number(config.age), }) :
-            await createUserModel({
-                ...config,
-                age: Number(config.age),
-            });
+            await createUserModel({ ...config, age: Number(config.age) });
         if (res.code === 0) {
             ElMessage.success($at('提交成功'));
-            router.replace("/create");
+            model3DRef.value?.clone();
         } else {
             ElMessage.error(res.msg || $at('提交失败'));
         };
@@ -234,40 +243,52 @@ const submit = async () => {
         loading.value = false;
     };
 };
+
+watch(config, () => {
+    if (!isEqual(config, apiConfig) && auditDetail.value.status === 'active') isSave.value = true;
+}, { deep: true });
+
 onMounted(async () => {
     if (route.query.id) {
         await GetModelDetail(Number(route.query.id));
-        config.name = auditDetail.value.name || '';
-        config.description = auditDetail.value.description || '';
-        config.prompt = auditDetail.value.prompt || '';
-        config.welcome_text = auditDetail.value.welcome_text || '';
-        config.url = auditDetail.value.avatar_url || '';
-        config.voice_id = auditDetail.value.voice_id || '';
+        Object.assign(apiConfig, {
+            name: auditDetail.value.name ?? '',
+            description: auditDetail.value.description ?? '',
+            prompt: auditDetail.value.prompt ?? '',
+            welcome_text: auditDetail.value.welcome_text ?? '',
+            url: auditDetail.value.avatar_url ?? '',
+            voice_id: auditDetail.value.voice_id ?? '',
+            gender: auditDetail.value.gender ?? 'M',
+            age: auditDetail.value.age ?? 0,
+            language: auditDetail.value.language ?? 'zh-CN',
+            is_public: auditDetail.value.is_public ?? false,
+            tags: auditDetail.value.tags ?? '',
+        });
+        files.value = [{ name: 'avatar', url: apiConfig.url }];
         voice.value = {
-            id: auditDetail.value.voice_id || '',
-            name: auditDetail.value.voice_name || '',
-            voice_url: auditDetail.value.voice_url || '',
+            id: auditDetail.value.voice_id ?? '',
+            name: auditDetail.value.voice_name ?? '',
+            voice_url: auditDetail.value.voice_url ?? '',
         };
-        config.gender = auditDetail.value.gender || 'M';
-        config.age = auditDetail.value.age || 0;
-        config.language = auditDetail.value.language || 'zh-CN';
-        config.is_public = auditDetail.value.is_public || false;
-        config.tags = auditDetail.value.tags || '';
+        Object.assign(config, apiConfig);
     };
     useTalkieStore().getTag();
 });
+
 onUnmounted(() => {
-    config.name = '';
-    config.description = '';
-    config.prompt = '';
-    config.welcome_text = '';
-    config.url = '';
-    config.voice_id = '';
-    config.gender = 'M';
-    config.age = 0;
-    config.language = 'zh-CN';
-    config.is_public = false;
-    config.tags = '';
+    Object.assign(config, {
+        name: '',
+        description: '',
+        prompt: '',
+        welcome_text: '',
+        url: '',
+        voice_id: '',
+        gender: 'M',
+        age: 0,
+        language: 'zh-CN',
+        is_public: false,
+        tags: '',
+    });
 });
 </script>
 
@@ -314,6 +335,7 @@ $publish-color: #a04bff;
     position: sticky;
     top: 0;
     z-index: 10;
+    height: 56px;
 
     .header-left {
         display: flex;
@@ -380,6 +402,26 @@ $publish-color: #a04bff;
     }
 }
 
+.config-panel-gaid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 20px;
+}
+
+.section-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    &.section-title--left-border {
+        border-left: 3px solid var(--el-primary-color);
+        padding-left: 10px;
+    }
+}
+
 // --- Shared Panel Styles ---
 .config-panel__section {
     background-color: var(--home-card-item-background);
@@ -389,24 +431,6 @@ $publish-color: #a04bff;
     display: flex;
     flex-direction: column;
     gap: 5px;
-
-    &:last-child {
-        margin-bottom: 0;
-    }
-
-    .section-title {
-        font-size: 16px;
-        font-weight: 600;
-        margin-bottom: 10px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-
-        &.section-title--left-border {
-            border-left: 3px solid var(--el-primary-color);
-            padding-left: 10px;
-        }
-    }
 
     .section-description {
         font-size: 13px;
@@ -592,150 +616,7 @@ $publish-color: #a04bff;
     }
 }
 
-// 颜色变量定义
-$bg-color: #0f0f0f;
-$text-primary: #ffffff;
-$text-secondary: #666666;
-$input-bg: #1e1e1e;
-$hint-bg: #1a1a1a;
-$accent-color: #8e8e8e;
 
-.chat-preview-page {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    height: calc(100vh - 60px);
-    background-color: $bg-color;
-    color: $text-primary;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    padding: 20px;
-    box-sizing: border-box;
-    overflow: hidden;
-
-    .header {
-        .title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .subtitle {
-            font-size: 0.75rem;
-            color: $text-secondary;
-        }
-    }
-
-    .main-content {
-        flex: 1;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        position: relative;
-
-        .not {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: $text-secondary;
-        }
-
-    }
-
-    .footer {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 16px;
-        padding-bottom: 10px;
-
-        .floating-hint {
-            background-color: $hint-bg;
-            color: $accent-color;
-            padding: 10px 20px;
-            border-radius: 12px;
-            font-size: 0.85rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-        }
-
-        .input-bar {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-
-            .reset-action {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                cursor: pointer;
-                color: $accent-color;
-
-                .icon-reset {
-                    width: 20px;
-                    height: 20px;
-                    border: 2px solid $accent-color;
-                    border-radius: 50%;
-                    margin-bottom: 4px;
-                    position: relative;
-
-                    &::after {
-                        content: 'N'; // 模拟图中的图标
-                        font-size: 10px;
-                        position: absolute;
-                        top: 50%;
-                        left: 50%;
-                        transform: translate(-50%, -50%);
-                    }
-                }
-
-                span {
-                    font-size: 0.7rem;
-                }
-            }
-
-            .input-container {
-                flex: 1;
-                height: 44px;
-                background-color: $input-bg;
-                border-radius: 22px;
-                display: flex;
-                align-items: center;
-                padding: 0 12px 0 20px;
-
-                .input-field {
-                    flex: 1;
-                }
-
-                .actions {
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                    color: $accent-color;
-
-                    button {
-                        background: none;
-                        border: none;
-                        color: inherit;
-                        cursor: pointer;
-                        display: flex;
-                        align-items: center;
-                        padding: 0;
-
-                        &.btn-add {
-                            font-size: 1.5rem;
-                            line-height: 1;
-                        }
-
-                        &.btn-send {
-                            transform: rotate(-10deg); // 稍微倾斜还原图标角度
-                            opacity: 0.6;
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
 
 
 

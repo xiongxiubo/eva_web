@@ -26,4 +26,10 @@ app.use(ElementPlus);
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component);
 }
+app.config.errorHandler = (err, instance, info) => {
+  console.error("Vue errorHandler:", err);
+  console.log("组件实例:", instance);
+  console.log("错误来源:", info);
+  // 可以上报到日志系统
+};
 app.mount("#app");

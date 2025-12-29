@@ -1,8 +1,8 @@
 <template>
     <div class="pagination">
-        <el-pagination v-model:current-page="page_index" v-model:page-size="page_size"
-            :page-sizes="[100, 200, 300, 400]" layout="total, sizes, prev, pager, next" :total="total"
-            @size-change="handleSizeChange" @current-change="handleCurrentChange" />
+        <el-pagination v-model:current-page="page_index" v-model:page-size="page_size" :page-sizes="[10, 20, 30, 40]"
+            layout="total, sizes, prev, pager, next" :total="total" @size-change="handleSizeChange"
+            @current-change="handleCurrentChange" />
     </div>
 
 

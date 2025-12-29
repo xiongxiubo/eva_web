@@ -2,7 +2,7 @@
     <aside class="sidebar" :class="{ 'mobile-open': isMobileMenuOpen }">
         <div class="logo-area">
             <span class="logo-text">{{ $at('创作中心') }}</span>
-            <el-icon :size="20" @click="isMobileMenuOpen = !isMobileMenuOpen">
+            <el-icon :size="20" v-if="isMobile" @click="isMobileMenuOpen = !isMobileMenuOpen">
                 <Fold />
             </el-icon>
         </div>
@@ -27,11 +27,12 @@
 </template>
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
-import { Avatar, CircleCloseFilled, Mic, Stamp } from '@element-plus/icons-vue';
+import { Avatar, Mic } from '@element-plus/icons-vue';
 import { $at } from 'i18n-auto-extractor';
 const { isMobileMenuOpen } = storeToRefs(useCreationStore());
 const router = useRouter();
 const route = useRoute();
+const { isMobile } = useDevice()
 const menuItems = [
     { name: $at('我的人物'), icon: Avatar, path: '/create' },
     { name: $at('我的音色'), icon: Mic, path: '/create/voice' },

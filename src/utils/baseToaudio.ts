@@ -57,7 +57,7 @@ export async function DownloadPCM(pcmBase64: string) {
   a.click();
   URL.revokeObjectURL(url);
 }
-export function pcmBase64ToAudioUrl(base64: string, sampleRate = 48000, numChannels = 1, bitsPerSample = 16) {
+export function pcmBase64ToAudioUrl(base64: string, sampleRate = 16000, numChannels = 1, bitsPerSample = 16) {
   // 解码 Base64 → 字节数组
   const raw = atob(base64);
   const rawLength = raw.length;
@@ -172,4 +172,50 @@ function write(view: DataView<ArrayBuffer>, offset: number, str: string) {
   for (let i = 0; i < str.length; i++) {
     view.setUint8(offset + i, str.charCodeAt(i));
   }
+}
+export function float32ToInt16(input: Float32Array): Int16Array {
+  const out = new Int16Array(input.length);
+  for (let i = 0; i < input.length; i++) {
+    const s = Math.max(-1, Math.min(1, input[i]));
+    out[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+  }
+  return out;
+}
+
+export async function resampleTo16k(input: Float32Array<ArrayBuffer>, inputSampleRate: number): Promise<Float32Array> {
+  const offlineCtx = new OfflineAudioContext(1, Math.ceil((input.length * 16000) / inputSampleRate), 16000);
+  const buffer = offlineCtx.createBuffer(1, input.length, inputSampleRate);
+  buffer.copyToChannel(input, 0);
+  const source = offlineCtx.createBufferSource();
+  source.buffer = buffer;
+  source.connect(offlineCtx.destination);
+  source.start();
+
+  const rendered = await offlineCtx.startRendering();
+  return rendered.getChannelData(0);
+}
+export function concatFloat32(chunks: Float32Array[]): Float32Array<ArrayBuffer> {
+  let totalLength = 0;
+  for (const c of chunks) {
+    totalLength += c.length;
+  }
+  const result = new Float32Array(totalLength);
+  let offset = 0;
+  for (const c of chunks) {
+    result.set(c, offset);
+    offset += c.length;
+  }
+  return result;
+}
+export function pcm16ToBase64(pcm16: Int16Array): string {
+  const uint8 = new Uint8Array(pcm16.buffer);
+  let binary = "";
+  const chunkSize = 0x8000; // 32KB，防止 call stack 溢出
+
+  for (let i = 0; i < uint8.length; i += chunkSize) {
+    const sub = uint8.subarray(i, i + chunkSize);
+    binary += String.fromCharCode(...sub);
+  }
+
+  return btoa(binary);
 }

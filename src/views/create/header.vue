@@ -1,7 +1,7 @@
 <template>
     <div class="header">
         <div class="header_menu">
-            <el-icon :size="26" @click="isMobileMenuOpen = !isMobileMenuOpen">
+            <el-icon :size="26" v-if="isMobile" @click="isMobileMenuOpen = !isMobileMenuOpen">
                 <Expand />
             </el-icon>
         </div>
@@ -15,6 +15,7 @@
 </template>
 <script setup lang="ts">
 const { isMobileMenuOpen } = storeToRefs(useCreationStore());
+const { isMobile } = useDevice()
 </script>
 <style scoped lang="scss">
 .header {

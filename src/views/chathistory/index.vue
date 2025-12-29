@@ -4,9 +4,9 @@
         <div class="title">
             {{ chattingAi.name }} {{ $at('聊天记录') }}
         </div>
-        <DynamicScroller class="list" :items="History" :min-item-size="50" key-field="ID"
+        <DynamicScroller class="list" :items="History" :min-item-size="60" key-field="id"
             v-slot="{ item, index, active }" ref="messagesRef" @scroll.passive="handleScroll">
-            <DynamicScrollerItem :item="item" :active="active"
+            <DynamicScrollerItem :item="item" :index="index" :active="active" :key="item.id"
                 :class="['message-item', item.role === 'user' ? 'user-message' : 'ai-message']">
                 <div style="padding: 6px 0;">
                     <!-- AI消息 -->
@@ -24,9 +24,7 @@
                             <div class="content">{{ content(item) }}</div>
                         </div>
                         <div class="avatar-container">
-                            <el-avatar
-                                :src="user.Address === '' ? generateAvatar(user.Email) : generateAvatar(user.Address)"
-                                size="small" />
+                            <el-avatar :src="generateAvatar(user.Email)" size="small" />
                         </div>
                     </div>
                 </div>
@@ -49,13 +47,12 @@ import { DynamicScroller, DynamicScrollerItem } from "vue-virtual-scroller";
 import { generateAvatar } from '@/utils/utils'
 import { cloneDeep } from 'lodash';
 const router = useRouter();
-const History = computed(() => {
-    return cloneDeep(chatHistory.value)
-})
+const History = computed(() => [...cloneDeep(chatHistory.value)].reverse())
 const { user } = storeToRefs(useUserStore())
 const loading = ref(false);
+const messagesRef = ref<any>(null);
 
-const { chatHistory, chattingAi, page } = storeToRefs(useTalkieStore());
+const { chatHistory, chattingAi, page, chatHistoryTotal } = storeToRefs(useTalkieStore());
 const content = (item: any) => {
     if (item.role === 'user') {
         return JSON.parse(item.content).content
@@ -65,22 +62,37 @@ const content = (item: any) => {
 async function handleScroll(e: Event) {
     // 是否滚动到最底部
     const el = e.target as HTMLElement;
-    // 滚动到最底部
-    if (el.scrollTop >= el.scrollHeight - el.clientHeight - 50) {
-        loadMore();
+    // 当滚动条距离顶部小于 50px，且当前不在加载中时，触发加载
+    if (el.scrollTop <= 50 && !loading.value) {
+        await loadMore(el);
     }
 };
-const loadMore = async () => {
+const loadMore = async (el: any) => {
     if (loading.value) return;
+    if (chatHistoryTotal.value <= chatHistory.value.length) return;
+    const previousScrollHeight = el.scrollHeight;
     loading.value = true;
     page.value++;
-    await useTalkieStore().getHistory();
-    loading.value = false;
+    try {
+        await useTalkieStore().getHistory();
+        await nextTick();
+        const heightDifference = el.scrollHeight - previousScrollHeight;
+        el.scrollTop += heightDifference;
+    } catch (error) {
+        console.error("加载失败", error);
+        page.value--; // 失败时回退页码
+    } finally {
+        loading.value = false;
+
+    }
 }
-onMounted(() => {
-    useTalkieStore().getHistory();
-    useTalkieStore().getChatting();
-    console.log(chatHistory.value);
+onMounted(async () => {
+    await useTalkieStore().getHistory();
+    await useTalkieStore().getChatting();
+    await nextTick()
+    if (messagesRef.value) {
+        messagesRef.value?.scrollToBottom();
+    }
 })
 onUnmounted(() => {
     page.value = 1;
@@ -96,7 +108,9 @@ onUnmounted(() => {
     padding: 0 20px;
     box-sizing: border-box;
     position: relative;
-    overflow-y: auto;
+    gap: 20px;
+    overflow: hidden;
+    align-items: center;
 
     .bg {
         width: 100%;
@@ -112,21 +126,17 @@ onUnmounted(() => {
         font-size: 24px;
         font-weight: bold;
         width: 100%;
-        margin-bottom: 20px;
         text-align: center;
     }
 
     .list {
         display: flex;
-        flex-direction: column;
-        gap: 15px;
         width: 100%;
         max-width: 800px;
         align-self: center;
-        padding-bottom: 20px;
-        height: calc(100% - 140px);
+        flex: 1;
         overflow-y: auto;
-        margin: 0 auto;
+        box-sizing: border-box;
 
         .message-item {
             width: 100%;
@@ -207,14 +217,12 @@ onUnmounted(() => {
     }
 
     .footer {
+        height: 52px;
         display: flex;
         align-items: center;
-        width: 100%;
         box-sizing: border-box;
-        padding-top: 20px;
         width: 100%;
         max-width: 800px;
-        margin: 0 auto;
         cursor: pointer;
         z-index: 1;
 

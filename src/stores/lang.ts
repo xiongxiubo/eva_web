@@ -20,9 +20,7 @@ export const useLangStore = defineStore(
     // 初始化语言
     function initLang() {
       const langItem = lang.find((item: any) => item.code === currentLang.value);
-      if (langItem) {
-        setLang(langItem.code, langItem.json);
-      }
+      if (langItem) setLang(langItem.code, langItem.json);
     }
 
     return {

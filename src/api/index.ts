@@ -21,6 +21,8 @@ interface Params {
   status?: string;
 }
 interface AiParams extends Params {
+  gender: string;
+  language: string;
   tags_type: string;
 }
 interface ChatDataParams extends Params {
@@ -77,7 +79,7 @@ export const getTagList: () => Promise<Response> = () => request.get("/tags/list
 // 获取ai角色列表
 export const getRoleList: (params: AiParams) => Promise<Response> = (params: AiParams) => request.get("/ai/list", { params });
 // 获取私有角色列表
-export const getPrivateRoleList: (params: Params) => Promise<Response> = (params: Params) => request.get("/ai/private", { params });
+export const getPrivateRoleList: (params: AiParams) => Promise<Response> = (params: AiParams) => request.get("/ai/private", { params });
 // 获取正在聊的ai
 export const getChattingAi: (talkie_id: string) => Promise<Response> = (talkie_id: string) => request.get("/ai/current", { params: { talkie_id } });
 // 获取用户聊过的ai
@@ -123,3 +125,5 @@ export const getAuditDetail: (id: number) => Promise<Response> = (id: number) =>
 export const updateCharacterInfo: (data: EditCharacter) => Promise<Response> = (data: EditCharacter) => request.put(`/character/edit`, data);
 
 export const fileUpload: (data: FormData) => Promise<Response> = (data: FormData) => request.post(`/file/upload`, data);
+
+export const delvoice: (id: number) => Promise<Response> = (id: number) => request.delete(`/voice/user/delete`, { data: { id } });

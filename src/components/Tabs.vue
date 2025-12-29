@@ -66,9 +66,7 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 @use "sass:color";
-$text-active: #ffffff; // 激活文字白色
 $text-inactive: #666666; // 未激活文字灰色
-$line-color: #ffffff; // 下划线颜色
 $transition-time: 0.3s;
 
 .tabs-wrapper {
@@ -81,7 +79,7 @@ $transition-time: 0.3s;
     position: relative;
     display: flex;
     gap: 32px; // Tab 之间的间距
-    border-bottom: 1px solid #1a1a1a; // 可选：底部深色细线
+
 
     .tab-item {
         padding: 8px 0;
@@ -97,7 +95,7 @@ $transition-time: 0.3s;
         }
 
         &.active {
-            color: $text-active;
+            color: var(--tab-active);
         }
     }
 
@@ -107,7 +105,7 @@ $transition-time: 0.3s;
         bottom: 0;
         left: 0;
         height: 2px;
-        background-color: $line-color;
+        background-color: var(--tab-active);
         transition: all $transition-time cubic-bezier(0.4, 0, 0.2, 1);
         // 使用 transform 性能更好，且方便做动态效果
     }

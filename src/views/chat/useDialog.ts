@@ -1,0 +1,1 @@
+const useDialog = (avatarRef: any) => {};

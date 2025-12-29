@@ -5,7 +5,6 @@
                 <Fold v-if="!isCollapse" />
                 <Expand v-else />
             </el-icon>
-            <Search />
             <div class="r">
                 <Theme />
                 <Lang />

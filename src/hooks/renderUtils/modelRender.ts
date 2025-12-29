@@ -1,20 +1,22 @@
-import { AnimationMixer, SRGBColorSpace, WebGLRenderer, PerspectiveCamera, Scene, AmbientLight, Color, DirectionalLight, Vector3, Euler, Spherical, type Object3DEventMap, Group, Quaternion } from "three";
+import { AnimationMixer, SRGBColorSpace, WebGLRenderer, PerspectiveCamera, Scene, AmbientLight, Color, DirectionalLight, Vector3, Euler, Spherical, type Object3DEventMap, Group, Quaternion, EquirectangularReflectionMapping, LoopOnce } from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { FBXLoader } from "three/addons/loaders/FBXLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { KTX2Loader } from "three/examples/jsm/loaders/KTX2Loader.js";
-import { DynamicBones } from "./renderUtils/dynamicbones";
-import { Lipsync } from "./renderUtils/lipsync";
-const workletUrl = new URL("./renderUtils/playback-worklet.js", import.meta.url);
-interface Model {
-  url: string;
-}
+import { DynamicBones } from "./dynamicbones";
+import { Lipsync } from "./lipsync";
+import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
+const workletUrl = new URL("./playback-worklet.js", import.meta.url);
 interface streamOptions {
   sampleRate?: number;
   gain: number;
 }
-export class MixamoRender {
+interface Options {
+  url: string;
+  isXModel: boolean;
+}
+export class ModelRender {
   nodeAvatar: HTMLElement;
   lipsync: any;
   audioCtx: AudioContext | null = null;
@@ -75,8 +77,20 @@ export class MixamoRender {
   mixer: AnimationMixer | null = null;
   animEmojis: any = {};
   morphdict: any = {};
-  constructor(node: HTMLElement) {
+  isXModel: boolean;
+  url: string;
+  blinkState: {
+    nextBlinkTime: number;
+    blinkDuration: number;
+    blinkProgress: number;
+    isBlinking: boolean;
+  };
+  currentAction: any;
+  timer: any = null;
+  constructor(node: HTMLElement, options: Options) {
     this.nodeAvatar = node;
+    this.isXModel = options.isXModel;
+    this.url = options.url;
     this.lipsync = { en: new Lipsync() };
     this.initAudioGraph();
     this.renderer = new WebGLRenderer({ antialias: true, alpha: true });
@@ -86,12 +100,21 @@ export class MixamoRender {
     this.nodeAvatar.appendChild(this.renderer.domElement);
     this.camera = new PerspectiveCamera(10, this.nodeAvatar.clientWidth / this.nodeAvatar.clientHeight, 0.1, 2000);
     this.scene = new Scene();
-    this.lightAmbient = new AmbientLight(new Color(0xeeeeee), 3);
+    this.lightAmbient = new AmbientLight(new Color(0xeeeeee), this.isXModel ? 1 : 3);
     this.lightDirect = new DirectionalLight(new Color(0xffffff), 1);
+
+    if (this.isXModel) {
+      const loader = new RGBELoader();
+      loader.load("/model/action/bg.hdr", texture => {
+        texture.mapping = EquirectangularReflectionMapping;
+        this.scene.environment = texture;
+      });
+    }
+
     this.resizeobserver = new ResizeObserver(this.onResize.bind(this));
     this.resizeobserver.observe(this.nodeAvatar);
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    this.controls.enableZoom = true;
+    this.controls.enableZoom = false;
     this.controls.enableRotate = true;
     this.controls.enablePan = false;
     this.controls.minDistance = 2;
@@ -102,239 +125,13 @@ export class MixamoRender {
     this.controls.maxPolarAngle = Math.PI / 2; // 90 度
     this.controls.update();
     this.dynamicbones = new DynamicBones();
-    this.animEmojis = {
-      "🙂": { dt: [300, 2000], rescale: [0, 1], vs: { mouthSmile: [0.5] } },
-      "😊": { dt: [300, 2000], rescale: [0, 1], vs: { browInnerUp: [0.6], eyeSquintLeft: [1], eyeSquintRight: [1], mouthSmile: [0.7], noseSneerLeft: [0.7], noseSneerRight: [0.7] } },
-      "😀": {
-        dt: [300, 2000],
-        rescale: [0, 1],
-        vs: {
-          browInnerUp: [0.6],
-          jawOpen: [0.1],
-          mouthDimpleLeft: [0.2],
-          mouthDimpleRight: [0.2],
-          mouthOpen: [0.3],
-          mouthPressLeft: [0.3],
-          mouthPressRight: [0.3],
-          mouthRollLower: [0.4],
-          mouthShrugUpper: [0.4],
-          mouthSmile: [0.7],
-          mouthUpperUpLeft: [0.3],
-          mouthUpperUpRight: [0.3],
-          noseSneerLeft: [0.4],
-          noseSneerRight: [0.4],
-        },
-      },
-      "😃": {
-        dt: [300, 2000],
-        rescale: [0, 1],
-        vs: {
-          browInnerUp: [0.6],
-          eyeWideLeft: [0.7],
-          eyeWideRight: [0.7],
-          jawOpen: [0.1],
-          mouthDimpleLeft: [0.2],
-          mouthDimpleRight: [0.2],
-          mouthOpen: [0.3],
-          mouthPressLeft: [0.3],
-          mouthPressRight: [0.3],
-          mouthRollLower: [0.4],
-          mouthShrugUpper: [0.4],
-          mouthSmile: [0.7],
-          mouthUpperUpLeft: [0.3],
-          mouthUpperUpRight: [0.3],
-          noseSneerLeft: [0.4],
-          noseSneerRight: [0.4],
-        },
-      },
-      "😄": {
-        dt: [300, 2000],
-        rescale: [0, 1],
-        vs: {
-          browInnerUp: [0.3],
-          eyeSquintLeft: [1],
-          eyeSquintRight: [1],
-          jawOpen: [0.2],
-          mouthDimpleLeft: [0.2],
-          mouthDimpleRight: [0.2],
-          mouthOpen: [0.3],
-          mouthPressLeft: [0.3],
-          mouthPressRight: [0.3],
-          mouthRollLower: [0.4],
-          mouthShrugUpper: [0.4],
-          mouthSmile: [0.7],
-          mouthUpperUpLeft: [0.3],
-          mouthUpperUpRight: [0.3],
-          noseSneerLeft: [0.4],
-          noseSneerRight: [0.4],
-        },
-      },
-      "😁": {
-        dt: [300, 2000],
-        rescale: [0, 1],
-        vs: {
-          browInnerUp: [0.3],
-          eyeSquintLeft: [1],
-          eyeSquintRight: [1],
-          jawOpen: [0.3],
-          mouthDimpleLeft: [0.2],
-          mouthDimpleRight: [0.2],
-          mouthPressLeft: [0.5],
-          mouthPressRight: [0.5],
-          mouthShrugUpper: [0.4],
-          mouthSmile: [0.7],
-          mouthUpperUpLeft: [0.3],
-          mouthUpperUpRight: [0.3],
-          noseSneerLeft: [0.4],
-          noseSneerRight: [0.4],
-        },
-      },
-      "😆": {
-        dt: [300, 2000],
-        rescale: [0, 1],
-        vs: {
-          browInnerUp: [0.3],
-          eyeSquintLeft: [1],
-          eyeSquintRight: [1],
-          eyesClosed: [0.6],
-          jawOpen: [0.3],
-          mouthDimpleLeft: [0.2],
-          mouthDimpleRight: [0.2],
-          mouthPressLeft: [0.5],
-          mouthPressRight: [0.5],
-          mouthShrugUpper: [0.4],
-          mouthSmile: [0.7],
-          mouthUpperUpLeft: [0.3],
-          mouthUpperUpRight: [0.3],
-          noseSneerLeft: [0.4],
-          noseSneerRight: [0.4],
-        },
-      },
-      "😂": {
-        dt: [300, 2000],
-        rescale: [0, 1],
-        vs: {
-          browInnerUp: [0.3],
-          eyeSquintLeft: [1],
-          eyeSquintRight: [1],
-          eyesClosed: [0.6],
-          jawOpen: [0.3],
-          mouthDimpleLeft: [0.2],
-          mouthDimpleRight: [0.2],
-          mouthPressLeft: [0.5],
-          mouthPressRight: [0.5],
-          mouthShrugUpper: [0.4],
-          mouthSmile: [0.7],
-          mouthUpperUpLeft: [0.3],
-          mouthUpperUpRight: [0.3],
-          noseSneerLeft: [0.4],
-          noseSneerRight: [0.4],
-        },
-      },
-      "🤣": { link: "😂" },
-      "😅": { link: "😂" },
-      "😭": {
-        dt: [1000, 1000],
-        rescale: [0, 1],
-        vs: {
-          browInnerUp: [1],
-          eyeSquintLeft: [1],
-          eyeSquintRight: [1],
-          eyesClosed: [0.1],
-          jawOpen: [0],
-          mouthFrownLeft: [1],
-          mouthFrownRight: [1],
-          mouthOpen: [0.5],
-          mouthPucker: [0.5],
-          mouthUpperUpLeft: [0.6],
-          mouthUpperUpRight: [0.6],
-        },
-      },
-      "🥺": {
-        dt: [1000, 1000],
-        rescale: [0, 1],
-        vs: {
-          browDownLeft: [0.2],
-          browDownRight: [0.2],
-          browInnerUp: [1],
-          eyeWideLeft: [0.9],
-          eyeWideRight: [0.9],
-          eyesClosed: [0.1],
-          mouthClose: [0.2],
-          mouthFrownLeft: [1],
-          mouthFrownRight: [1],
-          mouthPressLeft: [0.4],
-          mouthPressRight: [0.4],
-          mouthPucker: [1],
-          mouthRollLower: [0.6],
-          mouthRollUpper: [0.2],
-          mouthUpperUpLeft: [0.8],
-          mouthUpperUpRight: [0.8],
-        },
-      },
-
-      "☹️": { dt: [500, 1500], rescale: [0, 1], vs: { mouthFrownLeft: [1], mouthFrownRight: [1], mouthPucker: [0.1], mouthRollLower: [0.8] } },
-      "😚": {
-        dt: [500, 1000, 1000],
-        rescale: [0, 1, 0],
-        vs: {
-          browInnerUp: [0.6],
-          eyeBlinkLeft: [1],
-          eyeBlinkRight: [1],
-          eyeSquintLeft: [1],
-          eyeSquintRight: [1],
-          mouthPucker: [0, 0.5],
-          noseSneerLeft: [0, 0.7],
-          noseSneerRight: [0, 0.7],
-          viseme_U: [0, 1],
-        },
-      },
-      "🥰": { dt: [1000, 1000], rescale: [0, 1], vs: { browInnerUp: [0.6], eyeSquintLeft: [1], eyeSquintRight: [1], mouthSmile: [0.7], noseSneerLeft: [0.7], noseSneerRight: [0.7] } },
-      "😍": {
-        dt: [1000, 1000],
-        rescale: [0, 1],
-        vs: {
-          browInnerUp: [0.6],
-          jawOpen: [0.1],
-          mouthDimpleLeft: [0.2],
-          mouthDimpleRight: [0.2],
-          mouthOpen: [0.3],
-          mouthPressLeft: [0.3],
-          mouthPressRight: [0.3],
-          mouthRollLower: [0.4],
-          mouthShrugUpper: [0.4],
-          mouthSmile: [0.7],
-          mouthUpperUpLeft: [0.3],
-          mouthUpperUpRight: [0.3],
-          noseSneerLeft: [0.4],
-          noseSneerRight: [0.4],
-        },
-      },
-      "🤩": { link: "😍" },
-      "😱": { dt: [500, 1500], rescale: [0, 1], vs: { browInnerUp: [0.8], eyeWideLeft: [0.5], eyeWideRight: [0.5], jawOpen: [0.7], mouthFunnel: [0.5] } },
-      "😬": {
-        dt: [500, 1500],
-        rescale: [0, 1],
-        vs: {
-          browDownLeft: [1],
-          browDownRight: [1],
-          browInnerUp: [1],
-          mouthDimpleLeft: [0.5],
-          mouthDimpleRight: [0.5],
-          mouthLowerDownLeft: [1],
-          mouthLowerDownRight: [1],
-          mouthPressLeft: [0.4],
-          mouthPressRight: [0.4],
-          mouthPucker: [0.5],
-          mouthSmile: [0.1],
-          mouthSmileLeft: [0.2],
-          mouthSmileRight: [0.2],
-          mouthStretchLeft: [1],
-          mouthStretchRight: [1],
-          mouthUpperUpLeft: [1],
-          mouthUpperUpRight: [1],
-        },
-      },
+    this.animEmojis = animEmojis;
+    // 初始化眨眼状态
+    this.blinkState = {
+      nextBlinkTime: 0,
+      blinkDuration: 200,
+      blinkProgress: 0,
+      isBlinking: false,
     };
   }
   initAudioGraph(sampleRate?: number) {
@@ -400,16 +197,18 @@ export class MixamoRender {
       obj.material.dispose();
     }
   }
-  async showModel(model: Model, onProgress?: (event: ProgressEvent) => void) {
+  async showModel(onProgress?: (event: ProgressEvent) => void) {
     const loader = new GLTFLoader();
     const dracoLoader = new DRACOLoader();
     dracoLoader.setDecoderPath(this.dracoDecoderPath);
     loader.setDRACOLoader(dracoLoader);
+
     const ktx2Loader = new KTX2Loader();
     ktx2Loader.setTranscoderPath("/basis/");
     ktx2Loader.detectSupport(this.renderer);
     loader.setKTX2Loader(ktx2Loader);
-    const gltf = await loader.loadAsync(model.url, onProgress);
+
+    const gltf = await loader.loadAsync(this.url, onProgress);
     const modelScene = gltf.scene;
     modelScene.traverse((obj: any) => {
       if (obj.isMesh && obj.material) {
@@ -421,12 +220,28 @@ export class MixamoRender {
         mat.needsUpdate = true;
       }
     });
+
+    this.stop();
+    if (this.mixer) {
+      this.mixer.stopAllAction();
+      this.mixer = null;
+    }
+    this.dynamicbones.dispose();
+    if (this.model) {
+      this.scene.remove(this.model);
+      this.clearThree(this.model);
+      this.model = null;
+    }
+    // 4. 重置状态
+    this.armature = null;
+    this.morphs = [];
+    this.morphdict = {};
+    // 5. 设置新模型
     this.scene.add(modelScene);
     this.model = modelScene;
-    this.stop();
-    this.dynamicbones.dispose();
-    if (this.armature) this.clearThree(this.scene);
-    this.armature = modelScene.getObjectByName("Armature");
+    // 6. 初始化模型组件
+    this.armature = modelScene.getObjectByName(this.isXModel ? "AvatarRoot" : "Armature");
+    if (!this.armature) throw new Error("Armature not found in model");
     this.armature.scale.setScalar(1);
     this.armature.traverse((x: any) => {
       if (x.morphTargetInfluences && x.morphTargetInfluences.length && x.morphTargetDictionary) {
@@ -435,7 +250,6 @@ export class MixamoRender {
       }
       x.frustumCulled = false;
     });
-    // if (this.morphs.length === 0) throw new Error("Blend shapes not found");
     const keys = new Set();
     this.morphs.forEach(x => {
       Object.keys(x.morphTargetDictionary).forEach(y => keys.add(y));
@@ -485,9 +299,10 @@ export class MixamoRender {
     this.setView();
     this.start();
     this.initBlink();
-    // await this.setGLBAction("/model/Dining.glb");
-    this.setAction("/model/standby.fbx");
-    // this.setRigAction("/model/Running.fbx");
+    this.isXModel ? this.setAction("/model/action/Waving.fbx") : this.setAction("/model/action2/Waving.fbx");
+    this.timer = setTimeout(() => {
+      this.isXModel ? this.setAction("/model/action/1.fbx") : this.setAction("/model/action2/1.fbx");
+    }, 10000);
   }
   initBlink() {
     this.blinkMorphs = [];
@@ -504,29 +319,33 @@ export class MixamoRender {
         });
       }
     });
-    this.startAutoBlink();
+    this.blinkState.nextBlinkTime = this.animClock + (5000 + Math.random() * 3000);
+    this.blinkState.blinkProgress = 0;
+    this.blinkState.isBlinking = false;
   }
-  startAutoBlink() {
-    const blinkLoop = () => {
-      const delay = 5000 + Math.random() * 3000; // 5～8 秒之间
-      this.blinkOnce(); // 执行眨眼
-      setTimeout(blinkLoop, delay);
-    };
-    blinkLoop();
+  startBlink() {
+    this.blinkState.isBlinking = true;
+    this.blinkState.blinkProgress = 0;
   }
-  blinkOnce(duration = 150) {
-    const start = performance.now();
-    const animate = (now: number) => {
-      const t = (now - start) / duration;
-      if (t >= 2) return;
-      const v = Math.sin(Math.min(t, 1) * Math.PI);
-      for (const m of this.blinkMorphs) {
-        if (m.leftIndex !== undefined) m.mesh.morphTargetInfluences[m.leftIndex] = v;
-        if (m.rightIndex !== undefined) m.mesh.morphTargetInfluences[m.rightIndex] = v;
+  updateBlink(dt: number) {
+    if (this.blinkMorphs.length === 0) return;
+    if (!this.blinkState.isBlinking && this.animClock >= this.blinkState.nextBlinkTime) {
+      this.startBlink();
+      this.blinkState.nextBlinkTime = this.animClock + (5000 + Math.random() * 3000);
+    }
+    if (this.blinkState.isBlinking) {
+      this.blinkState.blinkProgress += dt;
+      const t = this.blinkState.blinkProgress / this.blinkState.blinkDuration;
+      const blinkIntensity = Math.sin(Math.min(t, 1) * Math.PI);
+      for (const morph of this.blinkMorphs) {
+        if (morph.leftIndex !== undefined) morph.mesh.morphTargetInfluences[morph.leftIndex] = blinkIntensity;
+        if (morph.rightIndex !== undefined) morph.mesh.morphTargetInfluences[morph.rightIndex] = blinkIntensity;
       }
-      requestAnimationFrame(animate);
-    };
-    requestAnimationFrame(animate);
+      if (t >= 2) {
+        this.blinkState.isBlinking = false;
+        this.blinkState.blinkProgress = 0;
+      }
+    }
   }
   start() {
     if (this.armature && this.isRunning === false) {
@@ -607,6 +426,8 @@ export class MixamoRender {
     if (dt > 2 * this.animFrameDur) dt = 2 * this.animFrameDur;
     this.dynamicbones.update(dt);
     this.updateMorphTargets(dt);
+    this.updateBlink(dt);
+
     if (this.cameraClock !== null && this.cameraClock < 1000) {
       this.cameraClock += dt;
       if (this.cameraClock > 1000) this.cameraClock = 1000;
@@ -633,13 +454,24 @@ export class MixamoRender {
     if (this.mixer) this.mixer.update((dt / 1000) * this.mixer.timeScale);
     this.render();
   }
-  setView() {
+  setView(viewname?: string) {
     const fov = this.camera.fov * (Math.PI / 180);
     let x = 0 * Math.tan(fov / 2);
     let y = Math.tan(fov / 2);
     let z = 0;
-    z += 4.5;
-    y = y * z + 3.4 / 3;
+    switch (viewname) {
+      case "upper":
+        z += 4.5;
+        y = y * z + (2 * 1.7) / 3;
+        break;
+      case "mid":
+        z += 8;
+        y = y * z + 1.7 / 3;
+        break;
+      default:
+        z += 12;
+        y = y * z;
+    }
     x = x * z;
     this.controlsEnd = new Vector3(x, y, 0);
     this.cameraEnd = new Vector3(x, y, z).applyEuler(new Euler(0, 0, 0));
@@ -781,11 +613,12 @@ export class MixamoRender {
           for (let j = 0; j < val.visemes.length; j++) {
             const t = audioStart + time + (val.times[j] / dTotal) * duration;
             const d = (val.durations[j] / dTotal) * duration;
+            const viseme = this.isXModel ? val.visemes[j] : "viseme_" + val.visemes[j];
             this.animQueue.push({
               template: { name: "viseme" },
               ts: [t - Math.min(60, (2 * d) / 3), t + Math.min(25, d / 2), t + d + Math.min(60, d / 2)],
               vs: {
-                ["viseme_" + val.visemes[j]]: [null, val.visemes[j] === "PP" || val.visemes[j] === "FF" ? 0.9 : level, 0],
+                [viseme]: [null, viseme === "PP" || viseme === "FF" ? 0.9 : level, 0],
               },
             });
           }
@@ -919,28 +752,6 @@ export class MixamoRender {
       }
     }
   }
-  async setAction(url: string) {
-    if (!this.mixer) this.mixer = new AnimationMixer(this.model!);
-    const loader = new FBXLoader();
-    const fbx = await loader.loadAsync(url);
-    let anim = fbx.animations[0];
-    const props: any = {};
-    anim.tracks.forEach(t => {
-      t.name = t.name.replaceAll("mixamorig", "");
-      const ids = t.name.split(".");
-      if (ids[1] === "position") {
-        for (let i = 0; i < t.values.length; i++) {
-          t.values[i] = t.values[i] * 0.01;
-        }
-        props[t.name] = new Vector3(t.values[0], t.values[1], t.values[2]);
-      } else if (ids[1] === "quaternion") {
-        props[t.name] = new Quaternion(t.values[0], t.values[1], t.values[2], t.values[3]);
-      } else if (ids[1] === "rotation") {
-        props[ids[0] + ".quaternion"] = new Quaternion().setFromEuler(new Euler(t.values[0], t.values[1], t.values[2], "XYZ")).normalize();
-      }
-    });
-    this.mixer.clipAction(anim).fadeIn(0.5).play();
-  }
   playEmoji(emoji: string) {
     const animemoji = this.animEmojis[emoji];
     if (!animemoji) return;
@@ -1005,35 +816,58 @@ export class MixamoRender {
     };
     requestAnimationFrame(waitAndStart);
   }
-  async setRigAction(url: string) {
+  async setAction(url: string, loop = true) {
+    if (!this.mixer) this.mixer = new AnimationMixer(this.model!);
+
+    const loader = new FBXLoader();
+    const fbx = await loader.loadAsync(url);
+
+    let anim = fbx.animations[0];
+    const fixedTracks: any = [];
+    anim.tracks.forEach(t => {
+      if (this.isXModel) {
+        t.name = t.name.replace(/mixamorig:|mixamorig|Armature\|/g, "");
+        if (t.name.endsWith(".position")) return;
+        if (t.name.endsWith(".scale")) return;
+      } else {
+        t.name = t.name.replaceAll("mixamorig", "");
+        const ids = t.name.split(".");
+        if (ids[1] === "position") {
+          for (let i = 0; i < t.values.length; i++) {
+            t.values[i] = t.values[i] * 0.01;
+          }
+        }
+      }
+      fixedTracks.push(t);
+    });
+
+    anim.tracks = fixedTracks;
+
+    const newAction = this.mixer.clipAction(anim);
+    newAction.reset();
+    if (!loop) newAction.setLoop(LoopOnce, 0);
+    newAction.clampWhenFinished = true;
+    newAction.enabled = true;
+    // 如果已有旧动画 -> 交叉渐变
+    if (this.currentAction && this.currentAction !== newAction) {
+      // 关键：平滑过渡
+      newAction.crossFadeFrom(this.currentAction, 0.5, true).play();
+
+      // 可选：把旧动画淡出完成后停掉
+      this.currentAction.fadeOut(1);
+    } else {
+      // 首次播放
+      newAction.fadeIn(1).play();
+    }
+
+    // 记录为当前动画
+    this.currentAction = newAction;
+  }
+  async setAction2(url: string) {
     if (!this.mixer) this.mixer = new AnimationMixer(this.model!);
     const loader = new FBXLoader();
     const fbx = await loader.loadAsync(url);
     let anim = fbx.animations[0];
-    const props: any = {};
-    anim.tracks.forEach(t => {
-      const ids = t.name.split(".");
-      if (mapping[ids[0]]) {
-        t.name = mapping[ids[0]] + "." + ids[1];
-      }
-      if (ids[1] === "position") {
-        for (let i = 0; i < t.values.length; i++) {
-          t.values[i] = t.values[i] * 0.01;
-        }
-        props[t.name] = new Vector3(t.values[0], t.values[1], t.values[2]);
-      } else if (ids[1] === "quaternion") {
-        props[t.name] = new Quaternion(t.values[0], t.values[1], t.values[2], t.values[3]);
-      } else if (ids[1] === "rotation") {
-        props[ids[0] + ".quaternion"] = new Quaternion().setFromEuler(new Euler(t.values[0], t.values[1], t.values[2], "XYZ")).normalize();
-      }
-    });
-    this.mixer.clipAction(anim).fadeIn(0.5).play();
-  }
-  async setGLBAction(url: string) {
-    if (!this.mixer) this.mixer = new AnimationMixer(this.model!);
-    const loader = new GLTFLoader();
-    const gltf = await loader.loadAsync(url);
-    let anim = gltf.animations[0];
     const props: any = {};
     anim.tracks.forEach(t => {
       t.name = t.name.replaceAll("mixamorig", "");
@@ -1050,5 +884,12 @@ export class MixamoRender {
       }
     });
     this.mixer.clipAction(anim).fadeIn(0.5).play();
+  }
+  private randomAction() {
+    const randomNum = Math.floor(Math.random() * (4 - 1 + 1)) + 1;
+    this.setAction(`/model/action/${randomNum}.fbx`);
+  }
+  clone() {
+    clearTimeout(this.timer);
   }
 }
