@@ -112,6 +112,7 @@ declare global {
   const pcm16ToBase64: typeof import('../utils/baseToaudio')['pcm16ToBase64']
   const pcmBase64ToAudioUrl: typeof import('../utils/baseToaudio')['pcmBase64ToAudioUrl']
   const playPCM: typeof import('../utils/baseToaudio')['playPCM']
+  const preloadFBX: typeof import('../utils/cache')['preloadFBX']
   const previewVoice: typeof import("../api/index")["previewVoice"]
   const provide: typeof import('vue')['provide']
   const reactive: typeof import('vue')['reactive']

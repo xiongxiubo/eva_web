@@ -28,7 +28,7 @@ const computedStatus = computed(() => {
 <template>
     <div class="card-container">
         <div class="cover-area">
-            <img lazy :src="item.images" class="real-image" alt="Cover" />
+            <img lazy :src="item.images" class="real-image" />
         </div>
 
         <div class="content-area">
@@ -56,7 +56,6 @@ $accent-color: #000000;
 .card-container {
     width: 100%;
     border-radius: 16px;
-    overflow: hidden;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     border: 1px solid var(--el-border-color);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
@@ -66,10 +65,8 @@ $accent-color: #000000;
 
     // SCSS 嵌套：封面区域
     .cover-area {
-        position: relative;
         border-radius: 12px;
         margin: 12px;
-        width: calc(100% - 24px);
         aspect-ratio: 1 / 1; // 保持正方形
         overflow: hidden;
 

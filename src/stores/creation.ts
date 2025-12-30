@@ -75,7 +75,11 @@ export const useVoiceStore = defineStore("voice", () => {
     try {
       const res = await getVoiceList(params);
       if (eq(res.code, 0)) {
-        voiceList.value = get(res, "data.list", []);
+        if (params.page_index === 1) {
+          voiceList.value = get(res, "data.list", []);
+        } else {
+          voiceList.value.push(...get(res, "data.list", []));
+        }
       }
     } catch (error) {
       console.log(error);

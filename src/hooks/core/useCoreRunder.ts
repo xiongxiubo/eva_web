@@ -5,12 +5,12 @@ export function useCoreRunder() {
   const isSpeaker = ref(false);
   let bufferQueue: any[] = [];
 
-  const NewModelRender = async (avatar: HTMLDivElement) => {
-    const render = new ModelRender(avatar);
+  const NewModelRender = async (avatar: HTMLDivElement, opt: any) => {
+    const render = new ModelRender(avatar, opt);
     head.value = render;
   };
-  const initHead = async (url: string) => {
-    await head.value?.showModel({ url }, e => {
+  const initHead = async () => {
+    await head.value?.showModel(e => {
       if (e.loaded === e.total) {
         setTimeout(() => {
           isHeadLoading.value = false;

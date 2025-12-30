@@ -61,7 +61,7 @@
                         <h2 class="section-title">{{ $at('标签') }}</h2>
                         <div class="input-group">
                             <el-select v-model="config.tags" filterable placeholder="请选择标签">
-                                <el-option v-for="tag in tags" :label="tag.name" :value="tag.name" />
+                                <el-option v-for="tag in tags" :label="tag.name" :value="tag.value" />
                             </el-select>
                         </div>
                     </div>

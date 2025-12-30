@@ -28,9 +28,9 @@ export function useAudio(avatarRef: Ref<HTMLDivElement | null>) {
   const modelUrl = ref("");
   const isSpeaker = ref(false); // 说话人是否可以说话
   const wsMsg = ref<any>({});
-  const isXModel = ref(false);
-  let startTime = 0;
-
+  const startTime = ref(0);
+  const consumeTime = ref(0);
+  let timer: any = null;
   // --- 3. [核心] WASM 解密逻辑 ---
   const initWorker = () => {
     worker.onmessage = e => {
@@ -126,6 +126,7 @@ export function useAudio(avatarRef: Ref<HTMLDivElement | null>) {
   const checkAndPlayNext = async () => {
     if (isStreaming.value || bufferQueue.length === 0) return;
     const currAudio = bufferQueue.shift();
+    head.value?.setTailkAction();
     try {
       await head.value?.streamStart(
         { sampleRate: SAMPLE_RATE, gain: 3 },
@@ -136,6 +137,7 @@ export function useAudio(avatarRef: Ref<HTMLDivElement | null>) {
             checkAndPlayNext();
           } else {
             isSpeaker.value = false;
+            head.value?.setIdelAction();
           }
         },
       );
@@ -162,8 +164,11 @@ export function useAudio(avatarRef: Ref<HTMLDivElement | null>) {
       audioProcessor.port.postMessage({ command: "start" });
       await music.pauseContext();
       isRecording.value = true;
-      startTime = Date.now();
+      startTime.value = Date.now();
       bufferTimer = setInterval(flushBuffer, BUFFER_SEND_INTERVAL);
+      timer = setInterval(() => {
+        consumeTime.value = Date.now() - startTime.value;
+      }, 1000);
     } catch (error) {
       ElMessage.error("录音失败");
     }
@@ -174,8 +179,9 @@ export function useAudio(avatarRef: Ref<HTMLDivElement | null>) {
     audioProcessor?.disconnect();
     mediaStream?.getTracks().forEach(t => t.stop());
     audioContext.close();
-
+    clearInterval(timer);
     clearInterval(bufferTimer);
+    consumeTime.value = 0;
     flushBuffer();
     sendWsMessage({ type: "end" });
     music.resumeContext();
@@ -204,9 +210,11 @@ export function useAudio(avatarRef: Ref<HTMLDivElement | null>) {
   // --- 渲染器初始化 ---
   const initHead = async () => {
     if (!avatarRef.value || !modelUrl.value) return;
+    const actionurls = [...chattingAi.value.idle_model, chattingAi.value.hello_model, ...chattingAi.value.speaker_model];
     const opt = {
       url: modelUrl.value,
-      isXModel: isXModel.value,
+      actionurl: actionurls,
+      action: chattingAi.value.action,
     };
     const render = new ModelRender(avatarRef.value, opt);
     await render.showModel(e => {
@@ -218,30 +226,37 @@ export function useAudio(avatarRef: Ref<HTMLDivElement | null>) {
     });
     head.value = render;
   };
+  // --- 预加载模型动画 ---
+  const preloadModel = async () => {
+    let urls = [];
+    chattingAi.value.idle_model.map((e: any) => urls.push(e.url));
+    urls.push(chattingAi.value.hello_model.url);
+    chattingAi.value.speaker_model.map((e: any) => urls.push(e.url));
+    await preloadFBX(urls);
+  };
   // --- 生命周期 ---
   onMounted(async () => {
     initWorker();
     if (route.params.id) {
       await useTalkieStore().getChatting();
       connectWebSocket();
+      await preloadModel();
     }
   });
   onUnmounted(() => {
     worker.terminate();
     ws?.close();
-    worker.terminate();
     music.close();
     if (modelUrl.value.startsWith("blob:")) URL.revokeObjectURL(modelUrl.value);
     chattingAi.value = {};
     head.value?.clone();
-    console.log(123);
+    head.value?.closeAudioGraph();
   });
   // --- 监听 ---
   watch(
     () => chattingAi.value?.model_url,
     val => {
       if (!val) return;
-      isXModel.value = val.includes("_X");
       getDecode(val, false);
     },
     { immediate: true },
@@ -249,6 +264,13 @@ export function useAudio(avatarRef: Ref<HTMLDivElement | null>) {
   watch(modelUrl, () => {
     if (!modelUrl.value) return;
     initHead();
+  });
+  const formattedTime = computed(() => {
+    if (!isRecording.value) return "00:00";
+    const elapsed = consumeTime.value / 1000;
+    const minutes = Math.floor(elapsed / 60);
+    const seconds = Math.floor(elapsed % 60);
+    return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
   });
   return {
     isRecording,
@@ -259,10 +281,6 @@ export function useAudio(avatarRef: Ref<HTMLDivElement | null>) {
     sendWsMessage,
     startRecording,
     stopRecording,
-    // 这里的格式化时间建议用 computed 处理
-    formattedTime: computed(() => {
-      /* 基于 timer 的格式化逻辑 */
-      return "00:00";
-    }),
+    formattedTime,
   };
 }

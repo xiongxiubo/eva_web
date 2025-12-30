@@ -49,16 +49,6 @@ const computedStatus = computed(() => {
             return h(ElTag, { type: 'success' }, () => '已通过');
     };
 });
-function formatGender(gender: string) {
-    switch (gender) {
-        case 'M':
-            return '男';
-        case 'F':
-            return '女';
-        default:
-            return '未知';
-    };
-};
 
 function handleDelete() {
     ElMessageBox.confirm($at('确定删除吗？'), $at('删除'), {

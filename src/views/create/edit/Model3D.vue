@@ -70,8 +70,12 @@ onMounted(async () => {
     if (auditDetail.value.model_url === "" || !auditDetail.value.model_url) return;
     nextTick(async () => {
         if (!avatarRef.value) return;
-        NewModelRender(avatarRef.value);
-        await initHead(auditDetail.value.model_url);
+        NewModelRender(avatarRef.value, {
+            gender: auditDetail.value.gender,
+            action: auditDetail.value.action,
+            url: auditDetail.value.model_url,
+        });
+        await initHead();
     })
 })
 onUnmounted(() => {

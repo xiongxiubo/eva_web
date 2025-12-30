@@ -49,26 +49,24 @@
     </div>
     <div class="foot">
         <div class="externallinks">
-            <div class="item" v-for="item in link" :key="item.name" @click="openUrl(item.url)">
+            <div class="item" v-for="item in link" :key="item.icon" @click="openUrl(item.url)">
                 <el-icon>
                     <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4831">
                         <path :d="item.icon" p-id="4832" fill="#96979b"></path>
                     </svg>
                 </el-icon>
-                <span>{{ item.name }}</span>
-                <el-icon>
-                    <svg viewBox="0 0 24 24" fill="none">
-                        <path fill-rule="evenodd" clip-rule="evenodd"
-                            d="M5 5V19H19V12H21V19C21 20.1 20.1 21 19 21H5C3.89 21 3 20.1 3 19V5C3 3.9 3.89 3 5 3H12V5H5ZM14 5V3H21V10H19V6.41L9.17 16.24L7.76 14.83L17.59 5H14Z"
-                            fill="currentColor"></path>
-                    </svg>
-                </el-icon>
             </div>
+        </div>
+        <div class="copyright">
+            © 2026 Aianace.
+        </div>
+        <div class="terms">
+            Terms of Use | Privacy Policy
         </div>
     </div>
 </template>
 <script setup lang="ts">
-import Logo from '@/components/logo.vue'
+import Logo from '@/components/logo.vue';
 import { $at } from 'i18n-auto-extractor';
 import { CloseBold, } from '@element-plus/icons-vue';
 const storage = useUserStore();
@@ -78,15 +76,13 @@ const isHover = ref(false);
 const hoverId = ref(0);
 
 const link = [
-    { icon: svg.twitter, name: 'Twitter', url: '#' },
-    { icon: svg.github, name: 'GitHub', url: "#" },
-    { icon: svg.telegram, name: 'Telegram', url: "#" },
-    { icon: svg.youtube, name: 'YouTube', url: "#" },
-    { icon: svg.docs, name: 'Docs', url: "#" },
-]
+    { icon: svg.twitter, url: '#' },
+    { icon: svg.github, url: "#" },
+    { icon: svg.docs, url: "#" },
+];
 const openUrl = (url: string) => {
     window.open(url, '_blank');
-}
+};
 const hoverChat = (id: number) => {
     isHover.value = true;
     hoverId.value = id;
@@ -215,17 +211,19 @@ const deleteChat = async (id: string) => {
     display: flex;
     flex-direction: column;
     margin-top: auto;
+    padding: 10px;
     box-sizing: border-box;
-    padding: 10px 0 20px 0;
+    justify-content: center;
 
     .externallinks {
         width: 100%;
         display: flex;
+        align-items: center;
         justify-content: center;
-        flex-direction: column;
+        gap: 10px;
 
         .item {
-            width: 100%;
+            width: 24px;
             height: 24px;
             display: flex;
             align-items: center;
@@ -233,7 +231,6 @@ const deleteChat = async (id: string) => {
             border-radius: 8px;
             margin-top: 4px;
             flex-wrap: nowrap;
-            padding: 0 20px;
             box-sizing: border-box;
 
             &:hover {
@@ -249,6 +246,20 @@ const deleteChat = async (id: string) => {
                 margin-right: auto;
             }
         }
+    }
+
+    .copyright {
+        color: #96979b;
+        font-size: 14px;
+        text-align: center;
+        font-weight: 600;
+    }
+
+    .terms {
+        color: #96979b;
+        font-size: 10px;
+        text-align: center;
+        font-weight: 600;
     }
 }
 </style>

@@ -55,6 +55,7 @@ export const useTalkieStore = defineStore("talkie", () => {
   watch(
     () => [gender.value, language.value, tags_type.value, isPrivate.value],
     () => {
+      talkieList.value = [];
       isPrivate.value ? debounceGetAiPrivate() : debounceGetTalkie();
     },
   );

@@ -1,4 +1,24 @@
-import { AnimationMixer, SRGBColorSpace, WebGLRenderer, PerspectiveCamera, Scene, AmbientLight, Color, DirectionalLight, Vector3, Euler, Spherical, type Object3DEventMap, Group, Quaternion, EquirectangularReflectionMapping, LoopOnce } from "three";
+import {
+  AnimationMixer,
+  SRGBColorSpace,
+  WebGLRenderer,
+  PerspectiveCamera,
+  Scene,
+  AmbientLight,
+  Color,
+  DirectionalLight,
+  Vector3,
+  Euler,
+  Spherical,
+  type Object3DEventMap,
+  Group,
+  EquirectangularReflectionMapping,
+  LoopOnce,
+  PCFSoftShadowMap,
+  Mesh,
+  PlaneGeometry,
+  ShadowMaterial,
+} from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { FBXLoader } from "three/addons/loaders/FBXLoader.js";
@@ -14,7 +34,8 @@ interface streamOptions {
 }
 interface Options {
   url: string;
-  isXModel: boolean;
+  actionurl: any[];
+  action: string;
 }
 export class ModelRender {
   nodeAvatar: HTMLElement;
@@ -51,8 +72,6 @@ export class ModelRender {
   isStreaming = false;
   streamWorkletNode: AudioWorkletNode | null = null;
   streamAudioStartTime = 0;
-  streamLipsyncLang = "en";
-  streamLipsyncType = "words";
   streamLipsyncQueue: any[] = [];
   model: Group<Object3DEventMap> | null = null;
   armature: any | null = null;
@@ -77,7 +96,6 @@ export class ModelRender {
   mixer: AnimationMixer | null = null;
   animEmojis: any = {};
   morphdict: any = {};
-  isXModel: boolean;
   url: string;
   blinkState: {
     nextBlinkTime: number;
@@ -86,30 +104,43 @@ export class ModelRender {
     isBlinking: boolean;
   };
   currentAction: any;
+  currentUrl: string = "";
   timer: any = null;
+  actionurl: any[] = [];
+  action: string;
   constructor(node: HTMLElement, options: Options) {
     this.nodeAvatar = node;
-    this.isXModel = options.isXModel;
     this.url = options.url;
+    this.actionurl = options.actionurl;
+    this.action = options.action;
     this.lipsync = { en: new Lipsync() };
     this.initAudioGraph();
     this.renderer = new WebGLRenderer({ antialias: true, alpha: true });
     this.renderer.setPixelRatio(1 * window.devicePixelRatio);
     this.renderer.setSize(this.nodeAvatar.clientWidth, this.nodeAvatar.clientHeight);
-    this.renderer.shadowMap.enabled = false;
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = PCFSoftShadowMap;
     this.nodeAvatar.appendChild(this.renderer.domElement);
     this.camera = new PerspectiveCamera(10, this.nodeAvatar.clientWidth / this.nodeAvatar.clientHeight, 0.1, 2000);
     this.scene = new Scene();
-    this.lightAmbient = new AmbientLight(new Color(0xeeeeee), this.isXModel ? 1 : 3);
+    this.lightAmbient = new AmbientLight(new Color(0xeeeeee), this.action === "A" ? 1 : 3);
     this.lightDirect = new DirectionalLight(new Color(0xffffff), 1);
+    this.lightDirect.position.set(5, 10, 5);
+    this.lightDirect.castShadow = true;
 
-    if (this.isXModel) {
+    if (this.action === "A") {
       const loader = new RGBELoader();
-      loader.load("/model/action/bg.hdr", texture => {
+      loader.load("/model/bg.hdr", texture => {
         texture.mapping = EquirectangularReflectionMapping;
         this.scene.environment = texture;
+        // this.scene.background = texture;
       });
     }
+    const shadowMat = new ShadowMaterial({ opacity: 0.4 });
+    const ground = new Mesh(new PlaneGeometry(50, 50), shadowMat);
+    ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
+    this.scene.add(ground);
 
     this.resizeobserver = new ResizeObserver(this.onResize.bind(this));
     this.resizeobserver.observe(this.nodeAvatar);
@@ -218,6 +249,8 @@ export class ModelRender {
         mat.metalness = 0.1;
         mat.envMapIntensity = 1.0;
         mat.needsUpdate = true;
+        obj.castShadow = true;
+        obj.receiveShadow = true;
       }
     });
 
@@ -239,8 +272,9 @@ export class ModelRender {
     // 5. 设置新模型
     this.scene.add(modelScene);
     this.model = modelScene;
+    this.mixer = new AnimationMixer(modelScene);
     // 6. 初始化模型组件
-    this.armature = modelScene.getObjectByName(this.isXModel ? "AvatarRoot" : "Armature");
+    this.armature = modelScene.getObjectByName(this.action === "A" ? "AvatarRoot" : "Armature");
     if (!this.armature) throw new Error("Armature not found in model");
     this.armature.scale.setScalar(1);
     this.armature.traverse((x: any) => {
@@ -299,10 +333,8 @@ export class ModelRender {
     this.setView();
     this.start();
     this.initBlink();
-    this.isXModel ? this.setAction("/model/action/Waving.fbx") : this.setAction("/model/action2/Waving.fbx");
-    this.timer = setTimeout(() => {
-      this.isXModel ? this.setAction("/model/action/1.fbx") : this.setAction("/model/action2/1.fbx");
-    }, 10000);
+    // 7. 播放动作
+    this.actionProcess();
   }
   initBlink() {
     this.blinkMorphs = [];
@@ -469,8 +501,8 @@ export class ModelRender {
         y = y * z + 1.7 / 3;
         break;
       default:
-        z += 12;
-        y = y * z;
+        z += 11;
+        y = this.action === "A" ? y * z : y * z - 0.05;
     }
     x = x * z;
     this.controlsEnd = new Vector3(x, y, 0);
@@ -601,7 +633,7 @@ export class ModelRender {
       const time = r.wtimes[i];
       let duration = r.wdurations[i];
       if (word.length === 0) continue;
-      const lipsyncLang = this.streamLipsyncLang;
+      const lipsyncLang = "en";
       const wrd = this.lipsyncPreProcessText(word, lipsyncLang);
       const val = this.lipsyncWordsToVisemes(wrd, lipsyncLang);
       if (val && val.visemes && val.visemes.length) {
@@ -613,7 +645,7 @@ export class ModelRender {
           for (let j = 0; j < val.visemes.length; j++) {
             const t = audioStart + time + (val.times[j] / dTotal) * duration;
             const d = (val.durations[j] / dTotal) * duration;
-            const viseme = this.isXModel ? val.visemes[j] : "viseme_" + val.visemes[j];
+            const viseme = this.action === "A" ? val.visemes[j] : "viseme_" + val.visemes[j];
             this.animQueue.push({
               template: { name: "viseme" },
               ts: [t - Math.min(60, (2 * d) / 3), t + Math.min(25, d / 2), t + d + Math.min(60, d / 2)],
@@ -818,78 +850,117 @@ export class ModelRender {
   }
   async setAction(url: string, loop = true) {
     if (!this.mixer) this.mixer = new AnimationMixer(this.model!);
-
     const loader = new FBXLoader();
     const fbx = await loader.loadAsync(url);
-
     let anim = fbx.animations[0];
     const fixedTracks: any = [];
     anim.tracks.forEach(t => {
-      if (this.isXModel) {
-        t.name = t.name.replace(/mixamorig:|mixamorig|Armature\|/g, "");
-        if (t.name.endsWith(".position")) return;
-        if (t.name.endsWith(".scale")) return;
-      } else {
-        t.name = t.name.replaceAll("mixamorig", "");
-        const ids = t.name.split(".");
-        if (ids[1] === "position") {
-          for (let i = 0; i < t.values.length; i++) {
-            t.values[i] = t.values[i] * 0.01;
+      switch (this.action) {
+        case "A":
+        case "AN":
+          t.name = t.name.replace(/mixamorig:|mixamorig|Armature\|/g, "");
+          if (t.name.endsWith(".scale")) return;
+          break;
+        case "M":
+          t.name = t.name.replaceAll("mixamorig", "");
+          const ids = t.name.split(".");
+          if (ids[1] === "position") {
+            for (let i = 0; i < t.values.length; i++) {
+              t.values[i] = t.values[i] * 0.01;
+            }
           }
-        }
+          break;
       }
       fixedTracks.push(t);
     });
-
     anim.tracks = fixedTracks;
-
     const newAction = this.mixer.clipAction(anim);
     newAction.reset();
-    if (!loop) newAction.setLoop(LoopOnce, 0);
+    if (!loop) newAction.setLoop(LoopOnce, 1);
     newAction.clampWhenFinished = true;
     newAction.enabled = true;
-    // 如果已有旧动画 -> 交叉渐变
     if (this.currentAction && this.currentAction !== newAction) {
-      // 关键：平滑过渡
-      newAction.crossFadeFrom(this.currentAction, 0.5, true).play();
-
-      // 可选：把旧动画淡出完成后停掉
+      newAction.crossFadeFrom(this.currentAction, 0.5, false).play();
       this.currentAction.fadeOut(1);
     } else {
-      // 首次播放
       newAction.fadeIn(1).play();
     }
-
-    // 记录为当前动画
+    this.currentUrl = url;
     this.currentAction = newAction;
   }
-  async setAction2(url: string) {
-    if (!this.mixer) this.mixer = new AnimationMixer(this.model!);
-    const loader = new FBXLoader();
-    const fbx = await loader.loadAsync(url);
-    let anim = fbx.animations[0];
-    const props: any = {};
-    anim.tracks.forEach(t => {
-      t.name = t.name.replaceAll("mixamorig", "");
-      const ids = t.name.split(".");
-      if (ids[1] === "position") {
-        for (let i = 0; i < t.values.length; i++) {
-          t.values[i] = t.values[i] * 0.01;
-        }
-        props[t.name] = new Vector3(t.values[0], t.values[1], t.values[2]);
-      } else if (ids[1] === "quaternion") {
-        props[t.name] = new Quaternion(t.values[0], t.values[1], t.values[2], t.values[3]);
-      } else if (ids[1] === "rotation") {
-        props[ids[0] + ".quaternion"] = new Quaternion().setFromEuler(new Euler(t.values[0], t.values[1], t.values[2], "XYZ")).normalize();
-      }
-    });
-    this.mixer.clipAction(anim).fadeIn(0.5).play();
-  }
   private randomAction() {
-    const randomNum = Math.floor(Math.random() * (4 - 1 + 1)) + 1;
-    this.setAction(`/model/action/${randomNum}.fbx`);
+    const arr = this.actionurl.filter(e => e.type === "idle" && !e.is_default);
+    const index = Math.floor(Math.random() * arr.length);
+    return arr[index].url;
+  }
+  actionProcess() {
+    const url = this.actionurl.find(e => e.type === "hello")?.url;
+    this.mixer?.addEventListener("finished", () => {
+      this.setIdelAction();
+    });
+    this.setAction(url, false);
+  }
+  setTailkAction() {
+    const url = this.actionurl.find(e => e.type === "speaker")?.url;
+    if (this.currentUrl === url) return;
+    this.clone();
+    this.setAction(url);
+  }
+  setIdelAction() {
+    const url = this.actionurl.find(e => e.type === "idle" && e.is_default)?.url;
+    this.setAction(url);
+    if (this.timer) clearTimeout(this.timer);
+    this.timer = setTimeout(() => {
+      this.setAction(this.randomAction(), false);
+    }, 60000);
   }
   clone() {
-    clearTimeout(this.timer);
+    if (this.timer) clearTimeout(this.timer);
+  }
+  async closeAudioGraph() {
+    // 1. 停止并释放 source（它们是一次性的节点）
+    const stopSource = (source?: AudioBufferSourceNode | null) => {
+      if (!source) return;
+      try {
+        source.stop(); // stop 只能调用一次
+      } catch {}
+      try {
+        source.disconnect();
+      } catch {}
+    };
+
+    stopSource(this.audioSpeechSource);
+    stopSource(this.audioBackgroundSource);
+
+    this.audioSpeechSource = null;
+    this.audioBackgroundSource = null;
+
+    // 2. 断开 GainNode / Analyzer / Reverb 连接
+    const disconnectNode = (node?: AudioNode | null) => {
+      if (!node) return;
+      try {
+        node.disconnect();
+      } catch {}
+    };
+
+    disconnectNode(this.audioSpeechGainNode);
+    disconnectNode(this.audioBackgroundGainNode);
+    disconnectNode(this.audioStreamGainNode);
+    disconnectNode(this.audioAnalyzerNode);
+    disconnectNode(this.audioReverbNode);
+
+    this.audioSpeechGainNode = null;
+    this.audioBackgroundGainNode = null;
+    this.audioStreamGainNode = null;
+    this.audioAnalyzerNode = null;
+    this.audioReverbNode = null;
+
+    // 3. 关闭 AudioContext（异步）
+    if (this.audioCtx && this.audioCtx.state !== "closed") {
+      try {
+        await this.audioCtx.close();
+      } catch {}
+    }
+    this.audioCtx = null;
   }
 }

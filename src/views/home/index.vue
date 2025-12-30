@@ -7,7 +7,7 @@
             </h2>
             <FilterBar />
             <div class="content">
-                <Empty v-show="talkieList.length === 0" />
+                <Empty v-show="talkieList.length === 0 && !loading" />
                 <div class="cards">
                     <el-skeleton class="card_item" animated v-show="loading">
                         <template #template>
@@ -32,7 +32,7 @@
                             </div>
                         </div>
                         <p class="creator">{{ $at('由') }} <el-link>@{{ item.user_name }}</el-link> {{ $at('创建')
-                            }}</p>
+                        }}</p>
                         <div class="btn" @click="router.push(`/chat/${item.id}`)">
                             <el-icon>
                                 <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
@@ -51,7 +51,7 @@
                 </div>
 
             </div>
-            <div class="footer">
+            <!-- <div class="footer">
                 <div class="logo">
                     <img :src="isDark ? '/image/logo_dark.png' : '/image/logo_light.png'" />
                     <span>Aianace</span>
@@ -64,10 +64,8 @@
                         </svg>
                     </a>
                 </div>
-                <div class="copyright">
-                    Copyright © 2025 Aianace. All rights reserved.
-                </div>
-            </div>
+              
+            </div> -->
         </MainPage>
     </div>
 
@@ -76,28 +74,10 @@
 <script setup lang="ts">
 import { $at } from 'i18n-auto-extractor';
 import MainPage from '@/components/mainPage.vue'
-import { useDark } from '@vueuse/core';
 import FilterBar from './FilterBar.vue';
-const isDark = useDark();
-const iconList = [
-    { icon: svg.twitter, url: '#' },
-    { icon: svg.github, url: "#" },
-    { icon: svg.telegram, url: "#" },
-    { icon: svg.youtube, url: "#" },
-    { icon: svg.docs, url: "#" },
-]
 const router = useRouter();
 const store = useTalkieStore();
 const { talkieList, loading } = storeToRefs(store);
-const getAiList = async () => {
-    await store.getTalkie();
-};
-
-onMounted(async () => {
-    await store.getTag();
-    getAiList();
-});
-
 </script>
 <style scoped lang="scss">
 .home {

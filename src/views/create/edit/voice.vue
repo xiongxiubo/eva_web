@@ -28,27 +28,23 @@
                     </button>
                 </div>
             </div>
-            <ul class="voice-list">
-                <li v-for="voice in voiceList" :key="voice.id" class="voice-item">
-                    <div class="voice-info">
-                        <button class="play-button" @click="previewVoice(voice)">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
-                                <path fill="currentColor" d="M8 5.14v13.72L19 12z" />
-                            </svg>
-                        </button>
-
-                        <div class="voice-details">
-                            <div class="voice-name">{{ voice.name }}</div>
-                            <div class="voice-tags">
-                                <span class="tag gender">{{ getGender(voice.gender) }}</span>
-                                <span class="tag accent">{{ voice.language }}</span>
+            <el-scrollbar @end-reached="loadMore" ref="scrollbar">
+                <ul class="voice-list">
+                    <li v-for="voice in voiceList" :key="voice.id" class="voice-item">
+                        <div class="voice-info">
+                            <Audio :src="voice.sample_audio_url || voice.voice_url" />
+                            <div class="voice-details">
+                                <div class="voice-name">{{ voice.name }}</div>
+                                <div class="voice-tags">
+                                    <span class="tag gender">{{ getGender(voice.gender) }}</span>
+                                    <span class="tag accent">{{ voice.language }}</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-
-                    <button class="use-button" @click="selectVoice(voice)">{{ $at('使用') }}</button>
-                </li>
-            </ul>
+                        <button class="use-button" @click="selectVoice(voice)">{{ $at('使用') }}</button>
+                    </li>
+                </ul>
+            </el-scrollbar>
         </div>
         <div class="content-area" v-if="activeTab === 'mine' && !clonedVoice">
             <div class="empty" v-if="userVoiceList.length === 0">
@@ -64,12 +60,7 @@
             <ul class="voice-list" v-else>
                 <li v-for="voice in userVoiceList" :key="voice.id" class="voice-item">
                     <div class="voice-info">
-                        <button class="play-button" @click="previewVoice(voice)">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
-                                <path fill="currentColor" d="M8 5.14v13.72L19 12z" />
-                            </svg>
-                        </button>
-
+                        <Audio :src="voice.sample_audio_url || voice.voice_url" />
                         <div class="voice-details">
                             <div class="voice-name">{{ voice.name }}</div>
                             <div class="voice-tags">
@@ -78,7 +69,6 @@
                             </div>
                         </div>
                     </div>
-
                     <button class="use-button" @click="selectVoice(voice)">{{ $at('使用') }}</button>
                 </li>
             </ul>
@@ -87,6 +77,7 @@
 </template>
 
 <script setup lang="ts">
+import type { ScrollbarDirection } from 'element-plus';
 import { $at } from 'i18n-auto-extractor';
 const store = useVoiceStore();
 const { voiceList, userVoiceList } = storeToRefs(store)
@@ -103,36 +94,43 @@ const Gender = [
     { name: $at('所有性别'), value: 'ALL' },
     { name: $at('男性'), value: 'M' },
     { name: $at('女性'), value: 'F' },
-]
+];
+const page_index = ref(1);
+const scrollbar = ref<any>();
 const getGender = (gender: string) => {
     switch (gender) {
         case 'M':
-            return $at('男性')
+            return $at('男性');
         case 'F':
-            return $at('女性')
+            return $at('女性');
         default:
-            return $at('未知')
+            return $at('未知');
+    };
+};
+
+const loadMore = (direction: ScrollbarDirection) => {
+    if (direction === 'bottom') {
+        page_index.value++;
+        store.getVoice({
+            page_index: page_index.value,
+            page_count: 50,
+            gender: selectedGender.value,
+            is_public: 1,
+        });
     }
 }
-// 试听音色
-const previewVoice = (item: any) => {
-    const url = item.sample_audio_url || item.voice_url;
-    try {
-        if (audio.value) audio.value.pause();
-        audio.value = new Audio(url);
-        audio.value.play();
-    } catch (error) {
-        console.log(error);
-    }
-};
+
 watch(selectedGender, (newGender) => {
+    page_index.value = 1;
     store.getVoice({
-        page_index: 1,
+        page_index: page_index.value,
         page_count: 50,
         gender: newGender,
         is_public: 1,
     });
+    scrollbar.value?.setScrollTop(0);
 });
+
 const selectVoice = (item: any) => {
     emits('select', item);
     dialogVisible.value = false;
@@ -140,13 +138,13 @@ const selectVoice = (item: any) => {
 
 onMounted(() => {
     store.getVoice({
-        page_index: 1,
+        page_index: page_index.value,
         page_count: 50,
         gender: 'ALL',
         is_public: 1,
     });
     store.getUserVoice();
-})
+});
 </script>
 
 <style lang="scss" scoped>

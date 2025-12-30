@@ -22,7 +22,7 @@
                     @keydown="handleEnter" :disabled="isSpeaker">
                     <el-button :icon="Position" type="primary" @click="handleSend" circle />
             </div>
-            <el-icon style="cursor: pointer;" :size="28" @click="isSpeech = !isSpeech">
+            <el-icon style="cursor: pointer;" :size="36" @click="isSpeech = !isSpeech">
                 <Microphone v-if="!isSpeech" />
                 <svg v-else t="1757039432954" class="icon" viewBox="0 0 1024 1024" version="1.1"
                     xmlns="http://www.w3.org/2000/svg" p-id="9091" width="200" height="200">
@@ -55,9 +55,7 @@ const { startRecording, stopRecording, sendWsMessage, formattedTime, wsMsg, isSp
 const input = ref<string>('');
 const isSpeech = ref<boolean>(false);
 const isRecording = ref<boolean>(false);
-const closeLoading = () => {
-    router.back();
-}
+const closeLoading = () => router.back();
 watch(() => wsMsg.value, async (newVal) => {
     if (newVal) {
         if (newVal.role === 'user') {
@@ -71,9 +69,7 @@ watch(() => wsMsg.value, async (newVal) => {
     };
 });
 watch(() => route.params.id, async (newVal) => {
-    if (newVal) {
-        await useTalkieStore().getChatting();
-    };
+    if (newVal) await useTalkieStore().getChatting();
 });
 const handleEnter = (e: KeyboardEvent | Event) => {
     if (e instanceof KeyboardEvent && eq(e?.key, 'Enter') && !eq(input.value, "")) {
