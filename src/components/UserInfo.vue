@@ -33,8 +33,11 @@ const router = useRouter();
 const logout = async () => {
     try {
         token.value = '';
+        user.value = {}
         await disconnect();
         router.push('/login');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
     } catch (error) {
         console.log(error);
     }

@@ -24,6 +24,7 @@ interface AiParams extends Params {
   gender: string;
   language: string;
   tags_type: string;
+  keyword: string;
 }
 interface ChatDataParams extends Params {
   talkie_id: string;

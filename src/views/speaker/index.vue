@@ -12,26 +12,8 @@
       </div>
 
       <div class="cards">
+        <el-empty v-if="SpeakerList.length === 0" :description="$at('还没有说话人，快去添加一个吧')" />
         <AudioCard v-for="item in SpeakerList" :key="item.id" :item="item" @delete="del" />
-        <!-- <div class="item" v-for="item in SpeakerList" :key="item.id">
-          <div class="name" v-if="isHover !== item.ID">
-            {{ item.speaker }}
-            <el-icon @click="isHover = item.ID">
-              <Edit />
-            </el-icon>
-          </div>
-          <div class="name" v-else>
-            <el-input v-model="item.speaker" @blur="isHover = 0" @keyup.enter="putSpeaker(item)" />
-          </div>
-          <div class="audio">
-            <audio class="no-volume" controls controlslist="nodownload noplaybackrate nofullscreen"
-              :src="pcmBase64ToAudioUrl(item.audio_data)"></audio>
-          </div>
-          <div class="footer">
-            <div class="time">{{ formatTime(item.created_at) }}</div>
-            <el-button :icon="Delete" type="danger" @click="delSpeaker(item)" circle />
-          </div>
-        </div> -->
       </div>
 
       <Pagination v-model:page="page_index" v-model:size="page_size" v-model:total="total" />

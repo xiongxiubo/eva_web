@@ -1,12 +1,15 @@
+import { RIGRender } from "../renderUtils/RIGRender";
+
 export function useCoreRunder() {
+  const { auditDetail } = storeToRefs(useAuditStore());
   const isHeadLoading = ref(true);
-  const head = shallowRef<ModelRender | null>(null);
+  const head = shallowRef<ModelRender | RIGRender | null>(null);
   const isStreaming = ref(false);
   const isSpeaker = ref(false);
   let bufferQueue: any[] = [];
 
   const NewModelRender = async (avatar: HTMLDivElement, opt: any) => {
-    const render = new ModelRender(avatar, opt);
+    const render = auditDetail.value?.action === "RIG" ? new RIGRender(avatar, opt) : new ModelRender(avatar, opt);
     head.value = render;
   };
   const initHead = async () => {

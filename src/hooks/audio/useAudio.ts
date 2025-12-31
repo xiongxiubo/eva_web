@@ -30,6 +30,7 @@ export function useAudio(avatarRef: Ref<HTMLDivElement | null>) {
   const wsMsg = ref<any>({});
   const startTime = ref(0);
   const consumeTime = ref(0);
+  const isDance = ref(false);
   let timer: any = null;
   // --- 3. [核心] WASM 解密逻辑 ---
   const initWorker = () => {
@@ -83,7 +84,13 @@ export function useAudio(avatarRef: Ref<HTMLDivElement | null>) {
         const msg = JSON.parse(e.data);
         handleWsJsonMessage(msg);
       } else {
-        music.play(e.data);
+        if (e.data instanceof Blob && (e.data as Blob).size === 0) return;
+        music.play(e.data, () => {
+          head.value?.setIdelAction();
+          isDance.value = false;
+        });
+        isDance.value = true;
+        head.value?.setDanceAction();
       }
     };
     ws.onclose = () => stopHeartbeat();
@@ -126,7 +133,7 @@ export function useAudio(avatarRef: Ref<HTMLDivElement | null>) {
   const checkAndPlayNext = async () => {
     if (isStreaming.value || bufferQueue.length === 0) return;
     const currAudio = bufferQueue.shift();
-    head.value?.setTailkAction();
+    if (!isDance.value) head.value?.setTailkAction();
     try {
       await head.value?.streamStart(
         { sampleRate: SAMPLE_RATE, gain: 3 },
@@ -137,7 +144,7 @@ export function useAudio(avatarRef: Ref<HTMLDivElement | null>) {
             checkAndPlayNext();
           } else {
             isSpeaker.value = false;
-            head.value?.setIdelAction();
+            if (!isDance.value) head.value?.setIdelAction();
           }
         },
       );
@@ -156,7 +163,6 @@ export function useAudio(avatarRef: Ref<HTMLDivElement | null>) {
       audioProcessor = new AudioWorkletNode(audioContext, "opus-recorder-processor");
       mediaSource = audioContext.createMediaStreamSource(mediaStream);
       mediaSource.connect(audioProcessor);
-
       audioProcessor.port.onmessage = e => {
         if (e.data.buffer) enqueueBuffer(float32ToInt16PCM(e.data.buffer));
       };
@@ -185,6 +191,7 @@ export function useAudio(avatarRef: Ref<HTMLDivElement | null>) {
     flushBuffer();
     sendWsMessage({ type: "end" });
     music.resumeContext();
+    if (!isDance.value) head.value?.setIdelAction();
   };
   const sendWsMessage = (data: any) => {
     if (ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify(data));
@@ -202,7 +209,6 @@ export function useAudio(avatarRef: Ref<HTMLDivElement | null>) {
   const startHeartbeat = () => {
     heartbeatTimer = setInterval(() => sendWsMessage({ type: "ping" }), HEARTBEAT_INTERVAL);
   };
-
   const stopHeartbeat = () => {
     clearInterval(heartbeatTimer);
     heartbeatTimer = null;
@@ -210,12 +216,29 @@ export function useAudio(avatarRef: Ref<HTMLDivElement | null>) {
   // --- 渲染器初始化 ---
   const initHead = async () => {
     if (!avatarRef.value || !modelUrl.value) return;
-    const actionurls = [...chattingAi.value.idle_model, chattingAi.value.hello_model, ...chattingAi.value.speaker_model];
+    if (chattingAi.value.action === "RIG") {
+      const opt = {
+        url: modelUrl.value,
+      };
+      const render = new RIGRender(avatarRef.value, opt);
+      await render.showModel(e => {
+        if (e.loaded === e.total) {
+          setTimeout(() => {
+            loading.value = false;
+          }, 2000);
+        }
+      });
+      head.value = render;
+      return;
+    }
+    const ai = chattingAi.value;
+    const actionurls = [...ai.idle_model, ai.hello_model, ...ai.speaker_model, ...ai.music_model];
     const opt = {
       url: modelUrl.value,
       actionurl: actionurls,
-      action: chattingAi.value.action,
+      action: ai.action,
     };
+
     const render = new ModelRender(avatarRef.value, opt);
     await render.showModel(e => {
       if (e.loaded === e.total) {
@@ -232,6 +255,7 @@ export function useAudio(avatarRef: Ref<HTMLDivElement | null>) {
     chattingAi.value.idle_model.map((e: any) => urls.push(e.url));
     urls.push(chattingAi.value.hello_model.url);
     chattingAi.value.speaker_model.map((e: any) => urls.push(e.url));
+    chattingAi.value.music_model.map((e: any) => urls.push(e.url));
     await preloadFBX(urls);
   };
   // --- 生命周期 ---
@@ -240,7 +264,7 @@ export function useAudio(avatarRef: Ref<HTMLDivElement | null>) {
     if (route.params.id) {
       await useTalkieStore().getChatting();
       connectWebSocket();
-      await preloadModel();
+      if (chattingAi.value.action !== "RIG") await preloadModel();
     }
   });
   onUnmounted(() => {

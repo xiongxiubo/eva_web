@@ -7,7 +7,7 @@
                         d="M19.75 18.719l-4.188-4.188c.907-1.094 1.407-2.5 1.407-4.031 0-3.563-2.938-6.5-6.5-6.5C6.875 4 4 6.938 4 10.5c0 3.594 2.906 6.5 6.469 6.5 1.5 0 2.906-.5 4.031-1.406l4.188 4.187a.753.753 0 00.562.219.622.622 0 00.5-.219c.313-.281.313-.75 0-1.062zM5.5 10.5c0-2.75 2.219-5 5-5 2.75 0 5 2.25 5 5 0 2.781-2.25 5-5 5-2.781 0-5-2.219-5-5z">
                     </path>
                 </svg>
-                <input v-model="searchQuery" type="text" :placeholder="$at('输入想要聊天的ai名称')" />
+                <input v-model="keyword" type="text" :placeholder="$at('输入想要聊天的ai名称')" />
             </div>
 
             <div class="actions-wrapper">
@@ -42,8 +42,12 @@
                 <div class="segmented-control">
                     <div class="slider-thumb"
                         :style="{ transform: isPrivate ? 'translateX(100%)' : 'translateX(0)' }" />
-                    <div class="segment-item" :class="{ active: !isPrivate }" @click="isPrivate = false"> 全部模型 </div>
-                    <div class="segment-item" :class="{ active: isPrivate }" @click="isPrivate = true">我的模型 </div>
+                    <div class="segment-item" :class="{ active: !isPrivate }" @click="isPrivate = false">
+                        {{ $at('全部模型') }}
+                    </div>
+                    <div class="segment-item" :class="{ active: isPrivate }" @click="isPrivate = true">
+                        {{ $at('我的模型') }}
+                    </div>
                 </div>
             </div>
         </div>
@@ -53,8 +57,7 @@
 <script setup lang="ts">
 import { $at } from 'i18n-auto-extractor';
 const store = useTalkieStore();
-const { tagList, tags_type, isPrivate } = storeToRefs(store);
-const searchQuery = ref('');
+const { tagList, tags_type, isPrivate, keyword } = storeToRefs(store);
 const tags = computed(() => [...tagList.value])
 const isOpen = ref(false);
 // 获取当前选中的对象
@@ -69,7 +72,6 @@ const toggleDropdown = () => {
 onMounted(async () => {
     await store.getTag();
     isPrivate.value ? store.getAiPrivate() : store.getTalkie();
-
 })
 </script>
 

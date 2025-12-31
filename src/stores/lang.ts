@@ -16,6 +16,7 @@ export const useLangStore = defineStore(
     function setLang(code: string, json: any) {
       currentLang.value = code;
       setCurrentLang(code, json);
+      useTalkieStore().getTag();
     }
     // 初始化语言
     function initLang() {

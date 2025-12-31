@@ -10,6 +10,7 @@
             </button>
         </div>
         <Tabs :tabList="tabs" v-model="status" />
+        <el-empty v-if="userVoiceList.length === 0" :description="$at('还没有语音，快去创建一个吧')" />
         <div class="voice-list">
             <AudioCard v-for="voice in userVoiceList" :key="voice.id" :item="voice" />
         </div>

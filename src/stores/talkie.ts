@@ -14,7 +14,8 @@ export const useTalkieStore = defineStore("talkie", () => {
   const route = useRoute();
   const router = useRouter();
   const isPrivate = ref<boolean>(false);
-  const loading = ref<boolean>(false);
+  const loading = ref<boolean>(true);
+  const keyword = ref<string>("");
 
   async function getAiPrivate() {
     try {
@@ -25,6 +26,7 @@ export const useTalkieStore = defineStore("talkie", () => {
         tags_type: tags_type.value,
         gender: gender.value,
         language: language.value,
+        keyword: keyword.value,
       });
       if (eq(res.code, 0)) {
         const list = get(res, "data.list", []);
@@ -51,11 +53,15 @@ export const useTalkieStore = defineStore("talkie", () => {
 
   const debounceGetTalkie = debounce(() => getTalkie(), 500);
   const debounceGetAiPrivate = debounce(() => getAiPrivate(), 500);
-
+  watch(isPrivate, () => {
+    tags_type.value = "ALL";
+    keyword.value = "";
+    gender.value = "all";
+    language.value = "all";
+  });
   watch(
-    () => [gender.value, language.value, tags_type.value, isPrivate.value],
+    () => [gender.value, language.value, tags_type.value, isPrivate.value, keyword.value],
     () => {
-      talkieList.value = [];
       isPrivate.value ? debounceGetAiPrivate() : debounceGetTalkie();
     },
   );
@@ -68,6 +74,7 @@ export const useTalkieStore = defineStore("talkie", () => {
         tags_type: tags_type.value,
         gender: gender.value,
         language: language.value,
+        keyword: keyword.value,
       });
       if (eq(res.code, 0)) {
         talkieList.value = get(res, "data.list", []);
@@ -122,6 +129,7 @@ export const useTalkieStore = defineStore("talkie", () => {
     tags_type,
     isPrivate,
     loading,
+    keyword,
     getAiPrivate,
     getTag,
     getTalkie,

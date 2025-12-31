@@ -4,6 +4,8 @@
             <div class="title">
                 {{ $at('记忆') }}
             </div>
+            <el-empty v-if="MemoryList.length === 0" :description="$at('还没有记忆，快去聊天吧')" />
+
             <div class="list">
                 <div class="item" v-for="(item, index) in MemoryList" :key="index"
                     @click="router.push(`/chathistory/${item.talkie_id}`)">

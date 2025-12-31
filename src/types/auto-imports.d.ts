@@ -21,6 +21,7 @@ declare global {
   const ModalRender: typeof import('../hooks/mixamoRender')['ModalRender']
   const ModelRender: typeof import('../hooks/renderUtils/modelRender')['ModelRender']
   const Music: typeof import('../hooks/audio/music')['Music']
+  const RIGRender: typeof import('../hooks/renderUtils/RIGRender')['RIGRender']
   const Render: typeof import("../hooks/mixamoRender")["Render"]
   const RigRender: typeof import("../hooks/rigRender")["RigRender"]
   const TalkingHead: typeof import("../hooks/head/talkinghead.mjs")["TalkingHead"]
@@ -185,6 +186,9 @@ declare global {
   // @ts-ignore
   export type { Music } from '../hooks/audio/music'
   import('../hooks/audio/music')
+  // @ts-ignore
+  export type { RIGRender } from '../hooks/renderUtils/RIGRender'
+  import('../hooks/renderUtils/RIGRender')
   // @ts-ignore
   export type { DynamicBones } from '../hooks/renderUtils/dynamicbones'
   import('../hooks/renderUtils/dynamicbones')

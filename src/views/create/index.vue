@@ -9,7 +9,7 @@
         </button>
     </div>
     <Tabs v-model="status" :tabList="tabList" />
-    <el-empty v-if="characterList.length === 0" description="还没有人物，快去创建一个吧" />
+    <el-empty v-if="characterList.length === 0" :description="$at('还没有人物，快去创建一个吧')" />
     <div class="content-grid">
         <Card v-for="card in characterList" :key="card.id" :item="card" @click="showDetailDialog(card)" />
     </div>

@@ -64,17 +64,25 @@ watch(msg, (newMsg) => {
     }
 })
 onMounted(async () => {
-    console.log(auditDetail.value)
     if (!route.query.id) return
     await GetModelDetail(Number(route.query.id));
     if (auditDetail.value.model_url === "" || !auditDetail.value.model_url) return;
     nextTick(async () => {
         if (!avatarRef.value) return;
-        NewModelRender(avatarRef.value, {
-            gender: auditDetail.value.gender,
-            action: auditDetail.value.action,
-            url: auditDetail.value.model_url,
-        });
+        let opt: any = {};
+        if (auditDetail.value.action === "RIG") {
+            opt = {
+                url: auditDetail.value.model_url,
+            }
+        } else {
+            const actionurls = [...auditDetail.value.idle_model, auditDetail.value.hello_model, ...auditDetail.value.speaker_model];
+            opt = {
+                actionurl: actionurls,
+                action: auditDetail.value.action,
+                url: auditDetail.value.model_url,
+            }
+        }
+        NewModelRender(avatarRef.value, opt);
         await initHead();
     })
 })

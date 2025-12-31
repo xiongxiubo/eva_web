@@ -874,16 +874,22 @@ export class ModelRender {
       fixedTracks.push(t);
     });
     anim.tracks = fixedTracks;
+
     const newAction = this.mixer.clipAction(anim);
     newAction.reset();
     if (!loop) newAction.setLoop(LoopOnce, 1);
     newAction.clampWhenFinished = true;
     newAction.enabled = true;
+    // ④ 保证时长归一，避免节奏不一致
+    if (this.currentAction) newAction.syncWith?.(this.currentAction);
+    newAction.setEffectiveTimeScale(1);
+    newAction.setEffectiveWeight(1);
+
     if (this.currentAction && this.currentAction !== newAction) {
-      newAction.crossFadeFrom(this.currentAction, 0.5, false).play();
-      this.currentAction.fadeOut(1);
+      newAction.crossFadeFrom(this.currentAction, 0.5, true).play();
+      this.currentAction.fadeOut(0.5);
     } else {
-      newAction.fadeIn(1).play();
+      newAction.fadeIn(0.5).play();
     }
     this.currentUrl = url;
     this.currentAction = newAction;
@@ -913,6 +919,11 @@ export class ModelRender {
     this.timer = setTimeout(() => {
       this.setAction(this.randomAction(), false);
     }, 60000);
+  }
+  setDanceAction() {
+    this.clone();
+    const url = this.actionurl.find(e => e.type === "music")?.url;
+    this.setAction(url);
   }
   clone() {
     if (this.timer) clearTimeout(this.timer);

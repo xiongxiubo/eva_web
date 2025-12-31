@@ -149,7 +149,7 @@ import { eq, isEqual } from 'lodash';
 const { GetModelDetail } = useAuditStore();
 const { auditDetail } = storeToRefs(useAuditStore());
 const { tagList } = storeToRefs(useTalkieStore());
-const tags = computed(() => tagList.value.filter(item => item.name !== "Recommend"))
+const tags = computed(() => tagList.value.filter(item => item.value !== "ALL"))
 const loading = ref(false);
 const router = useRouter();
 const route = useRoute();

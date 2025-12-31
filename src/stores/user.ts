@@ -7,13 +7,17 @@ export const useUserStore = defineStore(
     const user = ref<any>({});
     const chatList = ref<any[]>([]);
     const isCollapse = ref(false);
-
+    const router = useRouter();
     // 获取用户信息
     async function getUser() {
       try {
         const res = await getUserInfo();
         if (eq(res.code, 0)) {
           user.value = get(res, "data", {});
+        } else if (eq(res.code, 40001)) {
+          token.value = "";
+          user.value = {};
+          router.push("/login");
         }
       } catch (error) {
         console.log(error);
