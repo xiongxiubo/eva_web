@@ -588,7 +588,7 @@ export class ModelRender {
       }
     };
     this.resetLips();
-    if (this.audioCtx?.state === "suspended" || this.audioCtx?.state === "interrupted") {
+    if (this.audioCtx?.state === "suspended") {
       const resume = this.audioCtx.resume();
       const timeout = new Promise((_r, rej) => setTimeout(() => rej("p2"), 1000));
       try {
