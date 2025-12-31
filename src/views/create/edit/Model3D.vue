@@ -41,6 +41,7 @@ const { GetModelDetail } = useAuditStore();
 const { auditDetail } = storeToRefs(useAuditStore());
 const { sendWsMessage, connect, isConnected, isWsLoading, msg, clone } = useCoreWebSocket();
 const { initHead, handleWsJsonMessage, isSpeaker, NewModelRender, isHeadLoading } = useCoreRunder()
+const { initWorker, getDecode, blobUrl } = useCoreEncode()
 const islock = ref(false);
 const route = useRoute();
 defineExpose({ clone })
@@ -63,27 +64,33 @@ watch(msg, (newMsg) => {
         }
     }
 })
+watch(blobUrl, async (newUrl) => {
+    if (!newUrl) return;
+    let opt: any = {};
+    if (auditDetail.value.action === "RIG") {
+        opt = {
+            url: newUrl,
+        }
+    } else {
+        const actionurls = [...auditDetail.value.idle_model, auditDetail.value.hello_model, ...auditDetail.value.speaker_model];
+        opt = {
+            actionurl: actionurls,
+            action: auditDetail.value.action,
+            url: newUrl,
+        }
+    }
+    NewModelRender(avatarRef.value!, opt);
+    await initHead();
+})
 onMounted(async () => {
     if (!route.query.id) return
     await GetModelDetail(Number(route.query.id));
     if (auditDetail.value.model_url === "" || !auditDetail.value.model_url) return;
+    initWorker();
     nextTick(async () => {
         if (!avatarRef.value) return;
-        let opt: any = {};
-        if (auditDetail.value.action === "RIG") {
-            opt = {
-                url: auditDetail.value.model_url,
-            }
-        } else {
-            const actionurls = [...auditDetail.value.idle_model, auditDetail.value.hello_model, ...auditDetail.value.speaker_model];
-            opt = {
-                actionurl: actionurls,
-                action: auditDetail.value.action,
-                url: auditDetail.value.model_url,
-            }
-        }
-        NewModelRender(avatarRef.value, opt);
-        await initHead();
+        const bool = auditDetail.value.model_url.includes(".enc");
+        getDecode(auditDetail.value.model_url, bool);
     })
 })
 onUnmounted(() => {

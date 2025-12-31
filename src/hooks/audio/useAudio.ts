@@ -281,7 +281,8 @@ export function useAudio(avatarRef: Ref<HTMLDivElement | null>) {
     () => chattingAi.value?.model_url,
     val => {
       if (!val) return;
-      getDecode(val, false);
+      const bool = val.includes(".enc");
+      getDecode(val, bool);
     },
     { immediate: true },
   );
